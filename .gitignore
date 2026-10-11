@@ -1,5 +1,9 @@
-# Only the app and API are tracked in this repository.
-/*
-!/.gitignore
-!/backend/
-!/DatingAPP/
+# Vendor SDK downloads are kept locally and not published.
+/FaceTecSDK-*/
+
+# Secrets and machine-local files
+.env
+.env.*
+!.env.example
+.DS_Store
+__pycache__/
