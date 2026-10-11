@@ -1,0 +1,75 @@
+# Environment — do not commit secrets
+.env
+.env.local
+.env.*.local
+
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+Thumbs.db
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# Android signing — machine-local SDK path and release signing credentials.
+# Never commit a real keystore or its passwords; distribute these out-of-band
+# (password manager / CI secrets) when you get to release builds.
+android/local.properties
+android/key.properties
+android/secrets.properties
+android/app/google-services.json
+**/google-services.json
+**/GoogleService-Info.plist
+*.jks
+*.keystore
+
+# Android build output
+android/build/
+android/.kotlin/
+
+# iOS signing — provisioning profiles and certificates/keys.
+ios/Secrets.xcconfig
+*.mobileprovision
+*.p8
+*.p12
+*.cer
+.env.*.local

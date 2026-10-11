@@ -1,0 +1,39 @@
+import 'package:flutter/material.dart';
+
+abstract final class AppColors {
+  static const forest = Color(0xFF173F35);
+  static const forestDark = Color(0xFF0D2923);
+  static const forestDeep = Color(0xFF081D19);
+  static const coral = Color(0xFFFF6678);
+  static const coralPressed = Color(0xFFE95467);
+  static const coralSoft = Color(0xFFFFE3E2);
+  static const peach = Color(0xFFFFC8A8);
+  static const peachSoft = Color(0xFFFFE6D4);
+  static const background = Color(0xFFFFF9EF);
+  static const backgroundWarm = Color(0xFFF9F0E4);
+  static const surface = Color(0xFFFFFCF7);
+  static const surfaceSecondary = Color(0xFFF4ECE2);
+  static const darkBackground = Color(0xFF081714);
+  static const darkSurface = Color(0xFF10241F);
+  static const darkSurface2 = Color(0xFF173029);
+  static const textPrimary = Color(0xFF171A18);
+  static const textSecondary = Color(0xFF686B67);
+  static const textTertiary = Color(0xFF989A96);
+  static const textOnDark = Color(0xFFFFFAF2);
+  static const textOnBrand = Color(0xFFFFFFFF);
+  static const border = Color(0xFFE5DDD3);
+  static const borderStrong = Color(0xFFD2C8BC);
+  static const borderDark = Color(0xFF315047);
+  static const success = Color(0xFF3F806B);
+  static const warning = Color(0xFFE9A23B);
+  static const error = Color(0xFFE5525F);
+  static const info = Color(0xFF668BA4);
+  static const spotify = Color(0xFF1ED760);
+  static const verified = Color(0xFF4F8FCB);
+  static const selection = Color(0xFFE4EEE8);
+  static const scrim = Color(0x99000000);
+  static const softScrim = Color(0x55000000);
+  static const primary = forest;
+  static const text = textPrimary;
+  static const muted = textSecondary;
+}

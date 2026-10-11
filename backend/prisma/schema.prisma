@@ -1,0 +1,247 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                     String             @id @default(cuid())
+  clerkUserId            String             @unique
+  email                  String?
+  phoneNumber            String?
+  username               String?
+  firstName              String?
+  lastName               String?
+  imageUrl               String?
+  lastActiveAt           DateTime?
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+  onboardingProfile      OnboardingProfile?
+  profile                Profile?
+  likesSent              ProfileLike[]      @relation("ProfileLikesSent")
+  likesReceived          ProfileLike[]      @relation("ProfileLikesReceived")
+  passesSent             ProfilePass[]      @relation("ProfilePassesSent")
+  passesReceived         ProfilePass[]      @relation("ProfilePassesReceived")
+  conversationsAsUserOne Conversation[]     @relation("ConversationUserOne")
+  conversationsAsUserTwo Conversation[]     @relation("ConversationUserTwo")
+  sentMessages           Message[]          @relation("MessageSender")
+  hostedVibeRooms        VibeRoom[]         @relation("VibeRoomHost")
+  savedVibeRooms         VibeRoomSave[]
+  vibeRoomMemberships    VibeRoomMember[]
+  vibeRoomMessages       VibeRoomMessage[]  @relation("VibeRoomMessageSender")
+
+  @@index([email])
+  @@index([phoneNumber])
+}
+
+model Profile {
+  id                 String          @id @default(cuid())
+  userId             String          @unique
+  bio                String?
+  location           String?
+  education          String?
+  fieldOfStudy       String?
+  jobTitle           String?
+  company            String?
+  heightCm           Int?
+  zodiac             String?
+  languages          String[]        @default([])
+  industry           String?
+  smoking            String?
+  drinking           String?
+  diet               String?
+  religion           String?
+  showProfile        Boolean         @default(true)
+  showDistance       Boolean         @default(true)
+  showOnlineStatus   Boolean         @default(true)
+  spotifyConnected   Boolean         @default(false)
+  verificationStatus String          @default("not_started")
+  completedAt        DateTime?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  user               User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  photos             ProfilePhoto[]
+  prompts            ProfilePrompt[]
+}
+
+model ProfilePhoto {
+  id        String   @id @default(cuid())
+  profileId String
+  publicId  String   @unique
+  secureUrl String
+  width     Int
+  height    Int
+  position  Int
+  createdAt DateTime @default(now())
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId, position])
+}
+
+model ProfilePrompt {
+  id        String  @id @default(cuid())
+  profileId String
+  question  String
+  answer    String
+  position  Int
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId, position])
+}
+
+model ProfileLike {
+  id         String   @id @default(cuid())
+  fromUserId String
+  toUserId   String
+  createdAt  DateTime @default(now())
+  fromUser   User     @relation("ProfileLikesSent", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser     User     @relation("ProfileLikesReceived", fields: [toUserId], references: [id], onDelete: Cascade)
+
+  @@unique([fromUserId, toUserId])
+  @@index([toUserId, createdAt])
+}
+
+model ProfilePass {
+  id         String   @id @default(cuid())
+  fromUserId String
+  toUserId   String
+  createdAt  DateTime @default(now())
+  fromUser   User     @relation("ProfilePassesSent", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser     User     @relation("ProfilePassesReceived", fields: [toUserId], references: [id], onDelete: Cascade)
+
+  @@unique([fromUserId, toUserId])
+  @@index([toUserId, createdAt])
+}
+
+model Conversation {
+  id                 String    @id @default(cuid())
+  userOneId          String
+  userTwoId          String
+  userOneUnreadCount Int       @default(0)
+  userTwoUnreadCount Int       @default(0)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  userOne            User      @relation("ConversationUserOne", fields: [userOneId], references: [id], onDelete: Cascade)
+  userTwo            User      @relation("ConversationUserTwo", fields: [userTwoId], references: [id], onDelete: Cascade)
+  messages           Message[]
+
+  @@unique([userOneId, userTwoId])
+  @@index([userOneId, updatedAt])
+  @@index([userTwoId, updatedAt])
+}
+
+model Message {
+  id              String       @id @default(cuid())
+  conversationId  String
+  senderId        String
+  clientMessageId String
+  text            String       @db.Text
+  type            String       @default("text")
+  mediaUrl        String?
+  mediaPublicId   String?
+  mediaMimeType   String?
+  mediaSize       Int?
+  latitude        Float?
+  longitude       Float?
+  readAt          DateTime?
+  createdAt       DateTime     @default(now())
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender          User         @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@unique([senderId, clientMessageId])
+  @@index([conversationId, createdAt, id])
+}
+
+model VibeRoom {
+  id               String            @id @default(cuid())
+  title            String            @db.VarChar(40)
+  description      String            @db.Text
+  categoryId       String            @db.VarChar(80)
+  emoji            String            @db.VarChar(16)
+  coverAsset       String            @db.VarChar(255)
+  hostUserId       String
+  participantCount Int               @default(1)
+  city             String            @default("Hyderabad") @db.VarChar(120)
+  isLive           Boolean           @default(false)
+  inviteOnly       Boolean           @default(false)
+  maxParticipants  Int               @default(50)
+  scheduledFor     String?           @db.VarChar(120)
+  tags             String[]          @default([])
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  host             User              @relation("VibeRoomHost", fields: [hostUserId], references: [id], onDelete: Cascade)
+  saves            VibeRoomSave[]
+  members          VibeRoomMember[]
+  messages         VibeRoomMessage[]
+
+  @@index([categoryId, isLive, participantCount])
+  @@index([hostUserId, createdAt])
+}
+
+model VibeRoomSave {
+  roomId    String
+  userId    String
+  createdAt DateTime @default(now())
+  room      VibeRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([roomId, userId])
+  @@index([userId, createdAt])
+}
+
+model VibeRoomMember {
+  roomId   String
+  userId   String
+  role     String    @default("Listener") @db.VarChar(24)
+  joinedAt DateTime  @default(now())
+  leftAt   DateTime?
+  room     VibeRoom  @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([roomId, userId])
+  @@index([userId, leftAt, joinedAt])
+}
+
+model VibeRoomMessage {
+  id              String   @id @default(cuid())
+  roomId          String
+  senderId        String
+  clientMessageId String   @db.VarChar(80)
+  text            String   @db.VarChar(1000)
+  createdAt       DateTime @default(now())
+  room            VibeRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  sender          User     @relation("VibeRoomMessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@unique([senderId, clientMessageId])
+  @@index([roomId, createdAt, id])
+}
+
+model OnboardingProfile {
+  id                        String    @id @default(cuid())
+  userId                    String    @unique
+  birthDate                 DateTime? @db.Date
+  genderIdentity            String?
+  interestedIn              String?
+  datingIntentions          String[]  @default([])
+  vibeType                  String?
+  idealFriday               String?
+  interests                 String[]  @default([])
+  musicGenres               String[]  @default([])
+  favoriteArtists           String[]  @default([])
+  skippedQuestions          String[]  @default([])
+  currentEra                String?
+  dealbreakers              String[]  @default([])
+  preferredDistanceKm       Int       @default(25)
+  onlyShowPeopleNearby      Boolean   @default(true)
+  locationPermissionGranted Boolean   @default(false)
+  latitude                  Float?
+  longitude                 Float?
+  completedAt               DateTime?
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @updatedAt
+  user                      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([completedAt])
+}

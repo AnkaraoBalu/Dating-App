@@ -1,0 +1,9 @@
+ALTER TABLE "Profile"
+ADD COLUMN "industry" TEXT,
+ADD COLUMN "smoking" TEXT,
+ADD COLUMN "drinking" TEXT,
+ADD COLUMN "diet" TEXT,
+ADD COLUMN "religion" TEXT,
+ADD COLUMN "showProfile" BOOLEAN NOT NULL DEFAULT true,
+ADD COLUMN "showDistance" BOOLEAN NOT NULL DEFAULT true,
+ADD COLUMN "showOnlineStatus" BOOLEAN NOT NULL DEFAULT true;

@@ -1,0 +1,75 @@
+name: dating_app
+description: A Flutter foundation for a dating app.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.12.0
+
+dependencies:
+  app_links: ^6.4.1
+  camera: ^0.12.1
+  clerk_auth: ^0.0.18-beta
+  clerk_flutter: ^0.0.18-beta
+  flutter:
+    sdk: flutter
+  flutter_dotenv: ^5.2.1
+  geolocator: ^14.0.2
+  http: ^1.6.0
+  image_picker: ^1.2.4
+  shared_preferences: ^2.5.6
+  socket_io_client: ^3.1.6
+  url_launcher: ^6.3.3
+
+dependency_overrides:
+  clerk_auth:
+    path: packages/clerk_auth
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  shared_preferences_platform_interface: ^2.4.2
+
+flutter:
+  uses-material-design: true
+  assets:
+    - .env
+    - assets/images/login/ambient_bokeh.png
+    - assets/images/boys-images/cafe_hoodie_portrait.png
+    - assets/images/boys-images/rooftop_sunset_portrait.png
+    - assets/images/boys-images/cafe_smiling_portrait.png
+    - assets/images/boys-images/sunset_jacket_portrait.png
+    - assets/images/boys-images/golden_hour_white_shirt.png
+    - assets/images/boys-images/city_night_portrait.png
+    - assets/images/girls-images/golden_hour_portrait.png
+    - assets/images/girls-images/cafe_coffee_portrait.png
+    - assets/images/girls-images/sunset_floral_portrait.png
+    - assets/images/girls-images/iced_coffee_portrait.png
+    - assets/images/girls-images/cozy_headphones_portrait.png
+    - assets/images/girls-images/city_night_portrait.png
+    - assets/images/welcome/personality_polaroids.png
+    - assets/images/welcome/shared_energy_polaroids.png
+    - assets/images/welcome/real_connection_polaroids.png
+    - assets/images/welcome/new_chapter_polaroids.png
+    - assets/images/branding/logo.png
+    - assets/images/location/location.png
+    - assets/images/welcome/welcome_background.png
+  fonts:
+    - family: Manrope
+      fonts:
+        - asset: assets/fonts/manrope/Manrope.ttf
+          weight: 400
+        - asset: assets/fonts/manrope/Manrope.ttf
+          weight: 500
+        - asset: assets/fonts/manrope/Manrope.ttf
+          weight: 600
+        - asset: assets/fonts/manrope/Manrope.ttf
+          weight: 700
+    - family: DMSerifDisplay
+      fonts:
+        - asset: assets/fonts/dm_serif_display/DMSerifDisplay-Regular.ttf
+    - family: Caveat
+      fonts:
+        - asset: assets/fonts/caveat/Caveat.ttf
+          weight: 400

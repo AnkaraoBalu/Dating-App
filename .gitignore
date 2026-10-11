@@ -1,0 +1,5 @@
+# Only the app and API are tracked in this repository.
+/*
+!/.gitignore
+!/backend/
+!/DatingAPP/

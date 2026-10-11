@@ -1,0 +1,104 @@
+import {
+  Controller,
+  Body,
+  UploadedFile,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Query,
+  Req,
+  UseGuards,
+  UseInterceptors,
+} from "@nestjs/common";
+import { FileInterceptor } from "@nestjs/platform-express";
+import { ClerkAuthGuard, type ClerkRequest } from "../auth/clerk-auth.guard";
+import { MessageMediaService } from "./message-media.service";
+import { ConversationsService } from "./conversations.service";
+import { MessagesService } from "./messages.service";
+import { MessagesGateway } from "./messages.gateway";
+
+@Controller("messages")
+@UseGuards(ClerkAuthGuard)
+export class MessagesController {
+  constructor(
+    private readonly messages: MessagesService,
+    private readonly conversations: ConversationsService,
+    private readonly media: MessageMediaService,
+    private readonly gateway: MessagesGateway,
+  ) {}
+
+  @Post("conversations/:conversationId/images")
+  @UseInterceptors(
+    FileInterceptor("file", {
+      limits: { fileSize: 10 * 1024 * 1024, files: 1 },
+    }),
+  )
+  async sendImage(
+    @Req() request: ClerkRequest,
+    @Param("conversationId") conversationId: string,
+    @Body("clientMessageId") clientMessageId: string,
+    @Body("caption") caption: string | undefined,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    const message = await this.media.sendImage(
+      request.auth.userId,
+      conversationId,
+      clientMessageId,
+      caption ?? "",
+      file,
+    );
+    // Upload persistence is successful even if live fan-out is temporarily
+    // unavailable; recipients recover it from history on reconnect.
+    await this.gateway
+      .broadcastMessage(conversationId, message)
+      .catch(() => undefined);
+    return { ...message, fromMe: true };
+  }
+
+  @Post("conversations/:otherUserId")
+  openConversation(
+    @Req() request: ClerkRequest,
+    @Param("otherUserId") otherUserId: string,
+  ) {
+    return this.messages.openConversation(request.auth.userId, otherUserId);
+  }
+
+  @Get("conversations")
+  listConversations(
+    @Req() request: ClerkRequest,
+    @Query("search") search?: string,
+  ) {
+    return this.conversations.listConversations(request.auth.userId, search);
+  }
+
+  @Post("conversations/:conversationId/read")
+  markConversationRead(
+    @Req() request: ClerkRequest,
+    @Param("conversationId") conversationId: string,
+  ) {
+    return this.messages
+      .markConversationRead(request.auth.userId, conversationId)
+      .then((receipt) => {
+        if (receipt.lastReadMessageId && receipt.readAt) {
+          this.gateway.broadcastRead(conversationId, receipt);
+        }
+        return receipt;
+      });
+  }
+
+  @Get("conversations/:conversationId/messages")
+  listMessages(
+    @Req() request: ClerkRequest,
+    @Param("conversationId") conversationId: string,
+    @Query("before") before?: string,
+    @Query("limit", new ParseIntPipe({ optional: true })) limit = 50,
+  ) {
+    return this.messages.listMessages(
+      request.auth.userId,
+      conversationId,
+      before,
+      limit,
+    );
+  }
+}

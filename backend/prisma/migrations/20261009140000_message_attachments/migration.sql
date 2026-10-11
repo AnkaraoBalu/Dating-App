@@ -1,0 +1,8 @@
+ALTER TABLE "Message"
+  ADD COLUMN "type" TEXT NOT NULL DEFAULT 'text',
+  ADD COLUMN "mediaUrl" TEXT,
+  ADD COLUMN "mediaPublicId" TEXT,
+  ADD COLUMN "mediaMimeType" TEXT,
+  ADD COLUMN "mediaSize" INTEGER,
+  ADD COLUMN "latitude" DOUBLE PRECISION,
+  ADD COLUMN "longitude" DOUBLE PRECISION;

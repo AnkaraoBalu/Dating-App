@@ -1,0 +1,4 @@
+ALTER TABLE "OnboardingProfile"
+ADD COLUMN "favoriteArtists" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
+ADD COLUMN "preferredDistanceKm" INTEGER NOT NULL DEFAULT 25,
+ADD COLUMN "onlyShowPeopleNearby" BOOLEAN NOT NULL DEFAULT true;

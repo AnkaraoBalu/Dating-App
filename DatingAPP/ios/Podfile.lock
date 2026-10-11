@@ -1,0 +1,78 @@
+PODS:
+  - app_links (6.4.1):
+    - Flutter
+  - camera_avfoundation (0.0.1):
+    - Flutter
+  - device_info_plus (0.0.1):
+    - Flutter
+  - FaceTecSDK (10.1.23)
+  - Flutter (1.0.0)
+  - geolocator_apple (1.2.0):
+    - Flutter
+    - FlutterMacOS
+  - image_picker_ios (0.0.1):
+    - Flutter
+  - package_info_plus (0.4.5):
+    - Flutter
+  - passkeys_darwin (0.0.1):
+    - Flutter
+    - FlutterMacOS
+  - url_launcher_ios (0.0.1):
+    - Flutter
+  - webview_flutter_wkwebview (0.0.1):
+    - Flutter
+    - FlutterMacOS
+
+DEPENDENCIES:
+  - app_links (from `.symlinks/plugins/app_links/ios`)
+  - camera_avfoundation (from `.symlinks/plugins/camera_avfoundation/darwin`)
+  - device_info_plus (from `.symlinks/plugins/device_info_plus/ios`)
+  - FaceTecSDK (from `FaceTecSDK`)
+  - Flutter (from `Flutter`)
+  - geolocator_apple (from `.symlinks/plugins/geolocator_apple/darwin`)
+  - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
+  - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
+  - passkeys_darwin (from `.symlinks/plugins/passkeys_darwin/darwin`)
+  - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
+  - webview_flutter_wkwebview (from `.symlinks/plugins/webview_flutter_wkwebview/darwin`)
+
+EXTERNAL SOURCES:
+  app_links:
+    :path: ".symlinks/plugins/app_links/ios"
+  camera_avfoundation:
+    :path: ".symlinks/plugins/camera_avfoundation/darwin"
+  device_info_plus:
+    :path: ".symlinks/plugins/device_info_plus/ios"
+  FaceTecSDK:
+    :path: FaceTecSDK
+  Flutter:
+    :path: Flutter
+  geolocator_apple:
+    :path: ".symlinks/plugins/geolocator_apple/darwin"
+  image_picker_ios:
+    :path: ".symlinks/plugins/image_picker_ios/ios"
+  package_info_plus:
+    :path: ".symlinks/plugins/package_info_plus/ios"
+  passkeys_darwin:
+    :path: ".symlinks/plugins/passkeys_darwin/darwin"
+  url_launcher_ios:
+    :path: ".symlinks/plugins/url_launcher_ios/ios"
+  webview_flutter_wkwebview:
+    :path: ".symlinks/plugins/webview_flutter_wkwebview/darwin"
+
+SPEC CHECKSUMS:
+  app_links: 3dbc685f76b1693c66a6d9dd1e9ab6f73d97dc0a
+  camera_avfoundation: 968a9a5323c79a99c166ad9d7866bfd2047b5a9b
+  device_info_plus: 21fcca2080fbcd348be798aa36c3e5ed849eefbe
+  FaceTecSDK: 2171d17feb06b92bbc3c21b7006d67ed077177fb
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  geolocator_apple: ab36aa0e8b7d7a2d7639b3b4e48308394e8cef5e
+  image_picker_ios: e0ece4aa2a75771a7de3fa735d26d90817041326
+  package_info_plus: af8e2ca6888548050f16fa2f1938db7b5a5df499
+  passkeys_darwin: 395f63bb4dbfe81344ada36400c391e86fc395ea
+  url_launcher_ios: 7a95fa5b60cc718a708b8f2966718e93db0cef1b
+  webview_flutter_wkwebview: 8ebf4fded22593026f7dbff1fbff31ea98573c8d
+
+PODFILE CHECKSUM: 6876132f7d0de2acc4ddd6da7c448186d4187522
+
+COCOAPODS: 1.16.2

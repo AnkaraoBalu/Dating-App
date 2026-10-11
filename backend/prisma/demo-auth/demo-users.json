@@ -1,0 +1,429 @@
+{
+  "version": 1,
+  "city": "Hyderabad",
+  "latitude": 17.385,
+  "longitude": 78.4867,
+  "boys": [
+    {
+      "username": "Aarav",
+      "age": 27,
+      "bio": "Demo profile for Matchify testing. Usually looking for a great cafe and an even better conversation.",
+      "jobTitle": "Product designer",
+      "fieldOfStudy": "Design",
+      "interests": ["coffee", "travel", "design", "photography"],
+      "genres": ["indie"],
+      "vibe": "chill_and_balanced",
+      "friday": "cafe_hopping",
+      "era": "creative_era",
+      "image": 12,
+      "prompts": [
+        [
+          "A perfect first date",
+          "Coffee, a walk, and forgetting to check the time."
+        ],
+        [
+          "I get excited about",
+          "Finding a tiny restaurant with excellent food."
+        ],
+        [
+          "Green flags I look for",
+          "Kindness to everyone, especially the waiter."
+        ]
+      ]
+    },
+    {
+      "username": "Vihaan",
+      "age": 25,
+      "bio": "Demo profile for Matchify testing. Weekend hikes, playlists for every mood, and spontaneous road trips.",
+      "jobTitle": "Software engineer",
+      "fieldOfStudy": "Computer Science",
+      "interests": ["hiking", "music", "travel", "technology"],
+      "genres": ["pop"],
+      "vibe": "golden_retriever",
+      "friday": "long_drive",
+      "era": "travel_era",
+      "image": 13,
+      "prompts": [
+        ["My simple pleasures", "A long drive with the right playlist."],
+        ["Teach me about", "Your favorite place you have traveled."],
+        ["The way to win me over", "Be curious and a little silly."]
+      ]
+    },
+    {
+      "username": "Kabir",
+      "age": 29,
+      "bio": "Demo profile for Matchify testing. I cook, I read, and I will absolutely share my dessert.",
+      "jobTitle": "Chef",
+      "fieldOfStudy": "Hospitality",
+      "interests": ["cooking", "food", "books", "movies_and_tv"],
+      "genres": ["jazz"],
+      "vibe": "slow_burn",
+      "friday": "cooking_at_home",
+      "era": "ready_for_something_real",
+      "image": 14,
+      "prompts": [
+        [
+          "My signature dish",
+          "A very good biryani, still improving the recipe."
+        ],
+        [
+          "We will get along if",
+          "You enjoy slow dinners and honest conversation."
+        ],
+        ["Unpopular opinion", "Dessert menus deserve to be read first."]
+      ]
+    },
+    {
+      "username": "Reyansh",
+      "age": 26,
+      "bio": "Demo profile for Matchify testing. Live music, bad puns, and trying to keep my plants alive.",
+      "jobTitle": "Music producer",
+      "fieldOfStudy": "Audio engineering",
+      "interests": ["music", "concerts", "comedy", "nightlife"],
+      "genres": ["r_and_b"],
+      "vibe": "social_butterfly",
+      "friday": "live_music",
+      "era": "just_vibing",
+      "image": 15,
+      "prompts": [
+        [
+          "A song I never skip",
+          "Anything that makes the whole room sing along."
+        ],
+        [
+          "My most spontaneous plan",
+          "A concert ticket bought on the way there."
+        ],
+        ["Two truths and a lie", "I can DJ, bake, and parallel park perfectly."]
+      ]
+    },
+    {
+      "username": "Arjun",
+      "age": 30,
+      "bio": "Demo profile for Matchify testing. Early morning runs, thoughtful chats, and discovering new corners of the city.",
+      "jobTitle": "Doctor",
+      "fieldOfStudy": "Medicine",
+      "interests": ["fitness", "wellness", "coffee", "nature"],
+      "genres": ["classical"],
+      "vibe": "ambitious_energy",
+      "friday": "quiet_evening",
+      "era": "personal_growth",
+      "image": 16,
+      "prompts": [
+        ["After a long week", "A run, a shower, and a quiet dinner."],
+        ["I value", "Being consistent and showing up for people."],
+        ["Let's make time for", "A walk somewhere green and phone-free."]
+      ]
+    },
+    {
+      "username": "Rohan",
+      "age": 28,
+      "bio": "Demo profile for Matchify testing. Amateur photographer collecting sunsets and restaurant recommendations.",
+      "jobTitle": "Photographer",
+      "fieldOfStudy": "Visual Arts",
+      "interests": ["photography", "art", "travel", "beach_days"],
+      "genres": ["bollywood"],
+      "vibe": "sunshine",
+      "friday": "rooftop",
+      "era": "exploring_myself",
+      "image": 17,
+      "prompts": [
+        [
+          "My camera roll is mostly",
+          "Sunsets, street food, and my friends laughing."
+        ],
+        ["Best travel memory", "Getting lost and finding a better view."],
+        ["I hope you", "Have a place you are excited to show me."]
+      ]
+    },
+    {
+      "username": "Aditya",
+      "age": 24,
+      "bio": "Demo profile for Matchify testing. Startup by day, board games and movie marathons by night.",
+      "jobTitle": "Founder",
+      "fieldOfStudy": "Business",
+      "interests": [
+        "entrepreneurship",
+        "board_games",
+        "gaming",
+        "movies_and_tv"
+      ],
+      "genres": ["hip_hop"],
+      "vibe": "chaotic_good",
+      "friday": "gaming",
+      "era": "career_mode",
+      "image": 18,
+      "prompts": [
+        ["I will never say no to", "One more round of a good board game."],
+        ["A niche thing I love", "Explaining how a movie could have ended."],
+        ["Together we could", "Try a new hobby and be beginners at it."]
+      ]
+    },
+    {
+      "username": "Ishaan",
+      "age": 31,
+      "bio": "Demo profile for Matchify testing. Dog person, weekend cyclist, and enthusiastic home cook.",
+      "jobTitle": "Architect",
+      "fieldOfStudy": "Architecture",
+      "interests": ["dogs", "cycling", "cooking", "design"],
+      "genres": ["rock"],
+      "vibe": "somewhere_between",
+      "friday": "dinner_with_friends",
+      "era": "peaceful_era",
+      "image": 19,
+      "prompts": [
+        ["My ideal Sunday", "A ride, a big breakfast, and a very sleepy dog."],
+        ["I show I care by", "Remembering the little things you tell me."],
+        ["Let's debate", "Which city has the best breakfast."]
+      ]
+    },
+    {
+      "username": "Dev",
+      "age": 27,
+      "bio": "Demo profile for Matchify testing. Curious about people, new food, and how things work.",
+      "jobTitle": "Research analyst",
+      "fieldOfStudy": "Economics",
+      "interests": ["museums", "food", "podcasts", "culture"],
+      "genres": ["lo_fi"],
+      "vibe": "depends_who_im_with",
+      "friday": "movie_and_food",
+      "era": "new_chapter",
+      "image": 20,
+      "prompts": [
+        [
+          "I can talk for hours about",
+          "A great documentary or a surprising historical fact."
+        ],
+        ["My ideal low-key date", "A museum followed by snacks."],
+        ["I appreciate", "Direct communication and a warm sense of humor."]
+      ]
+    },
+    {
+      "username": "Karthik",
+      "age": 26,
+      "bio": "Demo profile for Matchify testing. Big on football, family dinners, and making plans that actually happen.",
+      "jobTitle": "Sports journalist",
+      "fieldOfStudy": "Communications",
+      "interests": ["sports", "family_time", "travel", "food"],
+      "genres": ["punjabi"],
+      "vibe": "golden_retriever",
+      "friday": "outdoors",
+      "era": "healing_and_growing",
+      "image": 21,
+      "prompts": [
+        ["A hill I will die on", "The best conversations happen over dinner."],
+        [
+          "My friends describe me as",
+          "Dependable, competitive, and always hungry."
+        ],
+        ["Let's make a plan to", "Explore a new neighborhood this weekend."]
+      ]
+    }
+  ],
+  "girls": [
+    {
+      "username": "Maya",
+      "age": 25,
+      "bio": "Demo profile for Matchify testing. Sunset walks, good coffee, and finding little reasons to celebrate.",
+      "jobTitle": "UX researcher",
+      "fieldOfStudy": "Psychology",
+      "interests": ["coffee", "travel", "books", "photography"],
+      "genres": ["indie"],
+      "vibe": "sunshine",
+      "friday": "cafe_hopping",
+      "era": "ready_for_something_real",
+      "image": 22,
+      "prompts": [
+        ["A perfect first date", "A cozy cafe and a walk with no rush."],
+        [
+          "I get excited about",
+          "A book recommendation that turns into a long chat."
+        ],
+        ["Green flags I look for", "Thoughtfulness, humor, and follow-through."]
+      ]
+    },
+    {
+      "username": "Kiara",
+      "age": 26,
+      "bio": "Demo profile for Matchify testing. Dance classes, spontaneous plans, and always ordering something to share.",
+      "jobTitle": "Marketing manager",
+      "fieldOfStudy": "Marketing",
+      "interests": ["dancing", "food", "music", "nightlife"],
+      "genres": ["pop"],
+      "vibe": "social_butterfly",
+      "friday": "club",
+      "era": "just_vibing",
+      "image": 23,
+      "prompts": [
+        ["My ideal Friday", "Dinner that turns into dancing."],
+        ["We will get along if", "You can laugh at yourself and try new food."],
+        [
+          "The best way to ask me out",
+          "Pick a place and a time. I love a plan."
+        ]
+      ]
+    },
+    {
+      "username": "Ananya",
+      "age": 27,
+      "bio": "Demo profile for Matchify testing. An artist at heart who will happily detour for a bookstore.",
+      "jobTitle": "Illustrator",
+      "fieldOfStudy": "Fine Arts",
+      "interests": ["art", "books", "museums", "coffee"],
+      "genres": ["jazz"],
+      "vibe": "black_cat",
+      "friday": "rooftop",
+      "era": "creative_era",
+      "image": 24,
+      "prompts": [
+        [
+          "A little thing that makes my day",
+          "A new sketchbook and an iced coffee."
+        ],
+        [
+          "Let's spend a day",
+          "At a gallery, then finding the best noodles nearby."
+        ],
+        ["I am looking for", "Something kind, steady, and fun."]
+      ]
+    },
+    {
+      "username": "Meera",
+      "age": 24,
+      "bio": "Demo profile for Matchify testing. Weekend trails, live gigs, and collecting stories from new places.",
+      "jobTitle": "Environmental scientist",
+      "fieldOfStudy": "Environmental Science",
+      "interests": ["hiking", "nature", "concerts", "travel"],
+      "genres": ["rock"],
+      "vibe": "golden_retriever",
+      "friday": "live_music",
+      "era": "travel_era",
+      "image": 25,
+      "prompts": [
+        ["My happy place", "A trail with a view and snacks in my backpack."],
+        ["I will always stop for", "A dog, a good view, or street-side chai."],
+        ["Teach me", "Your favorite song to hear live."]
+      ]
+    },
+    {
+      "username": "Sana",
+      "age": 28,
+      "bio": "Demo profile for Matchify testing. Food lover, amateur cook, and loyal friend to every dog I meet.",
+      "jobTitle": "Dentist",
+      "fieldOfStudy": "Dentistry",
+      "interests": ["cooking", "dogs", "food", "family_time"],
+      "genres": ["r_and_b"],
+      "vibe": "chill_and_balanced",
+      "friday": "cooking_at_home",
+      "era": "peaceful_era",
+      "image": 26,
+      "prompts": [
+        ["My comfort meal", "Anything homemade and shared with friends."],
+        ["A green flag", "Being kind when no one is watching."],
+        ["We should try", "A recipe neither of us has made before."]
+      ]
+    },
+    {
+      "username": "Ira",
+      "age": 29,
+      "bio": "Demo profile for Matchify testing. I like thoughtful conversations and leaving room for a little adventure.",
+      "jobTitle": "Journalist",
+      "fieldOfStudy": "Media Studies",
+      "interests": ["podcasts", "culture", "travel", "movies_and_tv"],
+      "genres": ["bollywood"],
+      "vibe": "slow_burn",
+      "friday": "movie_and_food",
+      "era": "personal_growth",
+      "image": 27,
+      "prompts": [
+        [
+          "I could talk all night about",
+          "People, cities, and the stories we tell."
+        ],
+        ["My ideal evening", "A film, something spicy, and good company."],
+        ["I appreciate", "Curiosity and a little patience."]
+      ]
+    },
+    {
+      "username": "Tara",
+      "age": 23,
+      "bio": "Demo profile for Matchify testing. Fitness class regular, playlist maker, and enthusiastic beach person.",
+      "jobTitle": "Fitness coach",
+      "fieldOfStudy": "Sports Science",
+      "interests": ["fitness", "beach_days", "music", "wellness"],
+      "genres": ["edm"],
+      "vibe": "ambitious_energy",
+      "friday": "spontaneous_adventure",
+      "era": "rebuilding",
+      "image": 28,
+      "prompts": [
+        ["My reset button", "A workout, a shower, and a fresh playlist."],
+        ["A date I would love", "Something active followed by a huge meal."],
+        ["I am happiest when", "Everyone around me feels included."]
+      ]
+    },
+    {
+      "username": "Nisha",
+      "age": 30,
+      "bio": "Demo profile for Matchify testing. Building a career I love and making sure life stays bigger than work.",
+      "jobTitle": "Product manager",
+      "fieldOfStudy": "Computer Science",
+      "interests": ["technology", "travel", "cooking", "planning"],
+      "genres": ["hip_hop"],
+      "vibe": "somewhere_between",
+      "friday": "dinner_with_friends",
+      "era": "career_mode",
+      "image": 29,
+      "prompts": [
+        ["I value", "Clear communication and a sense of humor."],
+        ["A recent small win", "Finally taking the trip I kept postponing."],
+        [
+          "My friends come to me for",
+          "A practical plan and a very honest opinion."
+        ]
+      ]
+    },
+    {
+      "username": "Pooja",
+      "age": 26,
+      "bio": "Demo profile for Matchify testing. Photographer, plant parent, and always up for a new dessert place.",
+      "jobTitle": "Content creator",
+      "fieldOfStudy": "Visual Communication",
+      "interests": ["photography", "gardening", "food", "art"],
+      "genres": ["r_and_b"],
+      "vibe": "depends_who_im_with",
+      "friday": "quiet_evening",
+      "era": "exploring_myself",
+      "image": 30,
+      "prompts": [
+        [
+          "My camera roll is mostly",
+          "Plants, food, and my friends being themselves."
+        ],
+        ["Let's make time for", "A slow afternoon and a very good dessert."],
+        ["The quality I admire most", "Being comfortable with who you are."]
+      ]
+    },
+    {
+      "username": "Zoya",
+      "age": 27,
+      "bio": "Demo profile for Matchify testing. Loves a clever joke, a long drive, and getting out of the city.",
+      "jobTitle": "Lawyer",
+      "fieldOfStudy": "Law",
+      "interests": ["cars", "comedy", "travel", "books"],
+      "genres": ["afrobeats"],
+      "vibe": "chaotic_good",
+      "friday": "long_drive",
+      "era": "new_chapter",
+      "image": 31,
+      "prompts": [
+        [
+          "A small hill I will defend",
+          "Road trips need a carefully curated playlist."
+        ],
+        ["I laugh hardest at", "Very bad puns delivered with confidence."],
+        ["Let's go", "Somewhere new, with a snack stop on the way."]
+      ]
+    }
+  ]
+}

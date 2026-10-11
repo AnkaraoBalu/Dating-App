@@ -1,0 +1,3 @@
+ALTER TABLE "Conversation"
+ADD COLUMN "userOneUnreadCount" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN "userTwoUnreadCount" INTEGER NOT NULL DEFAULT 0;

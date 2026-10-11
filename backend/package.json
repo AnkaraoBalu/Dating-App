@@ -1,0 +1,51 @@
+{
+  "name": "matchify-backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Matchify API built with NestJS and TypeScript",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "backend:dev": "nest start --watch",
+    "backend:build": "nest build",
+    "backend:start": "node dist/main.js",
+    "backend:typecheck": "tsc --noEmit -p tsconfig.json",
+    "backend:test": "npm run backend:build && node --test test/*.test.cjs",
+    "backend:db:generate": "prisma generate",
+    "backend:db:migrate": "prisma migrate dev",
+    "backend:db:deploy": "prisma migrate deploy",
+    "backend:db:seed:demo": "node prisma/demo-auth/seed-demo-users.cjs",
+    "backend:format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\""
+  },
+  "dependencies": {
+    "@clerk/backend": "^3.23.0",
+    "@nestjs/common": "^11.0.11",
+    "@nestjs/config": "^4.0.2",
+    "@nestjs/core": "^11.0.11",
+    "@nestjs/platform-express": "^11.0.11",
+    "@nestjs/platform-socket.io": "^11.2.7",
+    "@nestjs/websockets": "^11.2.7",
+    "@prisma/adapter-pg": "^7.10.0",
+    "@prisma/client": "^7.10.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.1",
+    "cloudinary": "^2.11.0",
+    "helmet": "^8.1.0",
+    "multer": "^2.4.0",
+    "pg": "^8.23.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "socket.io": "^4.8.4",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^11.0.5",
+    "@types/express": "^5.0.0",
+    "@types/multer": "^2.3.0",
+    "@types/node": "^22.13.10",
+    "prettier": "^3.5.3",
+    "prisma": "^7.10.0",
+    "typescript": "^5.8.2"
+  }
+}
