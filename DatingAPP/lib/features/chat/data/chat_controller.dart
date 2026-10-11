@@ -30,6 +30,8 @@ class ChatController extends ChangeNotifier {
   final ChatSocketService socket;
   final List<ChatMessage> messages = [];
   final Map<String, Timer> _sendTimeouts = {};
+  final StreamController<String> _sendErrors =
+      StreamController<String>.broadcast();
   StreamSubscription<Map<String, dynamic>>? _messageSubscription;
   StreamSubscription<Map<String, dynamic>>? _errorSubscription;
   StreamSubscription<Map<String, dynamic>>? _sentSubscription;
@@ -55,6 +57,16 @@ class ChatController extends ChangeNotifier {
 
   void _notify() {
     if (!_disposed) notifyListeners();
+  }
+
+  /// Why a message failed to send (for example the send rate limit), so the
+  /// screen can explain it next to the "Tap to retry" state.
+  Stream<String> get sendErrors => _sendErrors.stream;
+
+  void _reportSendError(Object reason) {
+    error = '$reason'.replaceFirst('Exception: ', '');
+    if (!_sendErrors.isClosed) _sendErrors.add(error!);
+    _notify();
   }
 
   Future<void> open(String peerUserId, {String? existingConversationId}) {
@@ -360,6 +372,7 @@ class ChatController extends ChangeNotifier {
       timer.cancel();
     }
     _sendTimeouts.clear();
+    unawaited(_sendErrors.close());
     unawaited(socket.dispose());
     api.close();
     super.dispose();

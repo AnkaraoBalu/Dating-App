@@ -35,6 +35,7 @@ class _ConversationScreenState extends State<ConversationScreen>
   final _messagesScroll = ScrollController();
   final _imagePicker = ImagePicker();
   int _lastMessageCount = 0;
+  StreamSubscription<String>? _sendErrors;
   late final ChatController _controller = ChatController(
     api: widget.api,
     socket: ChatSocketService(widget.api),
@@ -45,6 +46,9 @@ class _ConversationScreenState extends State<ConversationScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _controller.addListener(_updated);
+    _sendErrors = _controller.sendErrors.listen((reason) {
+      if (mounted) _notice(reason);
+    });
     _messagesScroll.addListener(_loadOlderWhenNearTop);
     unawaited(
       _controller.open(
@@ -84,6 +88,7 @@ class _ConversationScreenState extends State<ConversationScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _controller.removeListener(_updated);
+    unawaited(_sendErrors?.cancel());
     _messagesScroll.removeListener(_loadOlderWhenNearTop);
     _messagesScroll.dispose();
     _controller.dispose();

@@ -17,6 +17,7 @@ import { MessageMediaService } from "./message-media.service";
 import { ConversationsService } from "./conversations.service";
 import { MessagesService } from "./messages.service";
 import { MessagesGateway } from "./messages.gateway";
+import { SendRateLimiter } from "../rate-limit/send-rate-limiter.service";
 
 @Controller("messages")
 @UseGuards(ClerkAuthGuard)
@@ -26,6 +27,7 @@ export class MessagesController {
     private readonly conversations: ConversationsService,
     private readonly media: MessageMediaService,
     private readonly gateway: MessagesGateway,
+    private readonly limiter: SendRateLimiter,
   ) {}
 
   @Post("conversations/:conversationId/images")
@@ -41,6 +43,9 @@ export class MessagesController {
     @Body("caption") caption: string | undefined,
     @UploadedFile() file?: Express.Multer.File,
   ) {
+    // Photos share the chat allowance with text sent over the socket.
+    const userId = await this.messages.userId(request.auth.userId);
+    this.limiter.consume(`chat:${userId}`);
     const message = await this.media.sendImage(
       request.auth.userId,
       conversationId,
@@ -53,6 +58,7 @@ export class MessagesController {
     await this.gateway
       .broadcastMessage(conversationId, message)
       .catch(() => undefined);
+    await this.gateway.notifyInboxChanged(conversationId);
     return { ...message, fromMe: true };
   }
 
@@ -83,6 +89,8 @@ export class MessagesController {
         if (receipt.lastReadMessageId && receipt.readAt) {
           this.gateway.broadcastRead(conversationId, receipt);
         }
+        // Unread badges on the reader's other screens and devices.
+        void this.gateway.notifyInboxChanged(conversationId);
         return receipt;
       });
   }

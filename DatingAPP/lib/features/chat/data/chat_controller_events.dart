@@ -63,8 +63,7 @@ extension _ChatControllerEvents on ChatController {
     if (clientMessageId == null) return;
     _sendTimeouts.remove(clientMessageId)?.cancel();
     _markFailed(clientMessageId);
-    error = json['message']?.toString() ?? 'Message could not be sent.';
-    _notify();
+    _reportSendError(json['message'] ?? 'Message could not be sent.');
   }
 
   void _confirmMessage(Map<String, dynamic> json) {

@@ -4,6 +4,7 @@ import {
   ConnectedSocket,
   MessageBody,
   OnGatewayConnection,
+  OnGatewayInit,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
@@ -13,11 +14,20 @@ import { Server, Socket } from "socket.io";
 import { PrismaService } from "../../database/prisma.service";
 import { MessagesService } from "./messages.service";
 import { verifyDemoSessionToken } from "../demo-auth/demo-session";
+import { RealtimeService } from "../realtime/realtime.service";
+import {
+  SendRateLimiter,
+  TooManyMessagesException,
+} from "../rate-limit/send-rate-limiter.service";
 
 type EventPayload = Record<string, unknown>;
 
 @WebSocketGateway({ maxHttpBufferSize: 64 * 1024 })
-export class MessagesGateway implements OnGatewayConnection<Socket> {
+// The app's single Socket.IO gateway: chat rooms per conversation, plus a
+// private room per user for inbox, like and match events (RealtimeService).
+export class MessagesGateway
+  implements OnGatewayInit<Server>, OnGatewayConnection<Socket>
+{
   private readonly logger = new Logger(MessagesGateway.name);
   @WebSocketServer()
   server!: Server;
@@ -26,7 +36,13 @@ export class MessagesGateway implements OnGatewayConnection<Socket> {
     private readonly config: ConfigService,
     private readonly prisma: PrismaService,
     private readonly messages: MessagesService,
+    private readonly realtime?: RealtimeService,
+    private readonly limiter?: SendRateLimiter,
   ) {}
+
+  afterInit(server: Server) {
+    this.realtime?.attach(server);
+  }
 
   async handleConnection(client: Socket) {
     try {
@@ -55,6 +71,7 @@ export class MessagesGateway implements OnGatewayConnection<Socket> {
       });
       if (!user) throw new Error("User account not found");
       client.data.userId = user.id;
+      await client.join(RealtimeService.userRoom(user.id));
       // Share the authenticated database user ID with this socket so the app
       // can classify its own messages without guessing from the peer ID.
       client.emit("chat:ready", { userId: user.id });
@@ -100,6 +117,7 @@ export class MessagesGateway implements OnGatewayConnection<Socket> {
     }
 
     try {
+      this.limiter?.consume(`chat:${userId}`);
       const message = await this.messages.sendMessage(
         userId,
         conversationId,
@@ -118,11 +136,18 @@ export class MessagesGateway implements OnGatewayConnection<Socket> {
       } catch (error) {
         this.logger.error("Saved message could not be broadcast", error);
       }
-    } catch {
-      client.emit("message:error", {
-        clientMessageId,
-        message: "Could not send message. Try again.",
-      });
+      await this.notifyInboxChanged(conversationId);
+    } catch (error) {
+      client.emit(
+        "message:error",
+        error instanceof TooManyMessagesException
+          ? {
+              clientMessageId,
+              message: error.message,
+              retryAfterSeconds: error.retryAfterSeconds,
+            }
+          : { clientMessageId, message: "Could not send message. Try again." },
+      );
     }
   }
 
@@ -140,6 +165,25 @@ export class MessagesGateway implements OnGatewayConnection<Socket> {
         ...message,
         fromMe: message.senderId === socket.data.userId,
       });
+    }
+  }
+
+  /**
+   * Tells both participants' other screens (chat list, unread badges) that a
+   * conversation changed, including users who don't have it open.
+   */
+  async notifyInboxChanged(conversationId: string) {
+    try {
+      const conversation = await this.prisma.conversation.findUnique({
+        where: { id: conversationId },
+        select: { userOneId: true, userTwoId: true },
+      });
+      if (!conversation || !this.realtime) return;
+      for (const userId of [conversation.userOneId, conversation.userTwoId]) {
+        this.realtime.notifyUser(userId, "inbox:changed", { conversationId });
+      }
+    } catch (error) {
+      this.logger.error("Inbox change could not be announced", error);
     }
   }
 

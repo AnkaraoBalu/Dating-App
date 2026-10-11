@@ -24,8 +24,7 @@ extension _ChatControllerSending on ChatController {
       _notify();
     } catch (exception) {
       _markFailed(clientId);
-      error = exception.toString();
-      _notify();
+      _reportSendError(exception);
     }
   }
 
@@ -47,8 +46,7 @@ extension _ChatControllerSending on ChatController {
       _startSendTimeout(clientId);
     } catch (exception) {
       _markFailed(clientId);
-      error = exception.toString();
-      _notify();
+      _reportSendError(exception);
     }
   }
 }

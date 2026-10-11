@@ -22,6 +22,43 @@ const server = http.createServer(async (req, res) => {
     }
     return res.end("{}");
   }
+  if (req.url.startsWith("/fixture/notify")) {
+    const params = new URL(req.url, "http://localhost").searchParams;
+    io.to(`user:${params.get("user")}`).emit(
+      params.get("event"),
+      JSON.parse(params.get("payload") || "{}"),
+    );
+    return res.end("{}");
+  }
+  if (req.url.startsWith("/fixture/vibe-message")) {
+    const params = new URL(req.url, "http://localhost").searchParams;
+    const roomId = params.get("room");
+    const senderId = params.get("sender");
+    const message = {
+      id: params.get("id"),
+      clientMessageId: params.get("client"),
+      senderId,
+      sender: senderId,
+      avatar: "",
+      text: params.get("text"),
+      time: new Date().toISOString(),
+      roomId,
+    };
+    for (const socket of await io.in(`vibe:${roomId}`).fetchSockets()) {
+      socket.emit("vibe:message", {
+        ...message,
+        isMe: socket.data.userId === senderId,
+      });
+    }
+    return res.end("{}");
+  }
+  if (req.url.startsWith("/fixture/kick")) {
+    const user = new URL(req.url, "http://localhost").searchParams.get("user");
+    for (const socket of io.sockets.sockets.values()) {
+      if (socket.data.userId === user) socket.disconnect(true);
+    }
+    return res.end("{}");
+  }
   if (req.url.startsWith("/fixture/receipt")) {
     const params = new URL(req.url, "http://localhost").searchParams;
     io.emit("conversation:read", {
@@ -61,16 +98,34 @@ io.on("connection", (socket) => {
   const userId = token.split(":")[0];
   authTokens.push(token);
   socket.data.userId = userId;
+  socket.join(`user:${userId}`);
   if (token.endsWith(":slow")) {
     setTimeout(() => socket.emit("chat:ready", { userId }), 800);
   } else {
     socket.emit("chat:ready", { userId });
   }
+  socket.on("vibe:join", ({ roomId }) => {
+    if (roomId === "forbidden") {
+      socket.emit("vibe:error", { roomId, message: "Not a member." });
+      return;
+    }
+    socket.join(`vibe:${roomId}`);
+    socket.emit("vibe:joined", { roomId });
+  });
+  socket.on("vibe:leave", ({ roomId }) => socket.leave(`vibe:${roomId}`));
   socket.on("conversation:join", ({ conversationId }) => {
     socket.join(conversationId);
     socket.emit("conversation:joined", { conversationId });
   });
   socket.on("message:send", (payload) => {
+    if (payload.text === "__rate_limited__") {
+      socket.emit("message:error", {
+        clientMessageId: payload.clientMessageId,
+        message: "You're sending messages too fast. Try again in 3 seconds.",
+        retryAfterSeconds: 3,
+      });
+      return;
+    }
     let message = messages.find(
       (m) =>
         m.senderId === userId && m.clientMessageId === payload.clientMessageId,

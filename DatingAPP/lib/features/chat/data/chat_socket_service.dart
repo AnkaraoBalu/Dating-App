@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:socket_io_client/socket_io_client.dart' as socket_io;
 
+import '../../../core/realtime/socket_zone.dart';
 import 'chat_api.dart';
 
 class ChatSocketService {
@@ -58,110 +59,117 @@ class ChatSocketService {
       _socket?.dispose();
       _ready = false;
       currentUserId = null;
-      final socket = socket_io.io(socketOrigin, {
-        'transports': ['websocket'],
-        'autoConnect': false,
-        // The default manager cache is keyed by origin, not account. Each chat
-        // must own its connection so a previous account's auth cannot survive.
-        'forceNew': true,
-        'multiplex': false,
-      });
-      _socket = socket;
-      socket.auth = (Function callback) async {
-        try {
-          final freshToken = await api.getSessionToken().timeout(
-            const Duration(seconds: 10),
-          );
-          if (!_disposed && identical(_socket, socket)) {
-            callback({'token': freshToken});
+      late final socket_io.Socket socket;
+      runSocketZone(() {
+        socket = socket_io.io(socketOrigin, {
+          'transports': ['websocket'],
+          'autoConnect': false,
+          // The default manager cache is keyed by origin, not account. Each chat
+          // must own its connection so a previous account's auth cannot survive.
+          'forceNew': true,
+          'multiplex': false,
+        });
+        _socket = socket;
+        socket.auth = (Function callback) async {
+          try {
+            final freshToken = await api.getSessionToken().timeout(
+              const Duration(seconds: 10),
+            );
+            if (!_disposed && identical(_socket, socket)) {
+              callback({'token': freshToken});
+            }
+          } catch (error) {
+            if (!completer.isCompleted) completer.completeError(error);
+            socket.disconnect();
           }
-        } catch (error) {
-          if (!completer.isCompleted) completer.completeError(error);
-          socket.disconnect();
-        }
-      };
-      socket.on('chat:ready', (data) {
-        if (_disposed || !identical(_socket, socket)) return;
-        currentUserId = data is Map ? data['userId']?.toString() : null;
-        _ready = true;
-        _connectionStates.add(true);
-        _rejoinAfterReconnect = _connectedBefore;
-        _connectedBefore = true;
-        final conversationId = _activeConversationId;
-        if (conversationId != null) {
-          socket.emit('conversation:join', {'conversationId': conversationId});
-        } else if (_rejoinAfterReconnect) {
+        };
+        socket.on('chat:ready', (data) {
+          if (_disposed || !identical(_socket, socket)) return;
+          currentUserId = data is Map ? data['userId']?.toString() : null;
+          _ready = true;
+          _connectionStates.add(true);
+          _rejoinAfterReconnect = _connectedBefore;
+          _connectedBefore = true;
+          final conversationId = _activeConversationId;
+          if (conversationId != null) {
+            socket.emit('conversation:join', {
+              'conversationId': conversationId,
+            });
+          } else if (_rejoinAfterReconnect) {
+            _reconnections.add(null);
+            _rejoinAfterReconnect = false;
+          }
+          if (!completer.isCompleted) completer.complete();
+          _connectionCompleter = null;
+        });
+        socket.on('conversation:joined', (data) {
+          if (data is! Map || data['conversationId'] != _activeConversationId) {
+            return;
+          }
+          final joinCompleter = _joinCompleter;
+          if (joinCompleter != null && !joinCompleter.isCompleted) {
+            joinCompleter.complete();
+          }
+          _joinCompleter = null;
+          // Refresh history after every join, including the first one, to cover
+          // messages sent between the initial HTTP request and joining the room.
           _reconnections.add(null);
           _rejoinAfterReconnect = false;
-        }
-        if (!completer.isCompleted) completer.complete();
-        _connectionCompleter = null;
-      });
-      socket.on('conversation:joined', (data) {
-        if (data is! Map || data['conversationId'] != _activeConversationId) {
-          return;
-        }
-        final joinCompleter = _joinCompleter;
-        if (joinCompleter != null && !joinCompleter.isCompleted) {
-          joinCompleter.complete();
-        }
-        _joinCompleter = null;
-        // Refresh history after every join, including the first one, to cover
-        // messages sent between the initial HTTP request and joining the room.
-        _reconnections.add(null);
-        _rejoinAfterReconnect = false;
-      });
-      socket.on('chat:error', (data) {
-        final joinCompleter = _joinCompleter;
-        if (joinCompleter != null && !joinCompleter.isCompleted) {
-          joinCompleter.completeError(
-            StateError(data is Map ? '${data['message']}' : 'Chat error.'),
-          );
+        });
+        socket.on('chat:error', (data) {
+          final joinCompleter = _joinCompleter;
+          if (joinCompleter != null && !joinCompleter.isCompleted) {
+            joinCompleter.completeError(
+              StateError(data is Map ? '${data['message']}' : 'Chat error.'),
+            );
+            _joinCompleter = null;
+          }
+        });
+        socket.onConnectError((error) {
+          if (!_disposed) _connectionStates.add(false);
+          if (!completer.isCompleted) {
+            completer.completeError(
+              StateError('Chat connection failed: $error'),
+            );
+          }
+          _connectionCompleter = null;
+        });
+        socket.onDisconnect((_) {
+          _ready = false;
+          if (!_disposed) _connectionStates.add(false);
+          if (!completer.isCompleted) {
+            completer.completeError(
+              StateError('Chat disconnected before authentication.'),
+            );
+          }
+          final joining = _joinCompleter;
+          if (joining != null && !joining.isCompleted) {
+            joining.completeError(StateError('Chat disconnected.'));
+          }
           _joinCompleter = null;
-        }
+        });
+        socket.on('message:new', (data) {
+          if (data is Map) {
+            _newMessages.add(Map<String, dynamic>.from(data));
+          }
+        });
+        socket.on('message:error', (data) {
+          if (data is Map) {
+            _messageErrors.add(Map<String, dynamic>.from(data));
+          }
+        });
+        socket.on('message:sent', (data) {
+          if (data is Map) {
+            _sentMessages.add(Map<String, dynamic>.from(data));
+          }
+        });
+        socket.on('conversation:read', (data) {
+          if (data is Map) {
+            _readReceipts.add(Map<String, dynamic>.from(data));
+          }
+        });
+        socket.connect();
       });
-      socket.onConnectError((error) {
-        if (!_disposed) _connectionStates.add(false);
-        if (!completer.isCompleted) {
-          completer.completeError(StateError('Chat connection failed: $error'));
-        }
-        _connectionCompleter = null;
-      });
-      socket.onDisconnect((_) {
-        _ready = false;
-        if (!_disposed) _connectionStates.add(false);
-        if (!completer.isCompleted) {
-          completer.completeError(
-            StateError('Chat disconnected before authentication.'),
-          );
-        }
-        final joining = _joinCompleter;
-        if (joining != null && !joining.isCompleted) {
-          joining.completeError(StateError('Chat disconnected.'));
-        }
-        _joinCompleter = null;
-      });
-      socket.on('message:new', (data) {
-        if (data is Map) {
-          _newMessages.add(Map<String, dynamic>.from(data));
-        }
-      });
-      socket.on('message:error', (data) {
-        if (data is Map) {
-          _messageErrors.add(Map<String, dynamic>.from(data));
-        }
-      });
-      socket.on('message:sent', (data) {
-        if (data is Map) {
-          _sentMessages.add(Map<String, dynamic>.from(data));
-        }
-      });
-      socket.on('conversation:read', (data) {
-        if (data is Map) {
-          _readReceipts.add(Map<String, dynamic>.from(data));
-        }
-      });
-      socket.connect();
       await completer.future.timeout(const Duration(seconds: 20));
     } catch (error) {
       _ready = false;

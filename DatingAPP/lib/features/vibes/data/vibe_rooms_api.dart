@@ -76,7 +76,7 @@ class VibeRoomsApi {
     }
     return decoded
         .whereType<Map<String, dynamic>>()
-        .map(_messageFromJson)
+        .map(messageFromJson)
         .toList();
   }
 
@@ -98,7 +98,7 @@ class VibeRoomsApi {
     if (decoded is! Map<String, dynamic>) {
       throw const FormatException('Invalid sent vibe room message.');
     }
-    return _messageFromJson(decoded);
+    return messageFromJson(decoded);
   }
 
   Future<VibeRoom> createRoom({
@@ -231,16 +231,15 @@ class VibeRoomsApi {
     );
   }
 
-  VibeRoomMessage _messageFromJson(Map<String, dynamic> json) =>
-      VibeRoomMessage(
-        id: json['id'] as String?,
-        clientMessageId: json['clientMessageId'] as String?,
-        sender: json['sender'] as String? ?? 'Member',
-        avatar: json['avatar'] as String? ?? '',
-        text: json['text'] as String? ?? '',
-        time: _displayTime(json['time'] as String?),
-        isMe: json['isMe'] as bool? ?? false,
-      );
+  VibeRoomMessage messageFromJson(Map<String, dynamic> json) => VibeRoomMessage(
+    id: json['id'] as String?,
+    clientMessageId: json['clientMessageId'] as String?,
+    sender: json['sender'] as String? ?? 'Member',
+    avatar: json['avatar'] as String? ?? '',
+    text: json['text'] as String? ?? '',
+    time: _displayTime(json['time'] as String?),
+    isMe: json['isMe'] as bool? ?? false,
+  );
 
   String _displayTime(String? value) {
     if (value == null || value.isEmpty) return '';

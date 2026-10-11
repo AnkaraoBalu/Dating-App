@@ -26,6 +26,12 @@ you add, rename, move or re-link one.
   need reuse across screens; do not import a `part` file directly.
 - `core/widgets/`: components shared across features, such as
   `AdaptiveFlowColumn`. Keep feature-specific UI inside the feature.
+- `core/realtime/`: `AuthedSocketConnection` (an authenticated Socket.IO
+  connection that refreshes its token and reconnects) and the session-wide
+  `RealtimeService` for inbox, like and match events. Feature live services,
+  such as `vibes/data/vibe_room_live_service.dart`, build on
+  `AuthedSocketConnection`. Chat screens still use their own conversation
+  socket in `chat/data/`.
 
 The onboarding, setup, and Home screens own their state; their layout and flow
 actions are separated using Dart library parts, matching the existing setup
@@ -57,6 +63,11 @@ scaling to hide overflow.
   ordering.
 - `ProfileConnectionsService` handles persisted likes, reciprocal matches, and
   connection statistics.
+- `RealtimeService` (global `realtime` module) sends live events to a member's
+  private Socket.IO room; inject it instead of the messages gateway when a
+  feature needs to notify users.
+- `SendRateLimiter` (global `rate-limit` module) limits how fast a member can
+  send messages; call `consume("<channel>:<userId>")` before saving a message.
 - Register services through Nest dependency injection in their feature module.
 - Database changes require a committed Prisma migration and regenerated client.
 

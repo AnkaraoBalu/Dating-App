@@ -8,6 +8,8 @@ import { ProfileSetupModule } from "./modules/profile-setup/profile-setup.module
 import { MessagesModule } from "./modules/messages/messages.module";
 import { VibeRoomsModule } from "./modules/vibe-rooms/vibe-rooms.module";
 import { AuthModule } from "./modules/demo-auth/auth.module";
+import { RealtimeModule } from "./modules/realtime/realtime.module";
+import { RateLimitModule } from "./modules/rate-limit/rate-limit.module";
 
 @Module({
   imports: [
@@ -15,6 +17,8 @@ import { AuthModule } from "./modules/demo-auth/auth.module";
     HealthModule,
     AuthModule,
     DatabaseModule,
+    RealtimeModule,
+    RateLimitModule,
     UsersModule,
     ProfileSetupModule,
     MessagesModule,

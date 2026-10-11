@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/theme.dart';
+import '../../data/vibe_room_live_service.dart';
 import '../../data/vibe_rooms_api.dart';
 import '../../data/vibe_room_store.dart';
 import '../../models/vibe_room.dart';
@@ -32,6 +33,9 @@ class _LiveVibeRoomScreenState extends State<LiveVibeRoomScreen> {
   final _messageController = TextEditingController();
   late final List<VibeRoomMessage> _messages = [...widget.room.messages];
   Timer? _messagePoll;
+  VibeRoomLiveService? _live;
+  StreamSubscription<VibeRoomMessage>? _liveMessages;
+  StreamSubscription<void>? _liveJoined;
   bool _refreshingMessages = false;
   bool _leaving = false;
   String? _retryMessageId;
@@ -40,18 +44,28 @@ class _LiveVibeRoomScreenState extends State<LiveVibeRoomScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.api != null) {
+    final api = widget.api;
+    if (api != null) {
       unawaited(_refreshMessages(showInitialError: true));
-      _messagePoll = Timer.periodic(
-        const Duration(seconds: 5),
-        (_) => unawaited(_refreshMessages()),
-      );
+      final live = VibeRoomLiveService(api: api, roomId: widget.room.id);
+      _live = live;
+      _liveMessages = live.messages.listen(_receiveLiveMessage);
+      // Every (re)join reloads history to cover anything sent while offline.
+      _liveJoined = live.joined.listen((_) => unawaited(_refreshMessages()));
+      live.connect();
+      // Fallback while the live connection is down.
+      _messagePoll = Timer.periodic(const Duration(seconds: 5), (_) {
+        if (_live?.live.value != true) unawaited(_refreshMessages());
+      });
     }
   }
 
   @override
   void dispose() {
     _messagePoll?.cancel();
+    unawaited(_liveMessages?.cancel());
+    unawaited(_liveJoined?.cancel());
+    unawaited(_live?.dispose());
     _messageController.dispose();
     super.dispose();
   }
@@ -90,6 +104,25 @@ class _LiveVibeRoomScreenState extends State<LiveVibeRoomScreen> {
       builder: (_) => IcebreakerGamesScreen(room: widget.room, api: widget.api),
     ),
   );
+
+  /// Adds a pushed message, replacing this member's pending copy if the push
+  /// arrives before the send response, and ignoring messages already shown.
+  void _receiveLiveMessage(VibeRoomMessage message) {
+    if (!mounted) return;
+    if (message.id != null && _messages.any((m) => m.id == message.id)) return;
+    setState(() {
+      final pending = message.clientMessageId == null
+          ? -1
+          : _messages.indexWhere(
+              (m) => m.clientMessageId == message.clientMessageId,
+            );
+      if (pending == -1) {
+        _messages.add(message);
+      } else {
+        _messages[pending] = message;
+      }
+    });
+  }
 
   Future<void> _refreshMessages({bool showInitialError = false}) async {
     final api = widget.api;
@@ -176,9 +209,14 @@ class _LiveVibeRoomScreenState extends State<LiveVibeRoomScreen> {
         );
       });
       _messageController.text = text;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Message was not sent: $error')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Message was not sent. '
+            '${'$error'.replaceFirst('Exception: ', '')}',
+          ),
+        ),
+      );
     }
   }
 

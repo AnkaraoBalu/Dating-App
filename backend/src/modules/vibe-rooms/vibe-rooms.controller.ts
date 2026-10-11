@@ -20,6 +20,8 @@ import {
 } from "./dto/vibe-room.dto";
 import { VibeRoomMessagesService } from "./vibe-room-messages.service";
 import { VibeRoomsService } from "./vibe-rooms.service";
+import { VibeRoomsGateway } from "./vibe-rooms.gateway";
+import { SendRateLimiter } from "../rate-limit/send-rate-limiter.service";
 
 @Controller("vibe-rooms")
 @UseGuards(ClerkAuthGuard)
@@ -27,6 +29,8 @@ export class VibeRoomsController {
   constructor(
     private readonly rooms: VibeRoomsService,
     private readonly messages: VibeRoomMessagesService,
+    private readonly gateway: VibeRoomsGateway,
+    private readonly limiter: SendRateLimiter,
   ) {}
 
   @Get()
@@ -54,8 +58,11 @@ export class VibeRoomsController {
   }
 
   @Delete(":roomId/membership")
-  leave(@Req() request: ClerkRequest, @Param("roomId") roomId: string) {
-    return this.rooms.leave(request.auth.userId, roomId);
+  async leave(@Req() request: ClerkRequest, @Param("roomId") roomId: string) {
+    const room = await this.rooms.leave(request.auth.userId, roomId);
+    const userId = await this.messages.databaseUserId(request.auth.userId);
+    this.gateway.removeMember(roomId, userId);
+    return room;
   }
 
   @Get(":roomId/messages")
@@ -68,11 +75,16 @@ export class VibeRoomsController {
   }
 
   @Post(":roomId/messages")
-  sendMessage(
+  async sendMessage(
     @Req() request: ClerkRequest,
     @Param("roomId") roomId: string,
     @Body() body: CreateVibeRoomMessageDto,
   ) {
-    return this.messages.send(request.auth.userId, roomId, body);
+    const userId = await this.messages.databaseUserId(request.auth.userId);
+    this.limiter.consume(`vibe:${userId}`);
+    const message = await this.messages.send(request.auth.userId, roomId, body);
+    // Saved first; live delivery to the room is best effort.
+    await this.gateway.broadcastMessage(roomId, message);
+    return message;
   }
 }

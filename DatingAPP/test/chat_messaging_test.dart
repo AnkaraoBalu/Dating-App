@@ -55,6 +55,37 @@ void main() {
   );
 
   test(
+    'a rate-limited send fails with the reason and can be retried',
+    () async {
+      final baseUrl = await startFixture();
+      final api = ChatApi(
+        baseUrl: baseUrl,
+        getSessionToken: () async => 'arav:1',
+      );
+      final controller = ChatController(
+        api: api,
+        socket: ChatSocketService(api),
+      );
+      addTearDown(controller.dispose);
+      final reasons = <String>[];
+      controller.sendErrors.listen(reasons.add);
+      await controller.open('zoya', existingConversationId: 'conversation');
+      await until(() => controller.socket.ready);
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+
+      expect(controller.sendText('__rate_limited__'), isTrue);
+      await until(() => reasons.isNotEmpty);
+      expect(
+        reasons.single,
+        "You're sending messages too fast. Try again in 3 seconds.",
+      );
+      final failed = controller.messages.single;
+      expect(failed.failed, isTrue);
+      expect(failed.pending, isFalse);
+    },
+  );
+
+  test(
     'messages sent during initial history loading are recovered after joining',
     () async {
       final baseUrl = await startFixture();

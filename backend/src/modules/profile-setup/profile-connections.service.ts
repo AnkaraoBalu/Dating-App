@@ -1,12 +1,14 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../../database/prisma.service";
 import { ProfileRepository } from "./profile.repository";
+import { RealtimeService } from "../realtime/realtime.service";
 
 @Injectable()
 export class ProfileConnectionsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly profiles: ProfileRepository,
+    private readonly realtime?: RealtimeService,
   ) {}
   async like(clerkUserId: string, targetUserId: string) {
     const [fromUser, targetUser] = await Promise.all([
@@ -42,6 +44,20 @@ export class ProfileConnectionsService {
       },
       select: { id: true },
     });
+    if (reciprocal) {
+      // Each side is told who they matched with; the liker's app already shows
+      // the celebration from this response.
+      this.realtime?.notifyUser(targetUser.id, "match:new", {
+        userId: fromUser.id,
+        initiatedByYou: false,
+      });
+      this.realtime?.notifyUser(fromUser.id, "match:new", {
+        userId: targetUser.id,
+        initiatedByYou: true,
+      });
+    } else {
+      this.realtime?.notifyUser(targetUser.id, "like:new");
+    }
     return { liked: true, isMatch: reciprocal != null };
   }
 

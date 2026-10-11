@@ -95,7 +95,7 @@ export class VibeRoomMessagesService {
     return this.serialize(message, userId);
   }
 
-  private async databaseUserId(clerkUserId: string) {
+  async databaseUserId(clerkUserId: string) {
     const user = await this.prisma.user.findUnique({
       where: { clerkUserId },
       select: { id: true },
@@ -106,7 +106,8 @@ export class VibeRoomMessagesService {
     return user.id;
   }
 
-  private async assertMember(userId: string, roomId: string) {
+  /** `userId` is the database user ID (as on authenticated sockets). */
+  async assertMember(userId: string, roomId: string) {
     const membership = await this.prisma.vibeRoomMember.findUnique({
       where: { roomId_userId: { roomId, userId } },
       select: { leftAt: true },
