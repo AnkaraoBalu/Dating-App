@@ -1,4 +1,4 @@
-package com.example.dating_app
+package com.matchify.app
 
 import android.content.Intent
 import android.os.Handler
