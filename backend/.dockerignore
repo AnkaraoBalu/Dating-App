@@ -1,0 +1,14 @@
+node_modules
+dist
+coverage
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+.git
+package-lock.json
+# Keep secrets such as the Firebase service account key out of the image;
+# on Render, add it as a Secret File instead.
+*.pem
+*firebase*.json

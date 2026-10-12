@@ -107,6 +107,86 @@ export class MessagesService {
     });
   }
 
+  async setSavedInChat(
+    clerkUserId: string,
+    conversationId: string,
+    messageId: string,
+    saved: unknown,
+  ) {
+    if (typeof saved !== "boolean")
+      throw new BadRequestException("Invalid saved state.");
+    const userId = await this.userId(clerkUserId);
+    await this.assertParticipant(userId, conversationId);
+    return this.prisma.$transaction(async (tx) => {
+      // Shares the expiry lock: a save either protects content or reports that
+      // it has already expired, never revives an expired message.
+      await tx.$queryRaw`SELECT "id" FROM "Conversation" WHERE "id" = ${conversationId} FOR UPDATE`;
+      const message = await tx.message.findFirst({
+        where: { id: messageId, conversationId, type: { not: "expired" } },
+      });
+      if (!message)
+        throw new NotFoundException("Message is no longer available.");
+      await tx.message.update({
+        where: { id: messageId },
+        data: { savedInChat: saved },
+      });
+      return { conversationId, messageId, savedInChat: saved };
+    });
+  }
+
+  /** Only the recipient can expire messages they have already read. */
+  async expireViewedMessages(
+    clerkUserId: string,
+    conversationId: string,
+    messageIds: unknown,
+  ) {
+    if (
+      !Array.isArray(messageIds) ||
+      messageIds.length > 1000 ||
+      messageIds.some((id) => typeof id !== "string" || !id || id.length > 100)
+    ) {
+      throw new BadRequestException("Invalid message IDs.");
+    }
+    const userId = await this.userId(clerkUserId);
+    await this.assertParticipant(userId, conversationId);
+    return this.prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT "id" FROM "Conversation" WHERE "id" = ${conversationId} FOR UPDATE`;
+      const where = {
+        conversationId,
+        id: { in: messageIds as string[] },
+        senderId: { not: userId },
+        readAt: { not: null },
+        savedInChat: false,
+        type: { not: "expired" },
+      };
+      const rows = await tx.message.findMany({
+        where,
+        select: { id: true, mediaPublicId: true },
+      });
+      // Keep only a content-free tombstone so delayed send retries cannot
+      // recreate a deleted message and pagination cursors remain valid.
+      await tx.message.updateMany({
+        where,
+        data: {
+          type: "expired",
+          text: "",
+          mediaUrl: null,
+          mediaMimeType: null,
+          mediaSize: null,
+          latitude: null,
+          longitude: null,
+        },
+      });
+      return {
+        conversationId,
+        messageIds: rows.map((row) => row.id),
+        mediaPublicIds: rows.flatMap((row) =>
+          row.mediaPublicId ? [row.mediaPublicId] : [],
+        ),
+      };
+    });
+  }
+
   async assertParticipant(userId: string, conversationId: string) {
     const conversation = await this.prisma.conversation.findUnique({
       where: { id: conversationId },
@@ -144,6 +224,7 @@ export class MessagesService {
     const messages = await this.prisma.message.findMany({
       where: {
         conversationId,
+        type: { not: "expired" },
         ...(cursorMessage
           ? {
               OR: [
@@ -163,6 +244,12 @@ export class MessagesService {
     const page = messages.slice(0, limit).reverse();
     return {
       viewerId: userId,
+      expiredIds: (
+        await this.prisma.message.findMany({
+          where: { conversationId, type: "expired" },
+          select: { id: true },
+        })
+      ).map((message) => message.id),
       items: page.map((message) => ({
         id: message.id,
         clientMessageId: message.clientMessageId,
@@ -176,6 +263,7 @@ export class MessagesService {
         mediaSize: message.mediaSize,
         latitude: message.latitude,
         longitude: message.longitude,
+        savedInChat: message.savedInChat ?? false,
         readAt: message.readAt,
         createdAt: message.createdAt,
         fromMe: message.senderId === userId,
@@ -303,6 +391,7 @@ export class MessagesService {
     mediaSize: number | null;
     latitude: number | null;
     longitude: number | null;
+    savedInChat?: boolean;
     readAt: Date | null;
     createdAt: Date;
   }) {
@@ -319,6 +408,7 @@ export class MessagesService {
       mediaSize: message.mediaSize,
       latitude: message.latitude,
       longitude: message.longitude,
+      savedInChat: message.savedInChat ?? false,
       readAt: message.readAt,
       createdAt: message.createdAt,
     };

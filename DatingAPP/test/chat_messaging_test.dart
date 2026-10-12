@@ -32,7 +32,120 @@ Future<String> startFixture() async {
   return 'http://127.0.0.1:$port';
 }
 
+class _LocalChatSocket extends ChatSocketService {
+  _LocalChatSocket(super.api);
+  @override
+  Future<void> connect() async {}
+  @override
+  Future<void> joinConversation(String conversationId) async {}
+}
+
 void main() {
+  test(
+    'save and unsave persist through model merges and send explicit states',
+    () async {
+      final states = <bool>[];
+      final api = ChatApi(
+        baseUrl: 'https://api.test',
+        getSessionToken: () async => 'session',
+        client: MockClient((request) async {
+          if (request.url.path.endsWith('/saved')) {
+            final saved =
+                (jsonDecode(request.body) as Map)['savedInChat'] as bool;
+            states.add(saved);
+            return http.Response(
+              jsonEncode({
+                'conversationId': 'c1',
+                'messageId': 'm1',
+                'savedInChat': saved,
+              }),
+              200,
+            );
+          }
+          if (request.url.path.endsWith('/leave'))
+            return http.Response('{"messageIds":[]}', 200);
+          if (request.url.path.endsWith('/read'))
+            return http.Response('{}', 200);
+          return http.Response(
+            '{"viewerId":"me","items":[{"id":"m1","senderId":"peer","text":"Hi","savedInChat":false}],"hasMore":false}',
+            200,
+          );
+        }),
+      );
+      final controller = ChatController(
+        api: api,
+        socket: _LocalChatSocket(api),
+      );
+      await controller.open('peer', existingConversationId: 'c1');
+      await controller.toggleSaved(controller.messages.single);
+      expect(controller.messages.single.savedInChat, true);
+      expect(
+        controller.messages.single.copyWith(pending: false).savedInChat,
+        true,
+      );
+      await controller.toggleSaved(controller.messages.single);
+      expect(controller.messages.single.savedInChat, false);
+      expect(states, [true, false]);
+      controller.dispose();
+    },
+  );
+
+  test(
+    'leaving removes received messages and preserves own unread messages',
+    () async {
+      final api = ChatApi(
+        baseUrl: 'https://api.test',
+        getSessionToken: () async => 'session',
+        client: MockClient((request) async {
+          if (request.url.path.endsWith('/leave')) {
+            expect(jsonDecode(request.body), {
+              'messageIds': ['incoming'],
+            });
+            return http.Response('{"messageIds":["incoming"]}', 200);
+          }
+          if (request.url.path.endsWith('/read'))
+            return http.Response('{}', 200);
+          return http.Response(
+            jsonEncode({
+              'viewerId': 'me',
+              'items': [
+                {'id': 'incoming', 'senderId': 'peer', 'text': 'Hi'},
+                {'id': 'outgoing', 'senderId': 'me', 'text': 'Hello'},
+              ],
+              'hasMore': false,
+            }),
+            200,
+          );
+        }),
+      );
+      final controller = ChatController(
+        api: api,
+        socket: _LocalChatSocket(api),
+      );
+      await controller.open('peer', existingConversationId: 'c1');
+      await controller.leaveConversation();
+      expect(controller.messages.map((message) => message.id), ['outgoing']);
+      controller.dispose();
+    },
+  );
+
+  test('leaving sends viewed IDs with session authentication', () async {
+    final api = ChatApi(
+      baseUrl: 'https://api.test',
+      getSessionToken: () async => 'session',
+      client: MockClient((request) async {
+        expect(request.url.path, '/messages/conversations/c1/leave');
+        expect(request.headers['Authorization'], 'Bearer session');
+        expect(jsonDecode(request.body), {
+          'messageIds': ['m1'],
+        });
+        return http.Response('{"messageIds":["m1"]}', 200);
+      }),
+    );
+    addTearDown(api.close);
+    expect(await api.expireViewedMessages('c1', ['m1']), ['m1']);
+  });
+
   test(
     'slow socket authentication does not hold the history loading spinner',
     () async {

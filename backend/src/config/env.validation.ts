@@ -13,6 +13,9 @@ const environmentSchema = z.object({
   CLOUDINARY_CLOUD_NAME: z.string().min(1),
   CLOUDINARY_API_KEY: z.string().min(1),
   CLOUDINARY_API_SECRET: z.string().min(1),
+  // Firebase service account key file (JSON) for push notifications. Optional:
+  // without it the API runs normally and simply sends no pushes.
+  FIREBASE_SERVICE_ACCOUNT_PATH: z.string().min(1).optional(),
 });
 
 export function validateEnvironment(environment: Record<string, unknown>) {

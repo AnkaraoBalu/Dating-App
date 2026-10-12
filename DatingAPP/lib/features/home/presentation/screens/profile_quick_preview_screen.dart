@@ -171,19 +171,6 @@ class ProfileQuickPreviewScreen extends StatelessWidget {
                                 api: api,
                               ),
                             ),
-                            const SizedBox(width: 10),
-                            IconButton.filledTonal(
-                              onPressed: () =>
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Profile menu opened'),
-                                    ),
-                                  ),
-                              icon: const Icon(Icons.more_horiz),
-                              style: IconButton.styleFrom(
-                                minimumSize: const Size(48, 46),
-                              ),
-                            ),
                           ],
                         ),
                       ],

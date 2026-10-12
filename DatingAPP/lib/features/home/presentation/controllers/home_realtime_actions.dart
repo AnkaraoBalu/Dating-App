@@ -20,47 +20,20 @@ extension _HomeRealtimeActions on _HomeScreenState {
         unawaited(_matchController?.loadIncomingLikes());
       case RealtimeEventType.inboxChanged:
       case RealtimeEventType.resynced:
-        _scheduleMatchReload();
       case RealtimeEventType.matched:
-        _scheduleMatchReload(
-          announceMatchWith: event.initiatedByYou ? null : event.userId,
-        );
+        // The match itself is announced by its push notification.
+        _scheduleMatchReload();
     }
   }
 
   /// Several events often arrive together (a message updates both sides);
   /// collapse them into one reload.
-  void _scheduleMatchReload({String? announceMatchWith}) {
-    if (announceMatchWith != null) {
-      _pendingMatchAnnouncement = announceMatchWith;
-    }
+  void _scheduleMatchReload() {
     _realtimeReload?.cancel();
-    _realtimeReload = Timer(const Duration(milliseconds: 300), () async {
-      await _matchController?.load();
-      final userId = _pendingMatchAnnouncement;
-      _pendingMatchAnnouncement = null;
-      if (userId != null && mounted) _announceMatch(userId);
-    });
-  }
-
-  void _announceMatch(String userId) {
-    final match = _matchController?.matches
-        .where((match) => match.person.id == userId)
-        .firstOrNull;
-    if (match == null) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text("It's a match with ${match.person.name}!"),
-          action: SnackBarAction(
-            label: 'View',
-            onPressed: () {
-              if (mounted) _refresh(() => _selectedNav = 2);
-            },
-          ),
-        ),
-      );
+    _realtimeReload = Timer(
+      const Duration(milliseconds: 300),
+      () => unawaited(_matchController?.load()),
+    );
   }
 
   void _stopRealtime() {

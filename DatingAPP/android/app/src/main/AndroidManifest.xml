@@ -3,6 +3,8 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Android 13+: asked at runtime before showing push notifications. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <application android:label="Matchify" android:name="${applicationName}" android:icon="@mipmap/ic_launcher">
         <activity android:name=".MainActivity" android:exported="true" android:launchMode="singleTop" android:taskAffinity="" android:theme="@style/LaunchTheme" android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode" android:hardwareAccelerated="true" android:windowSoftInputMode="adjustResize">
             <meta-data android:name="io.flutter.embedding.android.NormalTheme" android:resource="@style/NormalTheme" />
@@ -19,6 +21,9 @@
             </intent-filter>
         </activity>
         <meta-data android:name="flutterEmbedding" android:value="2" />
+        <!-- Background pushes use the high-importance channel the app creates
+             (SystemNotifications), so they appear as banners at the top. -->
+        <meta-data android:name="com.google.firebase.messaging.default_notification_channel_id" android:value="matchify_alerts" />
     </application>
     <queries>
         <intent>

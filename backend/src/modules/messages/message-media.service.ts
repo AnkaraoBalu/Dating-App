@@ -27,6 +27,24 @@ export class MessageMediaService {
     });
   }
 
+  async deleteExpiredMedia(publicIds: string[]) {
+    for (const publicId of publicIds) {
+      try {
+        const result = await cloudinary.uploader.destroy(publicId, {
+          invalidate: true,
+        });
+        if (result.result === "ok" || result.result === "not found") {
+          await this.prisma.message.updateMany({
+            where: { type: "expired", mediaPublicId: publicId },
+            data: { mediaPublicId: null },
+          });
+        }
+      } catch (error) {
+        this.logger.warn(`Expired chat media cleanup failed: ${String(error)}`);
+      }
+    }
+  }
+
   async sendImage(
     clerkUserId: string,
     conversationId: string,

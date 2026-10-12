@@ -110,8 +110,6 @@ extension _HomePersonActions on _HomeScreenState {
             currentUserName: widget.displayName,
           );
           if (mounted) await _matchController?.load();
-        } else {
-          _notice('You liked ${person.name} 💗');
         }
       }
     } catch (error) {

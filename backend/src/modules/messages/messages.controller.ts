@@ -58,7 +58,7 @@ export class MessagesController {
     await this.gateway
       .broadcastMessage(conversationId, message)
       .catch(() => undefined);
-    await this.gateway.notifyInboxChanged(conversationId);
+    await this.gateway.announceNewMessage(conversationId, message);
     return { ...message, fromMe: true };
   }
 
@@ -93,6 +93,45 @@ export class MessagesController {
         void this.gateway.notifyInboxChanged(conversationId);
         return receipt;
       });
+  }
+
+  @Post("conversations/:conversationId/messages/:messageId/saved")
+  async saveMessage(
+    @Req() request: ClerkRequest,
+    @Param("conversationId") conversationId: string,
+    @Param("messageId") messageId: string,
+    @Body("savedInChat") saved: unknown,
+  ) {
+    const result = await this.messages.setSavedInChat(
+      request.auth.userId,
+      conversationId,
+      messageId,
+      saved,
+    );
+    this.gateway.broadcastSaved(conversationId, result);
+    return result;
+  }
+
+  @Post("conversations/:conversationId/leave")
+  async leaveConversation(
+    @Req() request: ClerkRequest,
+    @Param("conversationId") conversationId: string,
+    @Body("messageIds") messageIds: unknown,
+  ) {
+    const expired = await this.messages.expireViewedMessages(
+      request.auth.userId,
+      conversationId,
+      messageIds,
+    );
+    if (expired.messageIds.length) {
+      this.gateway.broadcastExpired(conversationId, {
+        conversationId,
+        messageIds: expired.messageIds,
+      });
+      void this.gateway.notifyInboxChanged(conversationId);
+    }
+    await this.media.deleteExpiredMedia(expired.mediaPublicIds);
+    return { conversationId, messageIds: expired.messageIds };
   }
 
   @Get("conversations/:conversationId/messages")

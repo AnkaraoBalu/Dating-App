@@ -8,6 +8,7 @@ import '../widgets/profile_widgets.dart';
 import 'profile_edit_screen.dart';
 import 'profile_privacy_screen.dart';
 import 'profile_verification_screen.dart';
+import '../../../notifications/data/push_notifications_service.dart';
 
 class ProfileSettingsScreen extends StatelessWidget {
   const ProfileSettingsScreen({super.key, required this.controller});
@@ -243,11 +244,18 @@ class ProfileSettingsScreen extends StatelessWidget {
               );
               if (logout != true || !context.mounted) return;
               final success = await profileAction(context, () async {
-                if (DemoSession.current.value != null) {
+                final isDemo = DemoSession.current.value != null;
+                final clerk = isDemo
+                    ? null
+                    : ClerkAuth.of(context, listen: false);
+                // Stop this phone getting the account's pushes while the
+                // session token is still valid.
+                await PushNotificationsService.current?.unregister();
+                if (isDemo) {
                   DemoSession.clear();
                   return;
                 }
-                await ClerkAuth.of(context, listen: false).signOut();
+                await clerk!.signOut();
               });
               if (success && context.mounted) {
                 Navigator.popUntil(context, (route) => route.isFirst);

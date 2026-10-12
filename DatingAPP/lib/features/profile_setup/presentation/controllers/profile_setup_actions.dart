@@ -185,9 +185,6 @@ extension _ProfileSetupActions on _ProfileSetupScreenState {
   Future<void> _finishProfile() async => _runSave(() async {
     await widget.api!.complete();
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Profile saved successfully.')),
-    );
     Navigator.of(context).pop();
   });
 

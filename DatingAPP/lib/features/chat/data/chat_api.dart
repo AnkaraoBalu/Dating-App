@@ -50,6 +50,40 @@ class ChatApi {
     return body;
   }
 
+  Future<Map<String, dynamic>> setSavedInChat(
+    String conversationId,
+    String messageId,
+    bool saved,
+  ) async {
+    final response = await _client
+        .post(
+          Uri.parse(
+            '$baseUrl/messages/conversations/${Uri.encodeComponent(conversationId)}/messages/${Uri.encodeComponent(messageId)}/saved',
+          ),
+          headers: await _headers(),
+          body: jsonEncode({'savedInChat': saved}),
+        )
+        .timeout(const Duration(seconds: 20));
+    return _decode(response) as Map<String, dynamic>;
+  }
+
+  Future<List<String>> expireViewedMessages(
+    String conversationId,
+    List<String> messageIds,
+  ) async {
+    final response = await _client
+        .post(
+          Uri.parse(
+            '$baseUrl/messages/conversations/${Uri.encodeComponent(conversationId)}/leave',
+          ),
+          headers: await _headers(),
+          body: jsonEncode({'messageIds': messageIds}),
+        )
+        .timeout(const Duration(seconds: 20));
+    final body = _decode(response) as Map<String, dynamic>;
+    return (body['messageIds'] as List).cast<String>();
+  }
+
   Future<ChatMessagePage> loadMessages({
     required String conversationId,
     required String peerUserId,
@@ -85,6 +119,9 @@ class ChatApi {
         .toList();
     return ChatMessagePage(
       items: items,
+      expiredIds: body is Map<String, dynamic>
+          ? (body['expiredIds'] as List? ?? []).cast<String>()
+          : const [],
       hasMore: body is Map<String, dynamic> && body['hasMore'] == true,
       nextCursor: body is Map<String, dynamic>
           ? body['nextCursor']?.toString()

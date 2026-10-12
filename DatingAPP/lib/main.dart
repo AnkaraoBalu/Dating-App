@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -6,6 +7,13 @@ import 'app/dating_app.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env');
+  try {
+    // Reads android/app/google-services.json or ios/Runner/GoogleService-Info.plist.
+    await Firebase.initializeApp();
+  } catch (error) {
+    // Without Firebase config the app still runs, just without push notifications.
+    debugPrint('[Push] Firebase is not configured: $error');
+  }
   final publishableKey =
       (dotenv.env['CLERK_PUBLISHABLE_KEY']?.trim().isNotEmpty == true
               ? dotenv.env['CLERK_PUBLISHABLE_KEY']!

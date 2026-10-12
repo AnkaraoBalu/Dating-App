@@ -241,15 +241,6 @@ class _VibeRoomsHomeScreenState extends State<VibeRoomsHomeScreen> {
         ),
       ),
       IconButton(
-        tooltip: 'Room notifications',
-        onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('You’re all caught up on room updates.'),
-          ),
-        ),
-        icon: const Icon(Icons.notifications_none_rounded),
-      ),
-      IconButton(
         tooltip: 'Likes received',
         onPressed: widget.onOpenLikes,
         icon: const Icon(

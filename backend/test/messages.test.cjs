@@ -18,6 +18,7 @@ const row = {
   conversationId: "conversation",
   text: "Reply",
   type: "text",
+  savedInChat: false,
   createdAt: new Date(),
 };
 
@@ -29,7 +30,9 @@ function prismaBase() {
       }),
     },
     conversation: { findUnique: async () => conversation },
-    message: { findMany: async () => [row] },
+    message: {
+      findMany: async ({ where }) => (where.type === "expired" ? [] : [row]),
+    },
   };
 }
 
@@ -140,4 +143,109 @@ test("read resets lock the conversation and preserve unread messages after the s
   assert.deepEqual(updates, { userTwoUnreadCount: 1 });
   assert.equal(receipt.readerId, "zoya");
   assert.equal(receipt.unreadCount, 1);
+});
+
+test("leave expires only requested read incoming messages and scrubs content", async () => {
+  const prisma = prismaBase();
+  const records = [
+    { ...row, id: "read", readAt: new Date(), mediaPublicId: "photo" },
+    { ...row, id: "unread", readAt: null },
+    { ...row, id: "own", senderId: "zoya", readAt: new Date() },
+    { ...row, id: "other-chat", conversationId: "other", readAt: new Date() },
+    { ...row, id: "not-loaded", readAt: new Date() },
+    { ...row, id: "saved", readAt: new Date(), savedInChat: true },
+  ];
+  const matches = (w, r) =>
+    r.conversationId === w.conversationId &&
+    w.id.in.includes(r.id) &&
+    r.senderId !== w.senderId.not &&
+    r.readAt != null &&
+    r.type !== w.type.not &&
+    r.savedInChat === w.savedInChat;
+  prisma.$transaction = async (work) =>
+    work({
+      $queryRaw: async () => [],
+      message: {
+        findMany: async ({ where }) => records.filter((r) => matches(where, r)),
+        updateMany: async ({ where, data }) => {
+          records
+            .filter((r) => matches(where, r))
+            .forEach((r) => Object.assign(r, data));
+        },
+      },
+    });
+  const service = new MessagesService(prisma);
+  const ids = ["read", "unread", "own", "other-chat", "saved"];
+  const result = await service.expireViewedMessages(
+    "clerk-zoya",
+    "conversation",
+    ids,
+  );
+  assert.deepEqual(result.messageIds, ["read"]);
+  assert.deepEqual(result.mediaPublicIds, ["photo"]);
+  assert.equal(records[0].text, "");
+  assert.equal(records[0].type, "expired");
+  assert.equal(records[0].mediaUrl, null);
+  assert.equal(records[1].text, "Reply");
+  assert.equal(records[5].text, "Reply");
+  assert.deepEqual(
+    (await service.expireViewedMessages("clerk-zoya", "conversation", ids))
+      .messageIds,
+    [],
+  );
+  await assert.rejects(
+    service.expireViewedMessages("clerk-outsider", "conversation", ids),
+    /not part/,
+  );
+  await assert.rejects(
+    service.expireViewedMessages("clerk-zoya", "conversation", [123]),
+    /Invalid message/,
+  );
+});
+
+test("either participant saves and unsaves under the expiry lock; expired content cannot be saved", async () => {
+  const prisma = prismaBase();
+  let saved = false;
+  let expired = false;
+  const calls = [];
+  prisma.$transaction = async (work) =>
+    work({
+      $queryRaw: async () => calls.push("lock"),
+      message: {
+        findFirst: async ({ where }) => {
+          calls.push("lookup");
+          assert.equal(where.conversationId, "conversation");
+          assert.equal(where.type.not, "expired");
+          return expired ? null : row;
+        },
+        update: async ({ data }) => {
+          saved = data.savedInChat;
+        },
+      },
+    });
+  const service = new MessagesService(prisma);
+  const result = await service.setSavedInChat(
+    "clerk-zoya",
+    "conversation",
+    row.id,
+    true,
+  );
+  assert.equal(saved, true);
+  assert.equal(result.savedInChat, true);
+  await service.setSavedInChat("clerk-arav", "conversation", row.id, false);
+  assert.equal(saved, false);
+  assert.deepEqual(calls, ["lock", "lookup", "lock", "lookup"]);
+  expired = true;
+  await assert.rejects(
+    service.setSavedInChat("clerk-zoya", "conversation", row.id, true),
+    /no longer available/,
+  );
+  await assert.rejects(
+    service.setSavedInChat("clerk-outsider", "conversation", row.id, true),
+    /not part/,
+  );
+  await assert.rejects(
+    service.setSavedInChat("clerk-zoya", "conversation", row.id, "true"),
+    /Invalid saved/,
+  );
 });

@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../../database/prisma.service";
 import { ProfileRepository } from "./profile.repository";
 import { RealtimeService } from "../realtime/realtime.service";
+import { NotificationsService } from "../notifications/notifications.service";
 
 @Injectable()
 export class ProfileConnectionsService {
@@ -9,6 +10,7 @@ export class ProfileConnectionsService {
     private readonly prisma: PrismaService,
     private readonly profiles: ProfileRepository,
     private readonly realtime?: RealtimeService,
+    private readonly notifications?: NotificationsService,
   ) {}
   async like(clerkUserId: string, targetUserId: string) {
     const [fromUser, targetUser] = await Promise.all([
@@ -25,6 +27,15 @@ export class ProfileConnectionsService {
     if (!targetUser?.profile?.completedAt || fromUser.id === targetUser.id) {
       throw new NotFoundException("Profile not found.");
     }
+    const pair = {
+      fromUserId_toUserId: { fromUserId: fromUser.id, toUserId: targetUser.id },
+    };
+    // Pushes go out only for a new like, not when the same like is repeated.
+    const isNewLike =
+      (await this.prisma.profileLike.findUnique({
+        where: pair,
+        select: { id: true },
+      })) == null;
     await this.prisma.profileLike.upsert({
       where: {
         fromUserId_toUserId: {
@@ -55,8 +66,13 @@ export class ProfileConnectionsService {
         userId: targetUser.id,
         initiatedByYou: true,
       });
+      // The liker sees the celebration in the app; only the other member
+      // needs a push.
+      if (isNewLike)
+        void this.notifications?.newMatch(targetUser.id, fromUser.id);
     } else {
       this.realtime?.notifyUser(targetUser.id, "like:new");
+      if (isNewLike) void this.notifications?.newLike(targetUser.id);
     }
     return { liked: true, isMatch: reciprocal != null };
   }

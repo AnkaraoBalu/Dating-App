@@ -68,11 +68,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
   }
 
   Future<void> _saveSpot() async {
-    final room = await _joinRoom();
-    if (room == null || !mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('You saved a spot in ${room.title}.')),
-    );
+    await _joinRoom();
   }
 
   Future<void> _toggleSaved() async {

@@ -81,10 +81,6 @@ class _ProfileLikeButtonState extends State<ProfileLikeButton> {
           getSessionToken: api.getSessionToken,
         ),
       );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('You liked ${widget.person.name} 💗')),
-      );
     }
   }
 

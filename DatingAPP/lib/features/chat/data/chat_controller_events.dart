@@ -26,7 +26,8 @@ extension _ChatControllerEvents on ChatController {
     try {
       while (_readRequested && !_disposed && active && conversationId == id) {
         _readRequested = false;
-        await api.markConversationRead(id);
+        _readUpdate = api.markConversationRead(id);
+        await _readUpdate;
       }
     } catch (_) {
       // Reopening or reconnecting retries the read update.
@@ -105,6 +106,16 @@ extension _ChatControllerEvents on ChatController {
   }
 
   void _merge(ChatMessage incoming) {
+    if (incoming.type == 'expired' || _expiredIds.contains(incoming.id)) {
+      _expiredIds.add(incoming.id);
+      messages.removeWhere(
+        (message) =>
+            message.id == incoming.id ||
+            (incoming.fromMe &&
+                message.clientMessageId == incoming.clientMessageId),
+      );
+      return;
+    }
     final index = messages.indexWhere(
       (message) =>
           (incoming.id.isNotEmpty && message.id == incoming.id) ||

@@ -19,6 +19,7 @@ class ChatMessage {
       clientMessageId: json['clientMessageId']?.toString(),
       text: json['text']?.toString() ?? '',
       type: json['type']?.toString() ?? 'text',
+      savedInChat: json['savedInChat'] == true,
       mediaUrl: json['mediaUrl']?.toString(),
       mediaType: json['mediaMimeType']?.toString(),
       latitude: (json['latitude'] as num?)?.toDouble(),
@@ -43,6 +44,7 @@ class ChatMessage {
     this.latitude,
     this.longitude,
     this.clientMessageId,
+    this.savedInChat = false,
     this.pending = false,
     this.failed = false,
     this.readAt,
@@ -61,6 +63,7 @@ class ChatMessage {
   final double? latitude;
   final double? longitude;
   final String? clientMessageId;
+  final bool savedInChat;
   final bool pending;
   final bool failed;
   final DateTime? readAt;
@@ -76,6 +79,7 @@ class ChatMessage {
     String? clientMessageId,
     double? latitude,
     double? longitude,
+    bool? savedInChat,
     bool? pending,
     bool? failed,
     DateTime? readAt,
@@ -95,6 +99,7 @@ class ChatMessage {
     latitude: latitude ?? this.latitude,
     longitude: longitude ?? this.longitude,
     clientMessageId: clientMessageId ?? this.clientMessageId,
+    savedInChat: savedInChat ?? this.savedInChat,
     pending: pending ?? this.pending,
     failed: failed ?? this.failed,
     readAt: readAt ?? this.readAt,
@@ -105,11 +110,13 @@ class ChatMessagePage {
   const ChatMessagePage({
     required this.items,
     required this.hasMore,
+    this.expiredIds = const [],
     this.nextCursor,
   });
 
   final List<ChatMessage> items;
   final bool hasMore;
+  final List<String> expiredIds;
   final String? nextCursor;
 }
 

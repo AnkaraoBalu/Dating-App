@@ -161,8 +161,6 @@ class _VibeFeedScreenState extends State<VibeFeedScreen> {
           currentUserName: widget.currentUserName,
         );
         widget.onMatch?.call();
-      } else {
-        _notice('You liked ${person.name} 💗');
       }
     } catch (error) {
       if (!mounted) return;

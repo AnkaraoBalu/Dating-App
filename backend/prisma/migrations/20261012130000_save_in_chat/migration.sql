@@ -1,0 +1,1 @@
+ALTER TABLE "Message" ADD COLUMN "savedInChat" BOOLEAN NOT NULL DEFAULT false;

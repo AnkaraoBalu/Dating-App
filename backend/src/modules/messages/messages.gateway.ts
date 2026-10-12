@@ -15,6 +15,7 @@ import { PrismaService } from "../../database/prisma.service";
 import { MessagesService } from "./messages.service";
 import { verifyDemoSessionToken } from "../demo-auth/demo-session";
 import { RealtimeService } from "../realtime/realtime.service";
+import { NotificationsService } from "../notifications/notifications.service";
 import {
   SendRateLimiter,
   TooManyMessagesException,
@@ -38,6 +39,7 @@ export class MessagesGateway
     private readonly messages: MessagesService,
     private readonly realtime?: RealtimeService,
     private readonly limiter?: SendRateLimiter,
+    private readonly notifications?: NotificationsService,
   ) {}
 
   afterInit(server: Server) {
@@ -97,6 +99,19 @@ export class MessagesGateway
     }
   }
 
+  /**
+   * The app reports when its open chat goes to the background (`active:
+   * false`) and comes back, so pushes still reach a member who left a chat
+   * open on a locked phone.
+   */
+  @SubscribeMessage("conversation:presence")
+  presence(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: EventPayload,
+  ) {
+    client.data.away = payload?.active === false;
+  }
+
   @SubscribeMessage("message:send")
   async sendMessage(
     @ConnectedSocket() client: Socket,
@@ -136,7 +151,7 @@ export class MessagesGateway
       } catch (error) {
         this.logger.error("Saved message could not be broadcast", error);
       }
-      await this.notifyInboxChanged(conversationId);
+      await this.announceNewMessage(conversationId, message);
     } catch (error) {
       client.emit(
         "message:error",
@@ -172,6 +187,48 @@ export class MessagesGateway
    * Tells both participants' other screens (chat list, unread badges) that a
    * conversation changed, including users who don't have it open.
    */
+  /**
+   * After a message is saved: refresh both members' inboxes, and push it to
+   * the recipient unless they are looking at this conversation right now.
+   */
+  async announceNewMessage(
+    conversationId: string,
+    message: { senderId: string; type?: unknown; text?: unknown },
+  ) {
+    if (message.type === "expired") return;
+    await this.notifyInboxChanged(conversationId);
+    if (!this.notifications) return;
+    try {
+      const conversation = await this.prisma.conversation.findUnique({
+        where: { id: conversationId },
+        select: { userOneId: true, userTwoId: true },
+      });
+      if (!conversation) return;
+      const recipientId =
+        conversation.userOneId === message.senderId
+          ? conversation.userTwoId
+          : conversation.userOneId;
+      if (await this.isViewing(recipientId, conversationId)) return;
+      void this.notifications.newMessage(recipientId, {
+        senderId: message.senderId,
+        conversationId,
+        type: typeof message.type === "string" ? message.type : "text",
+        text: typeof message.text === "string" ? message.text : "",
+      });
+    } catch (error) {
+      this.logger.error("Message push could not be prepared", error);
+    }
+  }
+
+  private async isViewing(userId: string, conversationId: string) {
+    const sockets = await this.server
+      .in(this.room(conversationId))
+      .fetchSockets();
+    return sockets.some(
+      (socket) => socket.data.userId === userId && socket.data.away !== true,
+    );
+  }
+
   async notifyInboxChanged(conversationId: string) {
     try {
       const conversation = await this.prisma.conversation.findUnique({
@@ -185,6 +242,14 @@ export class MessagesGateway
     } catch (error) {
       this.logger.error("Inbox change could not be announced", error);
     }
+  }
+
+  broadcastSaved(conversationId: string, payload: unknown) {
+    this.server.to(this.room(conversationId)).emit("message:saved", payload);
+  }
+
+  broadcastExpired(conversationId: string, payload: unknown) {
+    this.server.to(this.room(conversationId)).emit("messages:expired", payload);
   }
 
   broadcastRead(conversationId: string, receipt: unknown) {

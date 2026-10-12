@@ -10,6 +10,7 @@ import { VibeRoomsModule } from "./modules/vibe-rooms/vibe-rooms.module";
 import { AuthModule } from "./modules/demo-auth/auth.module";
 import { RealtimeModule } from "./modules/realtime/realtime.module";
 import { RateLimitModule } from "./modules/rate-limit/rate-limit.module";
+import { NotificationsModule } from "./modules/notifications/notifications.module";
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { RateLimitModule } from "./modules/rate-limit/rate-limit.module";
     DatabaseModule,
     RealtimeModule,
     RateLimitModule,
+    NotificationsModule,
     UsersModule,
     ProfileSetupModule,
     MessagesModule,

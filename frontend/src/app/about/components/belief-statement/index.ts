@@ -1,0 +1,1 @@
+export { BeliefStatement } from "./BeliefStatement";

@@ -31,6 +31,11 @@ import '../../../vibes/presentation/screens/vibe_rooms_home_screen.dart';
 import '../../../vibes/data/vibe_rooms_api.dart';
 import '../widgets/home_person_card.dart';
 import '../../../../core/realtime/realtime_service.dart';
+import '../../../chat/presentation/screens/conversation_screen.dart';
+import '../../../notifications/data/notifications_api.dart';
+import '../../../notifications/data/push_notifications_service.dart';
+import '../../../notifications/models/push_notification.dart';
+import '../../../notifications/presentation/widgets/in_app_notification.dart';
 
 part '../controllers/home_discovery_actions.dart';
 part '../widgets/home_feed_layout.dart';
@@ -41,6 +46,7 @@ part '../widgets/home_bottom_navigation.dart';
 part '../controllers/home_person_actions.dart';
 part '../controllers/home_preferences_actions.dart';
 part '../controllers/home_realtime_actions.dart';
+part '../controllers/home_notification_actions.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -104,7 +110,10 @@ class _HomeScreenState extends State<HomeScreen> {
   RealtimeService? _realtime;
   StreamSubscription<RealtimeEvent>? _realtimeEvents;
   Timer? _realtimeReload;
-  String? _pendingMatchAnnouncement;
+  PushNotificationsService? _push;
+  StreamSubscription<PushNotification>? _pushOpened;
+  StreamSubscription<PushNotification>? _pushForeground;
+  final InAppNotification _inAppNotification = InAppNotification();
   final PageController _feedController = PageController();
 
   int get _unreadChatCount =>
@@ -183,6 +192,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _matchController?.addListener(_matchesUpdated);
     if (api != null) {
       _startRealtime(api);
+      _startPushNotifications(api);
       // Fallback while the live connection is down.
       _matchRefreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
         if (_realtime?.connected.value != true) {
@@ -208,6 +218,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _activityTimer?.cancel();
     _matchRefreshTimer?.cancel();
     _stopRealtime();
+    _stopPushNotifications();
     _feedController.dispose();
     super.dispose();
   }

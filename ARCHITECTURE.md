@@ -1,6 +1,7 @@
 # Project structure
 
-Flutter lives in `DatingAPP`; the NestJS API lives in `backend`. Organize each
+Flutter lives in `DatingAPP`; the NestJS API lives in `backend`; the public
+React + TypeScript website lives in `frontend`. Organize each
 feature by responsibility rather than putting the whole feature in one screen
 or service file.
 
@@ -26,6 +27,8 @@ you add, rename, move or re-link one.
   need reuse across screens; do not import a `part` file directly.
 - `core/widgets/`: components shared across features, such as
   `AdaptiveFlowColumn`. Keep feature-specific UI inside the feature.
+- `features/notifications/`: push notifications (Firebase Cloud Messaging),
+  started by `HomeScreen`.
 - `core/realtime/`: `AuthedSocketConnection` (an authenticated Socket.IO
   connection that refreshes its token and reconnects) and the session-wide
   `RealtimeService` for inbox, like and match events. Feature live services,
@@ -52,6 +55,23 @@ keyboard open, or with larger text, the flow can scroll instead of overflowing.
 Nested choice lists keep a bounded viewport. Do not disable accessibility text
 scaling to hide overflow.
 
+## Frontend website
+
+`frontend/` introduces the mobile app and explains its features. Its detailed
+folder conventions, route map, and integration boundaries are documented in
+[frontend/ARCHITECTURE.md](frontend/ARCHITECTURE.md).
+
+- `src/app/<feature>/`: page entry, page-local components, content, hooks, utils.
+- `src/components/`: shared navbar, footer, and container components.
+- `src/layouts/`: shared route shells; `src/router/`: route declarations.
+- `src/providers/`: theme/router setup; `src/styles/`: global styles and tokens.
+- Each component has separate `Component.tsx`, `Component.styles.ts`, `index.ts`.
+- API clients and API hooks are reserved for future public integrations.
+- Use Yarn from `frontend`: `yarn install`, `yarn ui:dev`, `yarn ui:build`.
+
+The website currently renders local presentation content. Keep backend secrets
+out of browser code. Generated dependencies and build output are ignored.
+
 ## Backend
 
 - Controllers handle HTTP routing, authentication, request DTOs, and delegation.
@@ -66,6 +86,8 @@ scaling to hide overflow.
 - `RealtimeService` (global `realtime` module) sends live events to a member's
   private Socket.IO room; inject it instead of the messages gateway when a
   feature needs to notify users.
+- `NotificationsService` (global `notifications` module) sends every push
+  notification; call it after saving whatever the notification is about.
 - `SendRateLimiter` (global `rate-limit` module) limits how fast a member can
   send messages; call `consume("<channel>:<userId>")` before saving a message.
 - Register services through Nest dependency injection in their feature module.

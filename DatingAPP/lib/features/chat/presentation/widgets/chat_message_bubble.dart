@@ -15,139 +15,161 @@ class ChatMessageBubble extends StatelessWidget {
     required this.message,
     required this.person,
     required this.onRetry,
+    this.onSave,
   });
 
   final ChatMessage message;
   final HomePerson person;
   final VoidCallback onRetry;
+  final VoidCallback? onSave;
 
   @override
   Widget build(BuildContext context) {
     final time = TimeOfDay.fromDateTime(message.sentAt).format(context);
     final picture = message.mediaUrl ?? message.mediaLocalPath;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 11),
-      child: Row(
-        mainAxisAlignment: message.fromMe
-            ? MainAxisAlignment.end
-            : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          if (!message.fromMe) ...[
-            chatPersonAvatar(person, radius: 17),
-            const SizedBox(width: 7),
-          ],
-          Flexible(
-            child: Column(
-              crossAxisAlignment: message.fromMe
-                  ? CrossAxisAlignment.end
-                  : CrossAxisAlignment.start,
-              children: [
-                Container(
-                  constraints: const BoxConstraints(maxWidth: 285),
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: message.fromMe
-                        ? AppColors.coral
-                        : AppColors.surfaceSecondary,
-                    borderRadius: BorderRadius.only(
-                      topLeft: const Radius.circular(16),
-                      topRight: const Radius.circular(16),
-                      bottomLeft: Radius.circular(message.fromMe ? 16 : 4),
-                      bottomRight: Radius.circular(message.fromMe ? 4 : 16),
+    return GestureDetector(
+      onLongPress: message.pending || message.failed ? null : onSave,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 11),
+        child: Row(
+          mainAxisAlignment: message.fromMe
+              ? MainAxisAlignment.end
+              : MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            if (!message.fromMe) ...[
+              chatPersonAvatar(person, radius: 17),
+              const SizedBox(width: 7),
+            ],
+            Flexible(
+              child: Column(
+                crossAxisAlignment: message.fromMe
+                    ? CrossAxisAlignment.end
+                    : CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    constraints: const BoxConstraints(maxWidth: 285),
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: message.fromMe
+                          ? AppColors.coral
+                          : AppColors.surfaceSecondary,
+                      borderRadius: BorderRadius.only(
+                        topLeft: const Radius.circular(16),
+                        topRight: const Radius.circular(16),
+                        bottomLeft: Radius.circular(message.fromMe ? 16 : 4),
+                        bottomRight: Radius.circular(message.fromMe ? 4 : 16),
+                      ),
                     ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (message.type == 'image' && picture != null)
-                        InkWell(
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute<void>(
-                              builder: (_) => ChatImageViewer(
-                                image: picture,
-                                localFile: message.mediaLocalPath != null,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (message.type == 'image' && picture != null)
+                          InkWell(
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute<void>(
+                                builder: (_) => ChatImageViewer(
+                                  image: picture,
+                                  localFile: message.mediaLocalPath != null,
+                                ),
+                              ),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: ChatMessageBubble.image(
+                                message,
+                                width: 235,
+                                height: 155,
                               ),
                             ),
                           ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: ChatMessageBubble.image(
-                              message,
-                              width: 235,
-                              height: 155,
+                        if (message.type == 'location')
+                          _locationBubble(context),
+                        if (message.text.isNotEmpty &&
+                            message.type != 'location')
+                          Text(
+                            message.text,
+                            style: TextStyle(
+                              color: message.fromMe
+                                  ? Colors.white
+                                  : AppColors.textPrimary,
+                              fontSize: 13,
+                              height: 1.4,
                             ),
                           ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        time,
+                        style: const TextStyle(
+                          color: AppColors.textTertiary,
+                          fontSize: 9,
                         ),
-                      if (message.type == 'location') _locationBubble(context),
-                      if (message.text.isNotEmpty && message.type != 'location')
-                        Text(
-                          message.text,
+                      ),
+                      if (message.savedInChat) ...[
+                        const SizedBox(width: 5),
+                        const Icon(
+                          Icons.bookmark,
+                          size: 12,
+                          color: AppColors.textSecondary,
+                        ),
+                        const Text(
+                          'Saved in Chat',
                           style: TextStyle(
-                            color: message.fromMe
-                                ? Colors.white
-                                : AppColors.textPrimary,
-                            fontSize: 13,
-                            height: 1.4,
+                            fontSize: 9,
+                            color: AppColors.textSecondary,
                           ),
                         ),
+                      ],
+                      if (message.fromMe && message.readAt != null) ...[
+                        const SizedBox(width: 5),
+                        const Text(
+                          'Seen',
+                          style: TextStyle(
+                            color: Color(0xFF9ED6FF),
+                            fontSize: 9,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
-                ),
-                const SizedBox(height: 3),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      time,
-                      style: const TextStyle(
+                  if (message.fromMe && message.pending)
+                    const Text(
+                      'Sending…',
+                      style: TextStyle(
                         color: AppColors.textTertiary,
                         fontSize: 9,
                       ),
                     ),
-                    if (message.fromMe && message.readAt != null) ...[
-                      const SizedBox(width: 5),
-                      const Text(
-                        'Seen',
+                  if (message.fromMe && message.failed)
+                    TextButton(
+                      onPressed: onRetry,
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: const Text(
+                        'Not sent · Tap to retry',
                         style: TextStyle(
-                          color: Color(0xFF9ED6FF),
+                          color: AppColors.coralPressed,
                           fontSize: 9,
-                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                    ],
-                  ],
-                ),
-                if (message.fromMe && message.pending)
-                  const Text(
-                    'Sending…',
-                    style: TextStyle(
-                      color: AppColors.textTertiary,
-                      fontSize: 9,
                     ),
-                  ),
-                if (message.fromMe && message.failed)
-                  TextButton(
-                    onPressed: onRetry,
-                    style: TextButton.styleFrom(
-                      padding: EdgeInsets.zero,
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    child: const Text(
-                      'Not sent · Tap to retry',
-                      style: TextStyle(
-                        color: AppColors.coralPressed,
-                        fontSize: 9,
-                      ),
-                    ),
-                  ),
-              ],
+                ],
+              ),
             ),
-          ),
-          if (message.fromMe) const SizedBox(width: 6),
-        ],
+            if (message.fromMe) const SizedBox(width: 6),
+          ],
+        ),
       ),
     );
   }

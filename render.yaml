@@ -1,0 +1,31 @@
+# Render Blueprint: deploys the API from backend/Dockerfile on every push to main.
+# In Render: New + → Blueprint → pick this repo. Fill in the secret values when prompted.
+services:
+  - type: web
+    name: matchify-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    branch: main
+    autoDeploy: true
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DB_URL
+        sync: false
+      - key: CLERK_SECRET_KEY
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: DEMO_AUTH_ENABLED
+        value: "false"
+      # Optional push notifications: upload the Firebase key as a Render
+      # Secret File named firebase-admin.json, then set this to
+      # /etc/secrets/firebase-admin.json. Leave empty to run without pushes.
+      - key: FIREBASE_SERVICE_ACCOUNT_PATH
+        sync: false

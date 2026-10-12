@@ -17,6 +17,10 @@ class ChatSocketService {
       StreamController<Map<String, dynamic>>.broadcast();
   final StreamController<Map<String, dynamic>> _readReceipts =
       StreamController<Map<String, dynamic>>.broadcast();
+  final StreamController<Map<String, dynamic>> _expiredMessages =
+      StreamController<Map<String, dynamic>>.broadcast();
+  final StreamController<Map<String, dynamic>> _savedMessages =
+      StreamController<Map<String, dynamic>>.broadcast();
   final StreamController<void> _reconnections =
       StreamController<void>.broadcast();
   final StreamController<bool> _connectionStates =
@@ -37,6 +41,8 @@ class ChatSocketService {
   Stream<Map<String, dynamic>> get messageErrors => _messageErrors.stream;
   Stream<Map<String, dynamic>> get sentMessages => _sentMessages.stream;
   Stream<Map<String, dynamic>> get readReceipts => _readReceipts.stream;
+  Stream<Map<String, dynamic>> get expiredMessages => _expiredMessages.stream;
+  Stream<Map<String, dynamic>> get savedMessages => _savedMessages.stream;
   Stream<void> get reconnections => _reconnections.stream;
   Stream<bool> get connectionStates => _connectionStates.stream;
 
@@ -163,6 +169,16 @@ class ChatSocketService {
             _sentMessages.add(Map<String, dynamic>.from(data));
           }
         });
+        socket.on('message:saved', (data) {
+          if (data is Map) {
+            _savedMessages.add(Map<String, dynamic>.from(data));
+          }
+        });
+        socket.on('messages:expired', (data) {
+          if (data is Map) {
+            _expiredMessages.add(Map<String, dynamic>.from(data));
+          }
+        });
         socket.on('conversation:read', (data) {
           if (data is Map) {
             _readReceipts.add(Map<String, dynamic>.from(data));
@@ -244,6 +260,8 @@ class ChatSocketService {
     await _messageErrors.close();
     await _sentMessages.close();
     await _readReceipts.close();
+    await _expiredMessages.close();
+    await _savedMessages.close();
     await _reconnections.close();
     await _connectionStates.close();
   }

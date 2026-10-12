@@ -250,10 +250,6 @@ class _IncomingLikeCardState extends State<_IncomingLikeCard> {
           chatApi: chatApi,
           currentUserImage: ownImage,
         );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('You liked ${incoming.person.name}.')),
-        );
       }
       if (mounted) await controller.load();
     } catch (error) {

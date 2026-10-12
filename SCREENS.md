@@ -215,3 +215,29 @@ navigating anywhere. Each one needs backend support first.
    `matches/presentation/navigation/match_navigation.dart`).
 3. Add it to the flow diagram (if it's on the main path) and to its feature table.
 4. Run `python3 scripts/check_structure.py` from the workspace root.
+
+
+## Public website (`frontend/`)
+
+The React website introduces the mobile app; the Flutter screen rules above
+apply to `DatingAPP`, while the web component conventions are documented in
+[frontend/ARCHITECTURE.md](frontend/ARCHITECTURE.md).
+
+| URL | Page | File relative to frontend/src | Navigation |
+| --- | --- | --- | --- |
+| `/` | HomePage | `app/home/HomePage.tsx` | Story, walkthrough, demos, app CTA |
+| `/about` | AboutPage | `app/about/AboutPage.tsx` | Our story and values |
+| `/how-it-works` | HowItWorksPage | `app/how-it-works/HowItWorksPage.tsx` | Product walkthrough and Help |
+| `/vibes` | VibesPage | `app/vibes/VibesPage.tsx` | Filterable illustrative themes |
+| `/help` | HelpPage | `app/help/HelpPage.tsx` | Search, categories, accordions; `#chat` deep link |
+| `/download` | DownloadPage | `app/download/DownloadPage.tsx` | App availability and chat demo |
+| `/community-guidelines` | CommunityPage | `app/community-guidelines/CommunityPage.tsx` | Community principles |
+| `/privacy` | PrivacyPage | `app/privacy/PrivacyPage.tsx` | Pending final privacy document |
+| `/terms` | TermsPage | `app/terms/TermsPage.tsx` | Pending final terms document |
+| `*` | NotFoundPage | `app/not-found/NotFoundPage.tsx` | Return to Home |
+
+`WebsiteLayout` provides the shared Navbar and Footer, page titles, focus and
+scroll handling. Mobile navigation is a fullscreen modal dialog. The desktop
+sticky story becomes stacked content on mobile and with reduced motion.
+Matching and chat demos use local illustrative state. Store links and final
+privacy/terms documents must be supplied before publishing.

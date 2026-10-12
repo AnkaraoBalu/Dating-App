@@ -11,9 +11,12 @@ dependencies:
   camera: ^0.12.1
   clerk_auth: ^0.0.18-beta
   clerk_flutter: ^0.0.18-beta
+  firebase_core: ^4.15.0
+  firebase_messaging: ^16.7.0
   flutter:
     sdk: flutter
   flutter_dotenv: ^5.2.1
+  flutter_local_notifications: ^22.3.1
   geolocator: ^14.0.2
   http: ^1.6.0
   image_picker: ^1.2.4

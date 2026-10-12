@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../matches/models/match_model.dart';
 import '../../data/chat_api.dart';
+import '../../models/chat_models.dart';
 import '../../data/chat_controller.dart';
 import '../../data/chat_socket_service.dart';
 import '../widgets/chat_composer_bar.dart';
@@ -80,6 +81,9 @@ class _ConversationScreenState extends State<ConversationScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      unawaited(_controller.leaveConversation());
+    }
     _controller.active = state == AppLifecycleState.resumed;
     if (_controller.active) unawaited(_controller.retryConnection());
   }
@@ -94,6 +98,36 @@ class _ConversationScreenState extends State<ConversationScreen>
     _controller.dispose();
     _composer.dispose();
     super.dispose();
+  }
+
+  Future<void> _showSaveMessage(ChatMessage message) async {
+    final save = await showModalBottomSheet<bool>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: ListTile(
+          leading: Icon(
+            message.savedInChat
+                ? Icons.bookmark_remove_outlined
+                : Icons.bookmark_add_outlined,
+          ),
+          title: Text(
+            message.savedInChat ? 'Unsave from Chat' : 'Save in Chat',
+          ),
+          subtitle: Text(
+            message.savedInChat
+                ? 'This message can disappear after the recipient leaves.'
+                : 'Keep this message for both people.',
+          ),
+          onTap: () => Navigator.pop(context, true),
+        ),
+      ),
+    );
+    if (save != true || !mounted) return;
+    try {
+      await _controller.toggleSaved(message);
+    } catch (_) {
+      if (mounted) _notice('Could not update saved message. Please try again.');
+    }
   }
 
   @override
@@ -164,7 +198,7 @@ class _ConversationScreenState extends State<ConversationScreen>
                 children: [
                   const Expanded(
                     child: Text(
-                      'Live chat is offline. Your messages are still available.',
+                      'Live chat is offline. Unread messages stay until viewed.',
                       style: TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 12,
@@ -181,7 +215,7 @@ class _ConversationScreenState extends State<ConversationScreen>
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 12),
             child: Text(
-              'Today',
+              'Viewed messages disappear · Long-press to save',
               style: TextStyle(color: AppColors.textTertiary, fontSize: 10),
             ),
           ),
@@ -244,6 +278,7 @@ class _ConversationScreenState extends State<ConversationScreen>
                       }
                       final message = _controller.messages[index];
                       return ChatMessageBubble(
+                        onSave: () => unawaited(_showSaveMessage(message)),
                         message: message,
                         person: widget.match.person,
                         onRetry: () => _controller.retryMessage(message),

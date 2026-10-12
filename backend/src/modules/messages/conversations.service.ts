@@ -72,6 +72,7 @@ export class ConversationsService {
           },
         },
         messages: {
+          where: { type: { not: "expired" } },
           select: { id: true, text: true, type: true, createdAt: true },
           orderBy: [{ createdAt: "desc" }, { id: "desc" }],
           take: 1,

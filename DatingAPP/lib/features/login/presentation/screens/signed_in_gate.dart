@@ -83,16 +83,6 @@ class _SignedInGateState extends State<SignedInGate> {
     } finally {
       if (mounted) {
         setState(() => _loading = false);
-        if (_error == null) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!mounted) return;
-            ScaffoldMessenger.of(context)
-              ..hideCurrentSnackBar()
-              ..showSnackBar(
-                const SnackBar(content: Text('Signed in successfully')),
-              );
-          });
-        }
       }
     }
   }

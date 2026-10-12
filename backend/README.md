@@ -55,3 +55,19 @@ All onboarding answers are stored together in the one-to-one `OnboardingProfile`
 ## Deployment
 
 Deploy this API as a Node.js service or container, independently from the Flutter builds. Set `NODE_ENV=production`, the port expected by the host, and database secrets in the host's secret settings. Serve it over HTTPS and restrict database network access to the API service.
+
+## Docker and Render
+
+`backend/Dockerfile` builds a production image (Node 22). On start it runs
+`prisma migrate deploy`, then `node dist/src/main.js`; set `RUN_MIGRATIONS=false`
+to skip migrations. Render injects `PORT`; health checks use `/api/v1/health`.
+
+```sh
+docker build -t matchify-backend ./backend
+docker run -p 3000:3000 --env-file backend/.env matchify-backend
+```
+
+The repository's `render.yaml` Blueprint deploys this image on every push to
+`main`. Set `DB_URL`, `CLERK_SECRET_KEY`, and the `CLOUDINARY_*` values in
+Render. For push notifications, upload the Firebase key as a Secret File named
+`firebase-admin.json` and set `FIREBASE_SERVICE_ACCOUNT_PATH=/etc/secrets/firebase-admin.json`.

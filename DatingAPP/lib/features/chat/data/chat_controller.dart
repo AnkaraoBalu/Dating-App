@@ -13,6 +13,13 @@ part 'chat_controller_sending.dart';
 
 class ChatController extends ChangeNotifier {
   ChatController({required this.api, required this.socket}) {
+    _savedSubscription = socket.savedMessages.listen(_applySaved);
+    _expiredSubscription = socket.expiredMessages.listen((event) {
+      if (_disposed || event['conversationId'] != conversationId) return;
+      final ids = (event['messageIds'] as List?)?.cast<String>() ?? <String>[];
+      _applyExpired(ids);
+      _notify();
+    });
     _messageSubscription = socket.newMessages.listen(_receiveMessage);
     _errorSubscription = socket.messageErrors.listen(_receiveError);
     _sentSubscription = socket.sentMessages.listen(_confirmMessage);
@@ -29,6 +36,10 @@ class ChatController extends ChangeNotifier {
   final ChatApi api;
   final ChatSocketService socket;
   final List<ChatMessage> messages = [];
+  final Set<String> _expiredIds = {};
+  StreamSubscription<Map<String, dynamic>>? _savedSubscription;
+  final Map<String, Future<void>> _saving = {};
+  StreamSubscription<Map<String, dynamic>>? _expiredSubscription;
   final Map<String, Timer> _sendTimeouts = {};
   final StreamController<String> _sendErrors =
       StreamController<String>.broadcast();
@@ -50,6 +61,7 @@ class ChatController extends ChangeNotifier {
   String? connectionError;
   bool _recovering = false;
   bool _reading = false;
+  Future<Map<String, dynamic>>? _readUpdate;
   bool _readRequested = false;
   Map<String, dynamic>? _latestPeerReceipt;
   bool _disposed = false;
@@ -158,6 +170,7 @@ class ChatController extends ChangeNotifier {
       if (id != conversationId || _disposed) return false;
       final newestPage = page;
       while (true) {
+        _applyExpired(page.expiredIds);
         for (final message in page.items) {
           _merge(message);
         }
@@ -211,6 +224,7 @@ class ChatController extends ChangeNotifier {
         before: cursor,
       );
       if (id != conversationId || _disposed) return;
+      _applyExpired(page.expiredIds);
       for (final message in page.items) {
         _merge(message);
       }
@@ -359,9 +373,76 @@ class ChatController extends ChangeNotifier {
     _sendTypedMessage(message);
   }
 
+  void _applySaved(Map<String, dynamic> event) {
+    if (_disposed || event['conversationId'] != conversationId) return;
+    final index = messages.indexWhere(
+      (message) => message.id == event['messageId'],
+    );
+    if (index < 0) return;
+    messages[index] = messages[index].copyWith(
+      savedInChat: event['savedInChat'] == true,
+    );
+    _notify();
+  }
+
+  Future<void> toggleSaved(ChatMessage message) {
+    final id = conversationId;
+    if (id == null ||
+        message.pending ||
+        message.failed ||
+        message.id.startsWith('local-')) {
+      return Future<void>.value();
+    }
+    return _saving[message.id] ??= _saveMessage(id, message);
+  }
+
+  Future<void> _saveMessage(String id, ChatMessage message) async {
+    try {
+      _applySaved(
+        await api.setSavedInChat(id, message.id, !message.savedInChat),
+      );
+    } finally {
+      _saving.remove(message.id);
+    }
+  }
+
+  void _applyExpired(List<String> ids) {
+    _expiredIds.addAll(ids);
+    messages.removeWhere((message) => _expiredIds.contains(message.id));
+  }
+
+  /// Expires only received messages loaded in this chat, never unseen history.
+  Future<void> leaveConversation() async {
+    final id = conversationId;
+    if (id == null) return;
+    final ids = messages
+        .where((message) => !message.fromMe && !message.id.startsWith('local-'))
+        .map((message) => message.id)
+        .toList();
+    try {
+      await Future.wait(_saving.values.toList());
+      await _readUpdate;
+      for (var offset = 0; offset < ids.length; offset += 1000) {
+        final expired = await api.expireViewedMessages(
+          id,
+          ids.sublist(offset, min(offset + 1000, ids.length)),
+        );
+        _expiredIds.addAll(expired);
+      }
+      messages.removeWhere((message) => _expiredIds.contains(message.id));
+      _notify();
+    } catch (error) {
+      debugPrint('[Chat] Could not expire viewed messages: $error');
+    }
+  }
+
   @override
   void dispose() {
+    active = false;
+    final leaving = leaveConversation();
     _disposed = true;
+    unawaited(_expiredSubscription?.cancel());
+    unawaited(_savedSubscription?.cancel());
     unawaited(_messageSubscription?.cancel());
     unawaited(_errorSubscription?.cancel());
     unawaited(_sentSubscription?.cancel());
@@ -374,7 +455,7 @@ class ChatController extends ChangeNotifier {
     _sendTimeouts.clear();
     unawaited(_sendErrors.close());
     unawaited(socket.dispose());
-    api.close();
+    unawaited(leaving.whenComplete(api.close));
     super.dispose();
   }
 }

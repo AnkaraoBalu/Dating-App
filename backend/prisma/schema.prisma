@@ -31,6 +31,7 @@ model User {
   savedVibeRooms         VibeRoomSave[]
   vibeRoomMemberships    VibeRoomMember[]
   vibeRoomMessages       VibeRoomMessage[]  @relation("VibeRoomMessageSender")
+  pushDevices            PushDevice[]
 
   @@index([email])
   @@index([phoneNumber])
@@ -145,6 +146,7 @@ model Message {
   mediaSize       Int?
   latitude        Float?
   longitude       Float?
+  savedInChat     Boolean      @default(false)
   readAt          DateTime?
   createdAt       DateTime     @default(now())
   conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
@@ -244,4 +246,18 @@ model OnboardingProfile {
   user                      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([completedAt])
+}
+
+/// A phone that receives push notifications (Firebase Cloud Messaging token).
+/// A token belongs to whoever signed in on that phone most recently.
+model PushDevice {
+  id         String   @id @default(cuid())
+  userId     String
+  token      String   @unique @db.VarChar(4096)
+  platform   String   @db.VarChar(16)
+  createdAt  DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
