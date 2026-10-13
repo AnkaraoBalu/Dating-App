@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Patch,
   Post,
@@ -20,6 +21,11 @@ export class UsersController {
   @Get("me")
   getMe(@Req() request: ClerkRequest) {
     return this.users.syncFromClerk(request.auth.userId);
+  }
+
+  @Delete("me")
+  deleteMe(@Req() request: ClerkRequest) {
+    return this.users.deleteAccount(request.auth.userId);
   }
 
   @Patch("me/onboarding")

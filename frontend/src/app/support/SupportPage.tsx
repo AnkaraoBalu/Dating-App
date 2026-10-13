@@ -65,6 +65,41 @@ export function SupportPage() {
           </S.Topics>
         </S.Contacts>
       </S.Layout>
+      <S.Deletion id="delete-account" aria-labelledby="delete-account-title">
+        <h2 id="delete-account-title">Delete your Just2 account</h2>
+        <div>
+          <section>
+            <strong>In the app</strong>
+            <ol>
+              <li>Open Just2 and go to your Profile.</li>
+              <li>Tap Settings, then Delete account.</li>
+              <li>Confirm. Your account is deleted right away.</li>
+            </ol>
+          </section>
+          <section>
+            <strong>Without the app</strong>
+            <p>
+              Email{" "}
+              <a
+                href={`mailto:${support.email}?subject=Delete%20my%20Just2%20account`}
+              >
+                {support.email}
+              </a>{" "}
+              from the email address or phone number on your account with the
+              subject “Delete my Just2 account”. We’ll confirm and delete it
+              within 7 days.
+            </p>
+          </section>
+          <section>
+            <strong>What gets deleted</strong>
+            <p>
+              Your profile, photos, prompts, likes, matches, chats, voice
+              messages, Vibe rooms, and your sign-in. Deletion is permanent and
+              can’t be undone.
+            </p>
+          </section>
+        </div>
+      </S.Deletion>
     </CommonContainer>
   );
 }

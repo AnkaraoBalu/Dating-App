@@ -1,6 +1,7 @@
 import 'package:clerk_flutter/clerk_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:dating_app/features/demo_auth/data/demo_session.dart';
+import '../../../../core/theme/theme.dart';
 import '../../../../core/widgets/distance_slider.dart';
 import '../../data/profile_controller.dart';
 import '../../models/member_profile.dart';
@@ -13,6 +14,50 @@ import '../../../notifications/data/push_notifications_service.dart';
 class ProfileSettingsScreen extends StatelessWidget {
   const ProfileSettingsScreen({super.key, required this.controller});
   final ProfileController controller;
+
+  Future<void> _deleteAccount(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete your account?'),
+        content: const Text(
+          'This permanently deletes your profile, photos, matches, chats and '
+          'Vibe rooms. It can’t be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            child: const Text('Delete account'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    final isDemo = DemoSession.current.value != null;
+    final clerk = isDemo ? null : ClerkAuth.of(context, listen: false);
+    final success = await profileAction(context, () async {
+      // Stop this phone's pushes while the session token is still valid.
+      await PushNotificationsService.current?.unregister();
+      await controller.deleteAccount();
+      if (isDemo) {
+        DemoSession.clear();
+        return;
+      }
+      // The server already removed the login; just clear it on this phone.
+      try {
+        await clerk!.signOut();
+      } catch (_) {}
+    });
+    if (success && context.mounted) {
+      Navigator.popUntil(context, (route) => route.isFirst);
+    }
+  }
+
   Future<void> _preference(
     BuildContext context,
     String key,
@@ -211,7 +256,7 @@ class ProfileSettingsScreen extends StatelessWidget {
               builder: (context) => AlertDialog(
                 title: const Text('Need a hand?'),
                 content: const Text(
-                  'You can update your information, manage photos, and pause discovery from your profile. Verification, blocking, reporting, and account deletion are not available in this version yet.',
+                  'You can update your information, manage photos, and pause discovery from your profile. You can delete your account from Settings at any time. For anything else, visit just2.in/support.',
                 ),
                 actions: [
                   TextButton(
@@ -261,6 +306,11 @@ class ProfileSettingsScreen extends StatelessWidget {
                 Navigator.popUntil(context, (route) => route.isFirst);
               }
             },
+          ),
+          ProfileTile(
+            title: 'Delete account',
+            icon: Icons.delete_outline,
+            onTap: () => _deleteAccount(context),
           ),
         ],
       ),

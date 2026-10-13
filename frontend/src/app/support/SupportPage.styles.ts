@@ -92,3 +92,51 @@ export const Topics = styled.div`
     color: #c4d6c8;
   }
 `;
+export const Deletion = styled.section`
+  padding: 56px 0 100px;
+  border-top: 1px solid #d2c8bc;
+  scroll-margin-top: 120px;
+  h2 {
+    font-size: clamp(28px, 3.4vw, 40px);
+    letter-spacing: -1px;
+    font-weight: 600;
+  }
+  > div {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-top: 28px;
+  }
+  section {
+    padding: 24px 26px;
+    border: 1px solid #d2c8bc;
+    border-radius: 24px;
+  }
+  strong {
+    font-size: 16px;
+  }
+  ol {
+    margin-top: 12px;
+    padding-left: 18px;
+    display: grid;
+    gap: 6px;
+  }
+  p,
+  li {
+    font-size: 14px;
+    color: #686b67;
+  }
+  p {
+    margin-top: 12px;
+  }
+  a {
+    color: #173f35;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+  @media (max-width: 850px) {
+    > div {
+      grid-template-columns: 1fr;
+    }
+  }
+`;

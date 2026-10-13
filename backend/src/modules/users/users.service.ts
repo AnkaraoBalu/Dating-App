@@ -6,6 +6,7 @@ import {
 } from "@nestjs/common";
 import { createClerkClient } from "@clerk/backend";
 import { ConfigService } from "@nestjs/config";
+import { v2 as cloudinary } from "cloudinary";
 import { PrismaService } from "../../database/prisma.service";
 import { UpdateOnboardingDto } from "./dto/update-onboarding.dto";
 import { UpdateNameDto } from "./dto/update-name.dto";
@@ -17,7 +18,7 @@ export class UsersService {
 
   constructor(
     private readonly prisma: PrismaService,
-    config: ConfigService,
+    private readonly config: ConfigService,
   ) {
     this.clerk = createClerkClient({
       secretKey: config.getOrThrow<string>("CLERK_SECRET_KEY"),
@@ -169,6 +170,58 @@ export class UsersService {
     if (result.count === 0)
       throw new NotFoundException("User profile not found");
     return { active: true };
+  }
+
+  /**
+   * Permanently deletes the member: every row cascades from User (profile,
+   * photos, likes, chats, rooms, devices), then their uploads and Clerk login.
+   * Safe to retry: a missing local row still removes the Clerk user.
+   */
+  async deleteAccount(clerkUserId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { clerkUserId },
+      select: { id: true },
+    });
+    if (user) {
+      await this.prisma.user.delete({ where: { id: user.id } });
+      await this.deleteUploads(user.id);
+    }
+    if (!clerkUserId.startsWith("demo_matchify_")) {
+      try {
+        await this.clerk.users.deleteUser(clerkUserId);
+      } catch (error) {
+        const status = (error as { status?: number }).status;
+        if (status !== 404) throw error;
+      }
+    }
+    this.logger.log(`Deleted account for Clerk user ${clerkUserId}`);
+    return { deleted: true };
+  }
+
+  /** Best effort: a Cloudinary failure must not block account deletion. */
+  private async deleteUploads(userId: string) {
+    cloudinary.config({
+      cloud_name: this.config.getOrThrow<string>("CLOUDINARY_CLOUD_NAME"),
+      api_key: this.config.getOrThrow<string>("CLOUDINARY_API_KEY"),
+      api_secret: this.config.getOrThrow<string>("CLOUDINARY_API_SECRET"),
+      secure: true,
+    });
+    const folders = [
+      `matchify/profiles/${userId}/`,
+      `matchify/messages/${userId}/`,
+    ];
+    for (const prefix of folders) {
+      for (const resource_type of ["image", "video"] as const) {
+        try {
+          await cloudinary.api.delete_resources_by_prefix(prefix, {
+            resource_type,
+          });
+        } catch (error) {
+          const reason = error instanceof Error ? error.message : error;
+          this.logger.warn(`Could not delete uploads in ${prefix}: ${reason}`);
+        }
+      }
+    }
   }
 
   async completeOnboarding(clerkUserId: string) {

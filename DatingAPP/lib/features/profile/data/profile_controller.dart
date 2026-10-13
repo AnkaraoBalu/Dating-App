@@ -88,6 +88,9 @@ class ProfileController extends ChangeNotifier {
   });
   Future<void> updateOnboarding(Map<String, Object?> changes) =>
       _save(() => onboardingApi.update(changes));
+
+  /// Permanently deletes the account on the server (data, photos, login).
+  Future<void> deleteAccount() => request('DELETE', '/users/me');
   Future<void> updateName(String username) => _save(() async {
     await request('PATCH', '/users/me/name', {'username': username.trim()});
   });

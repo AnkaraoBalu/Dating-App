@@ -45,21 +45,6 @@ Future<void> showProfileOptions(
                   ),
                   onTap: () => Navigator.pop(context, item.$1),
                 ),
-              const Divider(),
-              const ListTile(
-                leading: Icon(
-                  Icons.delete_outline,
-                  color: AppColors.textTertiary,
-                ),
-                title: Text(
-                  'Delete account',
-                  style: TextStyle(color: AppColors.textTertiary),
-                ),
-                subtitle: Text(
-                  'Not available yet',
-                  style: TextStyle(color: AppColors.textTertiary, fontSize: 12),
-                ),
-              ),
               TextButton(
                 onPressed: () => Navigator.pop(context),
                 child: const Text(

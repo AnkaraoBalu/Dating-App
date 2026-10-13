@@ -236,3 +236,44 @@ test("chosen username updates only local username and preserves Clerk names", as
   });
   await assert.rejects(api.updateName("clerk-user", { username: "   " }));
 });
+
+test("delete account removes the member row, uploads and Clerk user", async () => {
+  const calls = [];
+  const api = new UsersService(
+    {
+      user: {
+        findUnique: async () => ({ id: "user-1" }),
+        delete: async (args) => calls.push(["db", args.where.id]),
+      },
+    },
+    { getOrThrow: () => "placeholder" },
+  );
+  api.deleteUploads = async (userId) => calls.push(["uploads", userId]);
+  api.clerk = {
+    users: { deleteUser: async (id) => calls.push(["clerk", id]) },
+  };
+  assert.deepEqual(await api.deleteAccount("clerk-user"), { deleted: true });
+  assert.deepEqual(calls, [
+    ["db", "user-1"],
+    ["uploads", "user-1"],
+    ["clerk", "clerk-user"],
+  ]);
+});
+
+test("delete account retry still removes Clerk user and ignores Clerk 404", async () => {
+  const calls = [];
+  const api = new UsersService(
+    { user: { findUnique: async () => null } },
+    { getOrThrow: () => "placeholder" },
+  );
+  api.clerk = {
+    users: {
+      deleteUser: async (id) => {
+        calls.push(id);
+        throw Object.assign(new Error("not found"), { status: 404 });
+      },
+    },
+  };
+  assert.deepEqual(await api.deleteAccount("clerk-user"), { deleted: true });
+  assert.deepEqual(calls, ["clerk-user"]);
+});

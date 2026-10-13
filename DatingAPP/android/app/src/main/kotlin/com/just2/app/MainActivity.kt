@@ -1,4 +1,4 @@
-package com.matchify.app
+package com.just2.app
 
 import android.content.Intent
 import android.os.Handler
