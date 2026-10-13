@@ -85,7 +85,7 @@ export function RoomsExplorer() {
               <Link to="/download">
                 <div data-photo>
                   <img
-                    src={`/images/${vibe.image}.png`}
+                    src={vibe.cover}
                     alt=""
                     loading="lazy"
                   />

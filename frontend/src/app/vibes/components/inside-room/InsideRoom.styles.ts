@@ -182,25 +182,52 @@ export const Games = styled.div`
   }
   [data-poll] strong {
     display: block;
-    margin-bottom: 14px;
+    margin-bottom: 16px;
   }
-  [data-option] {
+  [data-round] {
+    margin: 12px 0 8px;
+    color: #686b67;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  [data-choices] {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  [data-choice] {
     position: relative;
-    padding: 12px 14px;
-    margin-top: 8px;
+    min-width: 0;
+    padding-bottom: 8px;
     border-radius: 12px;
     background: #f4ece2;
-    font-size: 13px;
+    font-size: 11px;
     font-weight: 700;
     overflow: hidden;
   }
-  [data-option] span {
-    position: relative;
-    z-index: 1;
+  [data-choice] img {
+    display: block;
+    width: 100%;
+    height: 74px;
+    object-fit: cover;
   }
-  [data-option] i {
-    position: absolute;
-    inset: 0;
+  [data-choice] span {
+    display: block;
+    padding: 8px 9px 6px;
+  }
+  [data-choice] i {
+    display: block;
+    height: 4px;
+    margin-inline: 9px;
+    border-radius: 4px;
+    background: #173f3520;
+  }
+  [data-choice] i::after {
+    content: "";
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
     background: #ffc8a8;
     transform-origin: left;
     transform: scaleX(calc(var(--v) * var(--seen)));

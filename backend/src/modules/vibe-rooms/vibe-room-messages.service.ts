@@ -6,6 +6,7 @@ import {
 } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import { PrismaService } from "../../database/prisma.service";
+import { VoiceNoteStorage } from "../messages/voice-note.storage";
 import {
   CreateVibeRoomMessageDto,
   ListVibeRoomMessagesQueryDto,
@@ -40,7 +41,10 @@ type MessageWithSender = Prisma.VibeRoomMessageGetPayload<{
 
 @Injectable()
 export class VibeRoomMessagesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly voiceNotes: VoiceNoteStorage,
+  ) {}
 
   async list(
     clerkUserId: string,
@@ -95,6 +99,111 @@ export class VibeRoomMessagesService {
     return this.serialize(message, userId);
   }
 
+  /** Saves a voice message (kind "voice") with its uploaded audio clip. */
+  async sendVoice(
+    clerkUserId: string,
+    roomId: string,
+    clientMessageId: string,
+    rawDurationMs: unknown,
+    file?: Express.Multer.File,
+  ) {
+    if (!clientMessageId || clientMessageId.length > 80) {
+      throw new BadRequestException("Invalid client message ID.");
+    }
+    const userId = await this.databaseUserId(clerkUserId);
+    await this.assertMember(userId, roomId);
+    const existing = await this.prisma.vibeRoomMessage.findUnique({
+      where: {
+        senderId_clientMessageId: { senderId: userId, clientMessageId },
+      },
+      include: messageRelations,
+    });
+    if (existing) {
+      if (existing.roomId !== roomId) {
+        throw new BadRequestException("Duplicate message ID.");
+      }
+      return this.serialize(existing, userId);
+    }
+    const durationMs = this.voiceNotes.assertValid(file, rawDurationMs);
+    const audio = await this.voiceNotes.upload(
+      file!,
+      `matchify/vibe-rooms/${roomId}/voice`,
+      durationMs,
+    );
+    try {
+      const message = await this.prisma.vibeRoomMessage.create({
+        data: {
+          roomId,
+          senderId: userId,
+          clientMessageId,
+          text: "",
+          kind: "voice",
+          mediaUrl: audio.url,
+          mediaPublicId: audio.publicId,
+          mediaDurationMs: audio.durationMs,
+        },
+        include: messageRelations,
+      });
+      return this.serialize(message, userId);
+    } catch (error) {
+      await this.voiceNotes.destroy(audio.publicId);
+      const duplicate = await this.prisma.vibeRoomMessage.findUnique({
+        where: {
+          senderId_clientMessageId: { senderId: userId, clientMessageId },
+        },
+        include: messageRelations,
+      });
+      if (!duplicate || duplicate.roomId !== roomId) throw error;
+      return this.serialize(duplicate, userId);
+    }
+  }
+
+  /**
+   * Saves the "… joined the room" line in the chat history (a `join` message
+   * from the newcomer) so every member sees it, now and later.
+   */
+  async recordJoin(userId: string, roomId: string) {
+    const message = await this.prisma.vibeRoomMessage.create({
+      data: {
+        roomId,
+        senderId: userId,
+        clientMessageId: `join:${Date.now()}`,
+        text: "joined the room",
+        kind: "join",
+      },
+      include: messageRelations,
+    });
+    return this.serialize(message, userId);
+  }
+
+  /** IDs of everyone currently in the room. */
+  async activeMemberIds(roomId: string) {
+    const members = await this.prisma.vibeRoomMember.findMany({
+      where: { roomId, leftAt: null },
+      select: { userId: true },
+    });
+    return members.map((member) => member.userId);
+  }
+
+  /** Active members to push-notify about a message, minus the given user IDs. */
+  async pushRecipients(roomId: string, exclude: Iterable<string>) {
+    const skip = [...exclude];
+    const room = await this.prisma.vibeRoom.findUnique({
+      where: { id: roomId },
+      select: {
+        title: true,
+        members: {
+          where: { leftAt: null, userId: { notIn: skip } },
+          select: { userId: true },
+        },
+      },
+    });
+    return {
+      title: room?.title ?? "your Vibe room",
+      userIds: room?.members.map((member) => member.userId) ?? [],
+    };
+  }
+
   async databaseUserId(clerkUserId: string) {
     const user = await this.prisma.user.findUnique({
       where: { clerkUserId },
@@ -137,6 +246,9 @@ export class VibeRoomMessagesService {
         sender.imageUrl ??
         fallbackAvatar,
       text: message.text,
+      kind: message.kind,
+      mediaUrl: message.mediaUrl,
+      durationMs: message.mediaDurationMs,
       time: message.createdAt.toISOString(),
       isMe: message.senderId === viewerId,
     };

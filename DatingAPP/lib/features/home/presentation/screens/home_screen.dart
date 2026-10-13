@@ -29,6 +29,9 @@ import '../../../matches/presentation/navigation/match_navigation.dart';
 import '../../../vibes/presentation/screens/vibe_explore_screen.dart';
 import '../../../vibes/presentation/screens/vibe_rooms_home_screen.dart';
 import '../../../vibes/data/vibe_rooms_api.dart';
+import '../../../vibes/data/vibe_room_store.dart';
+import '../../../vibes/presentation/screens/live_vibe_room_screen.dart';
+import '../../../vibes/presentation/screens/room_detail_screen.dart';
 import '../widgets/home_person_card.dart';
 import '../../../../core/realtime/realtime_service.dart';
 import '../../../chat/presentation/screens/conversation_screen.dart';
@@ -36,6 +39,10 @@ import '../../../notifications/data/notifications_api.dart';
 import '../../../notifications/data/push_notifications_service.dart';
 import '../../../notifications/models/push_notification.dart';
 import '../../../notifications/presentation/widgets/in_app_notification.dart';
+import '../../../calls/data/call_coordinator.dart';
+import '../../../calls/data/calls_api.dart';
+import '../../../calls/models/voice_call.dart';
+import '../../../calls/presentation/screens/voice_call_screen.dart';
 
 part '../controllers/home_discovery_actions.dart';
 part '../widgets/home_feed_layout.dart';
@@ -47,6 +54,7 @@ part '../controllers/home_person_actions.dart';
 part '../controllers/home_preferences_actions.dart';
 part '../controllers/home_realtime_actions.dart';
 part '../controllers/home_notification_actions.dart';
+part '../controllers/home_call_actions.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -296,6 +304,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                     baseUrl: widget.discoverApi!.baseUrl,
                                     getSessionToken:
                                         widget.discoverApi!.getSessionToken,
+                                    currentUserImage: _memberPhotos.isEmpty
+                                        ? null
+                                        : _memberPhotos.first,
                                   ),
                             onOpenLikes: _openLikes,
                             onOpenProfile: () =>

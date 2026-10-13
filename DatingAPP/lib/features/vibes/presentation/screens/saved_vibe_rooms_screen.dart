@@ -6,6 +6,7 @@ import '../../data/vibe_room_store.dart';
 import '../../models/vibe_room.dart';
 import 'room_detail_screen.dart';
 import '../widgets/vibe_room_list_widgets.dart';
+import '../widgets/vibe_room_widgets.dart';
 
 class SavedVibeRoomsScreen extends StatefulWidget {
   const SavedVibeRoomsScreen({super.key, this.api});
@@ -108,12 +109,7 @@ class _SavedRoomTile extends StatelessWidget {
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(12),
-          child: Image.asset(
-            room.coverAsset,
-            width: 74,
-            height: 78,
-            fit: BoxFit.cover,
-          ),
+          child: VibeCoverImage(image: room.coverImage, width: 74, height: 78),
         ),
         const SizedBox(width: 11),
         Expanded(

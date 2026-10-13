@@ -22,6 +22,7 @@ class ChatMessage {
       savedInChat: json['savedInChat'] == true,
       mediaUrl: json['mediaUrl']?.toString(),
       mediaType: json['mediaMimeType']?.toString(),
+      durationMs: (json['mediaDurationMs'] as num?)?.toInt(),
       latitude: (json['latitude'] as num?)?.toDouble(),
       longitude: (json['longitude'] as num?)?.toDouble(),
       readAt: DateTime.tryParse(json['readAt']?.toString() ?? '')?.toLocal(),
@@ -41,6 +42,7 @@ class ChatMessage {
     this.mediaUrl,
     this.mediaLocalPath,
     this.mediaType,
+    this.durationMs,
     this.latitude,
     this.longitude,
     this.clientMessageId,
@@ -60,6 +62,9 @@ class ChatMessage {
   final String? mediaUrl;
   final String? mediaLocalPath;
   final String? mediaType;
+
+  /// Length of a voice message's clip.
+  final int? durationMs;
   final double? latitude;
   final double? longitude;
   final String? clientMessageId;
@@ -96,6 +101,7 @@ class ChatMessage {
         ? null
         : mediaLocalPath ?? this.mediaLocalPath,
     mediaType: mediaType,
+    durationMs: durationMs,
     latitude: latitude ?? this.latitude,
     longitude: longitude ?? this.longitude,
     clientMessageId: clientMessageId ?? this.clientMessageId,

@@ -23,6 +23,14 @@ extension _HomeRealtimeActions on _HomeScreenState {
       case RealtimeEventType.matched:
         // The match itself is announced by its push notification.
         _scheduleMatchReload();
+      case RealtimeEventType.callIncoming:
+        unawaited(_showIncomingCall(event.callId));
+      case RealtimeEventType.callUpdated:
+        final callId = event.callId;
+        final status = event.callStatus;
+        if (callId != null && status != null) {
+          CallCoordinator.instance.publish(VoiceCallUpdate(callId, status));
+        }
     }
   }
 

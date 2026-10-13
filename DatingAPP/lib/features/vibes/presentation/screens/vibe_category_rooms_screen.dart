@@ -8,6 +8,7 @@ import '../../models/vibe_room.dart';
 import 'create_vibe_room_screen.dart';
 import 'room_detail_screen.dart';
 import '../widgets/vibe_room_list_widgets.dart';
+import '../widgets/vibe_room_widgets.dart';
 
 part '../widgets/vibe_category_room_tile.dart';
 

@@ -119,4 +119,14 @@ void main() {
       throwsA(predicate((e) => '$e'.contains('Invalid token'))),
     );
   });
+
+  test('a Vibe room notification carries the room to open', () {
+    final notification = PushNotification.fromData(
+      {'type': 'vibe', 'roomId': 'room-42'},
+      title: 'Coffee',
+      body: 'Asha joined your room 👋',
+    );
+    expect(notification.type, PushNotificationType.vibe);
+    expect(notification.roomId, 'room-42');
+  });
 }

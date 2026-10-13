@@ -5,6 +5,9 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/theme/theme.dart';
+import '../../../calls/data/call_coordinator.dart';
+import '../../../calls/data/calls_api.dart';
+import '../../../calls/presentation/screens/voice_call_screen.dart';
 import '../../../matches/models/match_model.dart';
 import '../../data/chat_api.dart';
 import '../../models/chat_models.dart';
@@ -180,7 +183,8 @@ class _ConversationScreenState extends State<ConversationScreen>
         ),
         actions: [
           IconButton(
-            onPressed: () => _notice('Voice calls are coming soon.'),
+            onPressed: () => unawaited(_startCall()),
+            tooltip: 'Voice call',
             icon: const Icon(Icons.call_outlined),
           ),
           IconButton(
@@ -290,6 +294,8 @@ class _ConversationScreenState extends State<ConversationScreen>
             controller: _composer,
             onAttach: _showAttachments,
             onSend: _send,
+            onSendVoice: (note) =>
+                unawaited(_controller.sendVoice(note.path, note.duration)),
           ),
         ],
       ),
@@ -392,11 +398,37 @@ class _ConversationScreenState extends State<ConversationScreen>
       ),
     ),
   );
+  Future<void> _startCall() async {
+    final conversationId =
+        _controller.conversationId ?? widget.match.conversationId;
+    if (conversationId == null) {
+      _notice('This chat is still opening. Try again in a moment.');
+      return;
+    }
+    if (CallCoordinator.instance.screenOpen) return;
+    await Navigator.of(context, rootNavigator: true).push(
+      MaterialPageRoute<void>(
+        builder: (_) => VoiceCallScreen.outgoing(
+          api: CallsApi(
+            baseUrl: widget.api.baseUrl,
+            getSessionToken: widget.api.getSessionToken,
+          ),
+          conversationId: conversationId,
+          peerName: widget.match.person.name,
+          peerAvatar: widget.match.person.image,
+        ),
+      ),
+    );
+  }
+
   void _openInfo(BuildContext context) => Navigator.push(
     context,
     MaterialPageRoute<void>(
-      builder: (_) =>
-          ChatInfoScreen(match: widget.match, messages: _controller.messages),
+      builder: (_) => ChatInfoScreen(
+        match: widget.match,
+        messages: _controller.messages,
+        onAudioCall: () => unawaited(_startCall()),
+      ),
     ),
   );
 

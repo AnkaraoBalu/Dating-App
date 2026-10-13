@@ -17,9 +17,14 @@ dependencies:
     sdk: flutter
   flutter_dotenv: ^5.2.1
   flutter_local_notifications: ^22.3.1
+  flutter_ringtone_player: ^4.0.0+4
   geolocator: ^14.0.2
   http: ^1.6.0
   image_picker: ^1.2.4
+  just_audio: ^0.10.6
+  livekit_client: ^2.13.1
+  path_provider: ^2.1.6
+  record: ^7.1.2
   shared_preferences: ^2.5.6
   socket_io_client: ^3.1.6
   url_launcher: ^6.3.3
@@ -38,6 +43,18 @@ flutter:
   uses-material-design: true
   assets:
     - .env
+    - assets/images/vibes/coffee_chats.jpg
+    - assets/images/vibes/late_night_talks.jpg
+    - assets/images/vibes/live_music.jpg
+    - assets/images/vibes/food_adventures.jpg
+    - assets/images/vibes/mountain_travel.jpg
+    - assets/images/vibes/beach_getaway.jpg
+    - assets/images/vibes/city_exploration.jpg
+    - assets/images/vibes/romantic_dinner.jpg
+    - assets/images/vibes/board_games.jpg
+    - assets/images/vibes/arcade_games.jpg
+    - assets/images/vibes/study_dates.jpg
+    - assets/images/vibes/movie_night.jpg
     - assets/images/login/ambient_bokeh.png
     - assets/images/boys-images/cafe_hoodie_portrait.png
     - assets/images/boys-images/rooftop_sunset_portrait.png
@@ -45,12 +62,17 @@ flutter:
     - assets/images/boys-images/sunset_jacket_portrait.png
     - assets/images/boys-images/golden_hour_white_shirt.png
     - assets/images/boys-images/city_night_portrait.png
+    - assets/images/boys-images/acoustic_guitar_portrait.png
+    - assets/images/boys-images/daylight_sunglasses_portrait.png
+    - assets/images/boys-images/sunset_car_sunglasses.png
     - assets/images/girls-images/golden_hour_portrait.png
     - assets/images/girls-images/cafe_coffee_portrait.png
     - assets/images/girls-images/sunset_floral_portrait.png
     - assets/images/girls-images/iced_coffee_portrait.png
     - assets/images/girls-images/cozy_headphones_portrait.png
     - assets/images/girls-images/city_night_portrait.png
+    - assets/images/girls-images/mirror_selfie_portrait.png
+    - assets/images/girls-images/sunset_car_sunglasses.png
     - assets/images/welcome/personality_polaroids.png
     - assets/images/welcome/shared_energy_polaroids.png
     - assets/images/welcome/real_connection_polaroids.png

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/theme.dart';
+import '../../data/vibe_room_store.dart';
 import '../../models/vibe_room.dart';
 
 class VibeRoomAvatar extends StatelessWidget {
@@ -64,6 +65,37 @@ class VibeRoomAvatar extends StatelessWidget {
   );
 }
 
+/// One renderer for bundled scenes and uploaded room covers.
+class VibeCoverImage extends StatelessWidget {
+  const VibeCoverImage({
+    super.key,
+    required this.image,
+    this.width,
+    this.height,
+  });
+  final String image;
+  final double? width;
+  final double? height;
+
+  @override
+  Widget build(BuildContext context) => Image(
+    image: image.startsWith('https://') || image.startsWith('http://')
+        ? NetworkImage(image)
+        : AssetImage(image) as ImageProvider,
+    width: width,
+    height: height,
+    fit: BoxFit.cover,
+    excludeFromSemantics: true,
+    errorBuilder: (_, _, _) => Container(
+      width: width,
+      height: height,
+      color: AppColors.forest,
+      alignment: Alignment.center,
+      child: const Icon(Icons.groups_rounded, color: Colors.white),
+    ),
+  );
+}
+
 class VibeRoomCover extends StatelessWidget {
   const VibeRoomCover({
     super.key,
@@ -87,14 +119,7 @@ class VibeRoomCover extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          Image.asset(
-            asset,
-            fit: BoxFit.cover,
-            errorBuilder: (_, _, _) => const ColoredBox(
-              color: AppColors.forest,
-              child: Icon(Icons.auto_awesome_rounded, color: Colors.white),
-            ),
-          ),
+          VibeCoverImage(image: asset),
           const DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -129,143 +154,159 @@ class VibeRoomCard extends StatelessWidget {
   final double? width;
 
   @override
-  Widget build(BuildContext context) => SizedBox(
-    width: width,
-    child: Material(
-      color: AppColors.surface,
-      borderRadius: BorderRadius.circular(20),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            VibeRoomCover(
-              asset: room.coverAsset,
-              height: width == null ? 174 : 142,
-              borderRadius: 0,
-              child: Stack(
-                children: [
-                  Positioned(
-                    top: 10,
-                    left: 10,
-                    child: _RoomTag(
-                      label: room.isLive
-                          ? '● LIVE'
-                          : room.scheduledFor ?? 'SOON',
-                      background: room.isLive
-                          ? AppColors.coral
-                          : AppColors.surface,
-                      foreground: room.isLive
-                          ? Colors.white
-                          : AppColors.textPrimary,
-                    ),
-                  ),
-                  if (onSave != null)
+  Widget build(BuildContext context) {
+    final joined =
+        room.isJoined || VibeRoomStore.instance.joinedIds.contains(room.id);
+    return SizedBox(
+      width: width,
+      child: Material(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              VibeRoomCover(
+                asset: room.coverImage,
+                height: width == null ? 174 : 142,
+                borderRadius: 0,
+                child: Stack(
+                  children: [
                     Positioned(
-                      top: 4,
-                      right: 4,
-                      child: IconButton.filledTonal(
-                        visualDensity: VisualDensity.compact,
-                        onPressed: onSave,
-                        style: IconButton.styleFrom(
-                          backgroundColor: Colors.white.withValues(alpha: .9),
-                          foregroundColor: saved
-                              ? AppColors.coral
-                              : AppColors.textPrimary,
-                        ),
-                        icon: Icon(
-                          saved
-                              ? Icons.bookmark_rounded
-                              : Icons.bookmark_border_rounded,
-                          size: 19,
-                        ),
+                      top: 10,
+                      left: 10,
+                      child: _RoomTag(
+                        label: room.isLive
+                            ? '● LIVE'
+                            : room.scheduledFor ?? 'SOON',
+                        background: room.isLive
+                            ? AppColors.coral
+                            : AppColors.surface,
+                        foreground: room.isLive
+                            ? Colors.white
+                            : AppColors.textPrimary,
                       ),
                     ),
-                  Positioned(
-                    left: 12,
-                    right: 12,
-                    bottom: 11,
-                    child: Row(
+                    if (onSave != null)
+                      Positioned(
+                        top: 4,
+                        right: 4,
+                        child: IconButton.filledTonal(
+                          visualDensity: VisualDensity.compact,
+                          onPressed: onSave,
+                          style: IconButton.styleFrom(
+                            backgroundColor: Colors.white.withValues(alpha: .9),
+                            foregroundColor: saved
+                                ? AppColors.coral
+                                : AppColors.textPrimary,
+                          ),
+                          icon: Icon(
+                            saved
+                                ? Icons.bookmark_rounded
+                                : Icons.bookmark_border_rounded,
+                            size: 19,
+                          ),
+                        ),
+                      ),
+                    Positioned(
+                      left: 12,
+                      right: 12,
+                      bottom: 11,
+                      child: Row(
+                        children: [
+                          Text(
+                            room.emoji,
+                            style: const TextStyle(fontSize: 21),
+                          ),
+                          const SizedBox(width: 7),
+                          Expanded(
+                            child: Text(
+                              room.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTypography.title.copyWith(
+                                color: Colors.white,
+                                fontSize: 14,
+                                shadows: const [
+                                  Shadow(color: Colors.black54, blurRadius: 7),
+                                ],
+                              ),
+                            ),
+                          ),
+                          if (joined) ...[
+                            const SizedBox(width: 5),
+                            const Icon(
+                              Icons.check_circle_rounded,
+                              size: 17,
+                              color: Colors.white,
+                              semanticLabel: 'Joined',
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      room.description,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.caption.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 9),
+                    Row(
                       children: [
-                        Text(room.emoji, style: const TextStyle(fontSize: 21)),
-                        const SizedBox(width: 7),
+                        Icon(
+                          Icons.people_alt_outlined,
+                          size: 15,
+                          color: AppColors.coralPressed,
+                        ),
+                        const SizedBox(width: 4),
                         Expanded(
                           child: Text(
-                            room.title,
+                            '${room.participantCount} ${room.isLive ? 'in room' : 'going'}',
+                            style: AppTypography.caption.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                        Icon(
+                          Icons.location_on_outlined,
+                          size: 14,
+                          color: AppColors.textTertiary,
+                        ),
+                        const SizedBox(width: 2),
+                        Flexible(
+                          child: Text(
+                            room.city,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: AppTypography.title.copyWith(
-                              color: Colors.white,
-                              fontSize: 14,
-                              shadows: const [
-                                Shadow(color: Colors.black54, blurRadius: 7),
-                              ],
+                            style: AppTypography.caption.copyWith(
+                              color: AppColors.textSecondary,
                             ),
                           ),
                         ),
                       ],
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    room.description,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTypography.caption.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 9),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.people_alt_outlined,
-                        size: 15,
-                        color: AppColors.coralPressed,
-                      ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          '${room.participantCount} ${room.isLive ? 'in room' : 'going'}',
-                          style: AppTypography.caption.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ),
-                      Icon(
-                        Icons.location_on_outlined,
-                        size: 14,
-                        color: AppColors.textTertiary,
-                      ),
-                      const SizedBox(width: 2),
-                      Flexible(
-                        child: Text(
-                          room.city,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTypography.caption.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class _RoomTag extends StatelessWidget {

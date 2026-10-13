@@ -60,11 +60,16 @@ export class VibeRoomsGateway {
     }
   }
 
-  /** Best effort: the message is already saved and returned to the sender. */
+  /**
+   * Best effort: the message is already saved and returned to the sender.
+   * Returns the IDs of members who received it live (they have the room open),
+   * so the caller can push-notify everyone else.
+   */
   async broadcastMessage(
     roomId: string,
     message: { senderId: string; [key: string]: unknown },
-  ) {
+  ): Promise<Set<string>> {
+    const viewers = new Set<string>();
     try {
       const sockets = await this.server
         .in(VibeRoomsGateway.room(roomId))
@@ -76,10 +81,37 @@ export class VibeRoomsGateway {
           roomId,
           isMe: message.senderId === socket.data.userId,
         });
+        if (typeof socket.data.userId === "string") {
+          viewers.add(socket.data.userId);
+        }
       }
     } catch (error) {
       this.logger.error("Vibe room message could not be broadcast", error);
     }
+    return viewers;
+  }
+
+  /** Broadcasts only an invalidation, never a user's private answer state. */
+  async broadcastGame(
+    roomId: string,
+    sessionId: string,
+    change: string,
+    title?: string,
+  ) {
+    const viewers = new Set<string>();
+    try {
+      const sockets = await this.server
+        .in(VibeRoomsGateway.room(roomId))
+        .fetchSockets();
+      for (const socket of sockets) {
+        socket.emit("vibe:game", { roomId, sessionId, change, title });
+        if (typeof socket.data.userId === "string")
+          viewers.add(socket.data.userId);
+      }
+    } catch (error) {
+      this.logger.error("Vibe game update could not be broadcast", error);
+    }
+    return viewers;
   }
 
   /** After leaving over REST, stop live delivery to all of the user's sockets. */

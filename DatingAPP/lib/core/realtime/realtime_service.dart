@@ -14,6 +14,12 @@ enum RealtimeEventType {
   /// A like became mutual. [RealtimeEvent.userId] is the other member.
   matched,
 
+  /// Someone is calling this member. [RealtimeEvent.callId] is the call.
+  callIncoming,
+
+  /// A call this member is in changed status ([RealtimeEvent.callStatus]).
+  callUpdated,
+
   /// The connection came back after a drop. Events may have been missed while
   /// offline, so listeners should reload everything they show.
   resynced,
@@ -25,6 +31,8 @@ class RealtimeEvent {
     this.conversationId,
     this.userId,
     this.initiatedByYou = false,
+    this.callId,
+    this.callStatus,
   });
 
   final RealtimeEventType type;
@@ -34,6 +42,11 @@ class RealtimeEvent {
   /// For [RealtimeEventType.matched]: this member's like completed the match,
   /// so the app that sent it is already showing the celebration.
   final bool initiatedByYou;
+
+  final String? callId;
+
+  /// For [RealtimeEventType.callUpdated]: accepted, declined, missed, etc.
+  final String? callStatus;
 }
 
 /// One Socket.IO connection for the signed-in session (owned by HomeScreen).
@@ -66,6 +79,23 @@ class RealtimeService {
       })
       ..on('like:new', (_) {
         _add(const RealtimeEvent(RealtimeEventType.likeReceived));
+      })
+      ..on('call:incoming', (data) {
+        _add(
+          RealtimeEvent(
+            RealtimeEventType.callIncoming,
+            callId: data is Map ? data['callId']?.toString() : null,
+          ),
+        );
+      })
+      ..on('call:updated', (data) {
+        _add(
+          RealtimeEvent(
+            RealtimeEventType.callUpdated,
+            callId: data is Map ? data['callId']?.toString() : null,
+            callStatus: data is Map ? data['status']?.toString() : null,
+          ),
+        );
       })
       ..on('match:new', (data) {
         _add(

@@ -4,7 +4,8 @@
 - `images/login/ambient_bokeh.png`: generated photographic login header; prompt under `docs/design/`.
 - `images/welcome/welcome_background.png`: existing user-provided welcome background, restored from its build copy after the original asset folder was moved.
 - `images/welcome/*_polaroids.png`: four generated carousel artworks.
-- `images/girls-images/`, `images/boys-images/`: individual portraits saved for future features; not currently bundled.
+- `images/girls-images/`, `images/boys-images/`: individual sample portraits; selected files are bundled. Do not use them as activity imagery or as substitutes for missing real member photos.
+- `images/vibes/`: twelve generated scene photographs for Vibes covers and matching game choices. Optimized local JPEGs; full prompts and mapping notes are in `docs/design/vibes-image-prompts.md`.
 - `fonts/`: offline font files and their licenses.
 - `source-images/`: original portrait collages and unused generated welcome artwork; not bundled.
 

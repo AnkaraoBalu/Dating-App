@@ -242,7 +242,7 @@ class _TrendingVibesScreenState extends State<TrendingVibesScreen> {
             textAlign: TextAlign.center,
             style: AppTypography.body.copyWith(color: AppColors.textSecondary),
           ),
-          if (action != null) action,
+          ?action,
         ],
       ),
     ),

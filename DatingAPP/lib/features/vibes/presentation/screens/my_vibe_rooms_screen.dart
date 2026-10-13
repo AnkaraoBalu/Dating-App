@@ -8,6 +8,7 @@ import 'live_vibe_room_screen.dart';
 import 'room_detail_screen.dart';
 import 'room_settings_screen.dart';
 import '../widgets/vibe_room_list_widgets.dart';
+import '../widgets/vibe_room_widgets.dart';
 
 class MyVibeRoomsScreen extends StatefulWidget {
   const MyVibeRoomsScreen({super.key, this.initialTab = 'Joined', this.api});
@@ -112,11 +113,10 @@ class _MyRoomTile extends StatelessWidget {
             onTap: () => _openDetails(context),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.asset(
-                room.coverAsset,
+              child: VibeCoverImage(
+                image: room.coverImage,
                 width: 76,
                 height: 78,
-                fit: BoxFit.cover,
               ),
             ),
           ),

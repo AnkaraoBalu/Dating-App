@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/theme.dart';
+import '../../../../core/widgets/voice_note/voice_note_composer.dart';
 
 class ChatComposerBar extends StatelessWidget {
   const ChatComposerBar({
@@ -8,14 +9,23 @@ class ChatComposerBar extends StatelessWidget {
     required this.controller,
     required this.onAttach,
     required this.onSend,
+    required this.onSendVoice,
   });
 
   final TextEditingController controller;
   final VoidCallback onAttach;
   final VoidCallback onSend;
+  final ValueChanged<VoiceNote> onSendVoice;
 
   @override
-  Widget build(BuildContext context) => SafeArea(
+  Widget build(BuildContext context) => VoiceNoteComposer(
+    textController: controller,
+    onSendText: onSend,
+    onSendVoice: onSendVoice,
+    builder: _row,
+  );
+
+  Widget _row(BuildContext context, Widget actionButton) => SafeArea(
     top: false,
     child: Padding(
       padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
@@ -78,14 +88,7 @@ class ChatComposerBar extends StatelessWidget {
               size: 21,
             ),
           ),
-          IconButton.filled(
-            onPressed: onSend,
-            style: IconButton.styleFrom(
-              backgroundColor: AppColors.coral,
-              foregroundColor: Colors.white,
-            ),
-            icon: const Icon(Icons.send_rounded),
-          ),
+          actionButton,
         ],
       ),
     ),

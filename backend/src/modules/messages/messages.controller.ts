@@ -18,6 +18,7 @@ import { ConversationsService } from "./conversations.service";
 import { MessagesService } from "./messages.service";
 import { MessagesGateway } from "./messages.gateway";
 import { SendRateLimiter } from "../rate-limit/send-rate-limiter.service";
+import { VOICE_NOTE_MAX_BYTES } from "./voice-note.storage";
 
 @Controller("messages")
 @UseGuards(ClerkAuthGuard)
@@ -55,6 +56,35 @@ export class MessagesController {
     );
     // Upload persistence is successful even if live fan-out is temporarily
     // unavailable; recipients recover it from history on reconnect.
+    await this.gateway
+      .broadcastMessage(conversationId, message)
+      .catch(() => undefined);
+    await this.gateway.announceNewMessage(conversationId, message);
+    return { ...message, fromMe: true };
+  }
+
+  @Post("conversations/:conversationId/voice")
+  @UseInterceptors(
+    FileInterceptor("file", {
+      limits: { fileSize: VOICE_NOTE_MAX_BYTES, files: 1 },
+    }),
+  )
+  async sendVoice(
+    @Req() request: ClerkRequest,
+    @Param("conversationId") conversationId: string,
+    @Body("clientMessageId") clientMessageId: string,
+    @Body("durationMs") durationMs: string | undefined,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    const userId = await this.messages.userId(request.auth.userId);
+    this.limiter.consume(`chat:${userId}`);
+    const message = await this.media.sendVoice(
+      request.auth.userId,
+      conversationId,
+      clientMessageId,
+      durationMs,
+      file,
+    );
     await this.gateway
       .broadcastMessage(conversationId, message)
       .catch(() => undefined);

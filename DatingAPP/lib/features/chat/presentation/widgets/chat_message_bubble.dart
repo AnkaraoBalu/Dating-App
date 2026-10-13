@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/theme/theme.dart';
+import '../../../../core/widgets/voice_note/voice_note_player.dart';
 import '../../../home/data/home_discover_data.dart';
 import '../../models/chat_models.dart';
 import '../screens/chat_image_viewer.dart';
@@ -86,8 +87,19 @@ class ChatMessageBubble extends StatelessWidget {
                           ),
                         if (message.type == 'location')
                           _locationBubble(context),
+                        if (message.type == 'voice')
+                          VoiceNotePlayer(
+                            url: message.mediaUrl,
+                            localPath: message.mediaLocalPath,
+                            duration: Duration(
+                              milliseconds: message.durationMs ?? 0,
+                            ),
+                            onAccent: message.fromMe,
+                          ),
+                        if (message.type == 'call') _callLine(),
                         if (message.text.isNotEmpty &&
-                            message.type != 'location')
+                            message.type != 'location' &&
+                            message.type != 'call')
                           Text(
                             message.text,
                             style: TextStyle(
@@ -205,6 +217,54 @@ class ChatMessageBubble extends StatelessWidget {
       color: AppColors.textSecondary,
     ),
   );
+
+  /// "Voice call · 4:12", "Missed voice call", etc. The message's text is
+  /// the call's outcome and its sender is the caller.
+  Widget _callLine() {
+    final missed = message.text == 'missed';
+    final declined = message.text == 'declined';
+    final label = missed
+        ? (message.fromMe ? 'No answer' : 'Missed voice call')
+        : declined
+        ? (message.fromMe ? 'Call declined' : 'Declined voice call')
+        : 'Voice call';
+    final duration = message.durationMs;
+    final detail = !missed && !declined && duration != null
+        ? ' · ${_callDuration(Duration(milliseconds: duration))}'
+        : '';
+    final foreground = message.fromMe ? Colors.white : AppColors.textPrimary;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          missed || declined
+              ? Icons.call_missed_rounded
+              : message.fromMe
+              ? Icons.call_made_rounded
+              : Icons.call_received_rounded,
+          size: 18,
+          color: (missed || declined) && !message.fromMe
+              ? AppColors.error
+              : foreground,
+        ),
+        const SizedBox(width: 8),
+        Text(
+          '$label$detail',
+          style: TextStyle(
+            color: foreground,
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+
+  static String _callDuration(Duration duration) {
+    final minutes = duration.inMinutes;
+    final seconds = (duration.inSeconds % 60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
+  }
 
   Widget _locationBubble(BuildContext context) {
     final latitude = message.latitude;

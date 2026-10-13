@@ -197,12 +197,21 @@ export class VibeRoomsService {
   }
 
   async join(clerkUserId: string, roomId: string) {
+    return (await this.joinWithDetails(clerkUserId, roomId)).room;
+  }
+
+  /**
+   * Joins a room and says whether this was a new join (not already a member),
+   * so callers can announce it and notify the host exactly once.
+   */
+  async joinWithDetails(clerkUserId: string, roomId: string) {
     const userId = await this.databaseUserId(clerkUserId);
     return this.prisma.$transaction(async (tx) => {
       const room = await tx.vibeRoom.findUnique({
         where: { id: roomId },
         select: {
           id: true,
+          title: true,
           hostUserId: true,
           participantCount: true,
           maxParticipants: true,
@@ -215,12 +224,21 @@ export class VibeRoomsService {
       const previousMembership = await tx.vibeRoomMember.findUnique({
         where: key,
       });
+      const details = {
+        userId,
+        hostUserId: room.hostUserId,
+        title: room.title,
+      };
       if (previousMembership && previousMembership.leftAt == null) {
         const existing = await tx.vibeRoom.findUniqueOrThrow({
           where: { id: roomId },
           include: roomRelations(userId),
         });
-        return this.serializeRoom(existing, userId, true);
+        return {
+          ...details,
+          newlyJoined: false as const,
+          room: this.serializeRoom(existing, userId, true),
+        };
       }
       if (room.inviteOnly && !previousMembership) {
         throw new ForbiddenException("This room requires an invitation.");
@@ -260,7 +278,11 @@ export class VibeRoomsService {
         where: { id: roomId },
         include: roomRelations(userId),
       });
-      return this.serializeRoom(joined, userId, true);
+      return {
+        ...details,
+        newlyJoined: true as const,
+        room: this.serializeRoom(joined, userId, true),
+      };
     });
   }
 
@@ -294,6 +316,78 @@ export class VibeRoomsService {
       return this.serializeRoom(updated, userId, false);
     });
   }
+  /**
+   * The rooms this member is in, as group chats for the Chat tab: each with
+   * its latest message and how many messages arrived since they last read it.
+   * Newest activity first.
+   */
+  async chats(clerkUserId: string) {
+    const userId = await this.databaseUserId(clerkUserId);
+    const memberships = await this.prisma.vibeRoomMember.findMany({
+      where: { userId, leftAt: null },
+      select: {
+        joinedAt: true,
+        lastReadAt: true,
+        room: { include: roomRelations(userId) },
+      },
+    });
+    const chats = await Promise.all(
+      memberships.map(async ({ room, joinedAt, lastReadAt }) => {
+        const [last, unreadCount] = await Promise.all([
+          this.prisma.vibeRoomMessage.findFirst({
+            where: { roomId: room.id },
+            orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+            select: {
+              text: true,
+              kind: true,
+              createdAt: true,
+              senderId: true,
+              sender: {
+                select: { firstName: true, lastName: true, username: true },
+              },
+            },
+          }),
+          this.prisma.vibeRoomMessage.count({
+            where: {
+              roomId: room.id,
+              kind: { in: ["text", "voice"] },
+              senderId: { not: userId },
+              createdAt: { gt: lastReadAt ?? joinedAt },
+            },
+          }),
+        ]);
+        const lastActivityAt = last?.createdAt ?? joinedAt;
+        return {
+          room: this.serializeRoom(room, userId, true),
+          unreadCount,
+          lastActivityAt: lastActivityAt.toISOString(),
+          lastMessage: last
+            ? {
+                kind: last.kind,
+                text: last.text,
+                isMe: last.senderId === userId,
+                sender:
+                  this.name(last.sender) || last.sender.username || "Member",
+              }
+            : null,
+        };
+      }),
+    );
+    return chats.sort((a, b) =>
+      b.lastActivityAt.localeCompare(a.lastActivityAt),
+    );
+  }
+
+  /** Everything in the room up to now counts as read for this member. */
+  async markRead(clerkUserId: string, roomId: string) {
+    const userId = await this.databaseUserId(clerkUserId);
+    await this.prisma.vibeRoomMember.updateMany({
+      where: { roomId, userId, leftAt: null },
+      data: { lastReadAt: new Date() },
+    });
+    return { read: true };
+  }
+
   private serializeRoom(
     room: RoomWithRelations,
     viewerId: string,

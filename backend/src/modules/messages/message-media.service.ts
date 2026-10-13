@@ -9,6 +9,7 @@ import { ConfigService } from "@nestjs/config";
 import { v2 as cloudinary, UploadApiResponse } from "cloudinary";
 import { PrismaService } from "../../database/prisma.service";
 import { MessagesService } from "./messages.service";
+import { VoiceNoteStorage } from "./voice-note.storage";
 
 @Injectable()
 export class MessageMediaService {
@@ -17,6 +18,7 @@ export class MessageMediaService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly messages: MessagesService,
+    private readonly voiceNotes: VoiceNoteStorage,
     config: ConfigService,
   ) {
     cloudinary.config({
@@ -30,9 +32,16 @@ export class MessageMediaService {
   async deleteExpiredMedia(publicIds: string[]) {
     for (const publicId of publicIds) {
       try {
-        const result = await cloudinary.uploader.destroy(publicId, {
+        let result = await cloudinary.uploader.destroy(publicId, {
           invalidate: true,
         });
+        if (result.result === "not found") {
+          // Voice messages are stored as Cloudinary "video" resources.
+          result = await cloudinary.uploader.destroy(publicId, {
+            resource_type: "video",
+            invalidate: true,
+          });
+        }
         if (result.result === "ok" || result.result === "not found") {
           await this.prisma.message.updateMany({
             where: { type: "expired", mediaPublicId: publicId },
@@ -140,6 +149,85 @@ export class MessageMediaService {
       await cloudinary.uploader
         .destroy(uploaded.public_id, { resource_type: "image" })
         .catch(() => undefined);
+      const duplicate = await this.prisma.message.findUnique({
+        where: {
+          senderId_clientMessageId: { senderId: user.id, clientMessageId },
+        },
+      });
+      if (duplicate?.conversationId === conversationId) {
+        return this.messages.messageResponse(duplicate);
+      }
+      throw error;
+    }
+  }
+
+  async sendVoice(
+    clerkUserId: string,
+    conversationId: string,
+    clientMessageId: string,
+    rawDurationMs: unknown,
+    file?: Express.Multer.File,
+  ) {
+    if (!clientMessageId || clientMessageId.length > 100) {
+      throw new BadRequestException("Invalid client message ID.");
+    }
+    const user = await this.prisma.user.findUnique({
+      where: { clerkUserId },
+      select: { id: true },
+    });
+    if (!user) throw new NotFoundException("User account was not found.");
+    const conversation = await this.messages.assertParticipant(
+      user.id,
+      conversationId,
+    );
+    const existing = await this.prisma.message.findUnique({
+      where: {
+        senderId_clientMessageId: { senderId: user.id, clientMessageId },
+      },
+    });
+    if (existing) {
+      if (existing.conversationId !== conversationId) {
+        throw new BadRequestException("Duplicate message ID.");
+      }
+      return this.messages.messageResponse(existing);
+    }
+    const durationMs = this.voiceNotes.assertValid(file, rawDurationMs);
+    const audio = await this.voiceNotes.upload(
+      file!,
+      `matchify/messages/${user.id}/voice`,
+      durationMs,
+    );
+
+    try {
+      const message = await this.prisma.$transaction(async (tx) => {
+        const saved = await tx.message.create({
+          data: {
+            conversationId,
+            senderId: user.id,
+            clientMessageId,
+            text: "",
+            type: "voice",
+            mediaUrl: audio.url,
+            mediaPublicId: audio.publicId,
+            mediaMimeType: audio.mimeType,
+            mediaSize: audio.size,
+            mediaDurationMs: audio.durationMs,
+          },
+        });
+        await tx.conversation.update({
+          where: { id: conversationId },
+          data: {
+            updatedAt: new Date(),
+            ...(conversation.userOneId === user.id
+              ? { userTwoUnreadCount: { increment: 1 } }
+              : { userOneUnreadCount: { increment: 1 } }),
+          },
+        });
+        return saved;
+      });
+      return this.messages.messageResponse(message);
+    } catch (error) {
+      await this.voiceNotes.destroy(audio.publicId);
       const duplicate = await this.prisma.message.findUnique({
         where: {
           senderId_clientMessageId: { senderId: user.id, clientMessageId },

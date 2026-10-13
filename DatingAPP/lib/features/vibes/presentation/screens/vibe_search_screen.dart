@@ -346,7 +346,7 @@ class _VibeSearchScreenState extends State<VibeSearchScreen> {
             textAlign: TextAlign.center,
             style: AppTypography.body.copyWith(color: AppColors.textSecondary),
           ),
-          if (action != null) action,
+          ?action,
         ],
       ),
     ),

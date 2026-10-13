@@ -5,6 +5,7 @@ import {
   IsBoolean,
   IsInt,
   IsNotEmpty,
+  IsObject,
   IsOptional,
   IsString,
   Max,
@@ -52,4 +53,17 @@ export class ListVibeRoomMessagesQueryDto {
   @Min(1)
   @Max(100)
   limit = 50;
+}
+
+export class CreateVibeGameDto {
+  @IsString() @IsNotEmpty() @MaxLength(40) gameType!: string;
+  @IsOptional() @IsObject() setup?: {
+    statements?: string[];
+    lieIndex?: number;
+  };
+}
+
+export class SubmitVibeGameAnswerDto {
+  @Type(() => Number) @IsInt() @Min(0) questionIndex!: number;
+  @Type(() => Number) @IsInt() @Min(0) @Max(2) choiceIndex!: number;
 }

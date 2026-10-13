@@ -156,6 +156,33 @@ class ChatApi {
     return ChatMessage.fromJson(response, peerUserId: peerUserId);
   }
 
+  Future<ChatMessage> sendVoice({
+    required String conversationId,
+    required String path,
+    required int durationMs,
+    required String clientMessageId,
+    required String peerUserId,
+  }) async {
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse(
+        '$baseUrl/messages/conversations/${Uri.encodeComponent(conversationId)}/voice',
+      ),
+    )..headers.addAll(await _headers(json: false));
+    request.fields['clientMessageId'] = clientMessageId;
+    request.fields['durationMs'] = '$durationMs';
+    request.files.add(await http.MultipartFile.fromPath('file', path));
+    final streamed = await request.send().timeout(const Duration(seconds: 90));
+    final httpResponse = await http.Response.fromStream(
+      streamed,
+    ).timeout(const Duration(seconds: 30));
+    final response = _decode(httpResponse);
+    if (response is! Map<String, dynamic> || response['id'] is! String) {
+      throw const FormatException('Invalid voice message response.');
+    }
+    return ChatMessage.fromJson(response, peerUserId: peerUserId);
+  }
+
   void close() => _client.close();
 
   Future<Map<String, String>> _headers({bool json = true}) async => {

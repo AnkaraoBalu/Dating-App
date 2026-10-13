@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/theme.dart';
 import '../../data/vibe_rooms_api.dart';
 import '../../data/vibe_categories.dart';
+import '../../data/vibe_artwork.dart';
 import '../../data/vibe_room_store.dart';
 import 'room_detail_screen.dart';
 
@@ -21,17 +22,13 @@ class _CreateVibeRoomScreenState extends State<CreateVibeRoomScreen> {
   final _descriptionController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   late String _categoryId;
-  String _coverAsset = VibeRoomSeeds.rooms.first.coverAsset;
+  late String _coverAsset;
+  bool _pickedCover = false;
   int _maxParticipants = 25;
   bool _inviteOnly = false;
   bool _creating = false;
 
-  static const _covers = [
-    'assets/images/girls-images/cafe_coffee_portrait.png',
-    'assets/images/girls-images/city_night_portrait.png',
-    'assets/images/boys-images/acoustic_guitar_portrait.png',
-    'assets/images/boys-images/rooftop_sunset_portrait.png',
-  ];
+  static const _covers = VibeArtwork.covers;
 
   @override
   void initState() {
@@ -39,6 +36,7 @@ class _CreateVibeRoomScreenState extends State<CreateVibeRoomScreen> {
     _categoryId =
         VibeCategories.byId(widget.initialCategoryId ?? '')?.id ??
         VibeCategories.all.first.id;
+    _coverAsset = VibeArtwork.forCategory(_categoryId);
   }
 
   @override
@@ -110,8 +108,12 @@ class _CreateVibeRoomScreenState extends State<CreateVibeRoomScreen> {
                       child: Text('${item.emoji}  ${item.title}'),
                     ),
                 ],
-                onChanged: (value) =>
-                    setState(() => _categoryId = value ?? _categoryId),
+                onChanged: (value) => setState(() {
+                  _categoryId = value ?? _categoryId;
+                  if (!_pickedCover) {
+                    _coverAsset = VibeArtwork.forCategory(_categoryId);
+                  }
+                }),
               ),
               const SizedBox(height: 16),
               Row(
@@ -212,21 +214,66 @@ class _CreateVibeRoomScreenState extends State<CreateVibeRoomScreen> {
           itemCount: _covers.length,
           separatorBuilder: (_, _) => const SizedBox(width: 9),
           itemBuilder: (context, index) {
-            final asset = _covers[index];
+            final cover = _covers[index];
+            final asset = cover.asset;
             final selected = _coverAsset == asset;
-            return GestureDetector(
-              onTap: () => setState(() => _coverAsset = asset),
-              child: Container(
-                width: 120,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(15),
-                  border: Border.all(
-                    color: selected ? AppColors.coral : AppColors.border,
-                    width: selected ? 3 : 1,
+            return Semantics(
+              label: cover.label,
+              button: true,
+              selected: selected,
+              child: InkWell(
+                onTap: () => setState(() {
+                  _coverAsset = asset;
+                  _pickedCover = true;
+                }),
+                child: Container(
+                  width: 120,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(
+                      color: selected ? AppColors.coral : AppColors.border,
+                      width: selected ? 3 : 1,
+                    ),
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            Image.asset(
+                              asset,
+                              fit: BoxFit.cover,
+                              excludeFromSemantics: true,
+                            ),
+                            if (selected)
+                              const Positioned(
+                                top: 5,
+                                right: 5,
+                                child: Icon(
+                                  Icons.check_circle,
+                                  color: AppColors.coral,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(7),
+                        child: Text(
+                          cover.label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.caption.copyWith(
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                clipBehavior: Clip.antiAlias,
-                child: Image.asset(asset, fit: BoxFit.cover),
               ),
             );
           },
@@ -290,9 +337,23 @@ class _CreateVibeRoomScreenState extends State<CreateVibeRoomScreen> {
             );
       if (widget.api != null) VibeRoomStore.instance.cacheRoom(room);
       if (!mounted) return;
-      Navigator.of(context).pushReplacement<void, void>(
-        MaterialPageRoute<void>(
-          builder: (_) => RoomDetailScreen(room: room, api: widget.api),
+      // Back to the screen that opened this one (Vibes or a category), which
+      // shows the new room from the store; offer a shortcut into the room.
+      final navigator = Navigator.of(context);
+      final messenger = ScaffoldMessenger.of(context);
+      navigator.pop();
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('“${room.title}” created ✨'),
+          behavior: SnackBarBehavior.floating,
+          action: SnackBarAction(
+            label: 'Open',
+            onPressed: () => navigator.push<void>(
+              MaterialPageRoute<void>(
+                builder: (_) => RoomDetailScreen(room: room, api: widget.api),
+              ),
+            ),
+          ),
         ),
       );
     } catch (error) {

@@ -65,6 +65,7 @@ extension _VibeRoomsHomeSections on _VibeRoomsHomeScreenState {
         ),
       );
     }
+    final isJoined = room.isJoined || _store.joinedIds.contains(room.id);
 
     return Material(
       color: AppColors.surface,
@@ -75,7 +76,7 @@ extension _VibeRoomsHomeSections on _VibeRoomsHomeScreenState {
         child: SizedBox(
           height: 194,
           child: VibeRoomCover(
-            asset: room.coverAsset,
+            asset: room.coverImage,
             height: 194,
             borderRadius: 0,
             child: Padding(
@@ -143,7 +144,7 @@ extension _VibeRoomsHomeSections on _VibeRoomsHomeScreenState {
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(horizontal: 15),
                         ),
-                        child: const Text('Join room'),
+                        child: Text(isJoined ? 'Joined ✓' : 'Join room'),
                       ),
                     ],
                   ),

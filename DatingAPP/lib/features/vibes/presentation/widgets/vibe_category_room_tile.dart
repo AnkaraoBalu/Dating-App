@@ -17,6 +17,8 @@ class _CategoryRoomTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final saved =
         room.isSaved || VibeRoomStore.instance.savedIds.contains(room.id);
+    final joined =
+        room.isJoined || VibeRoomStore.instance.joinedIds.contains(room.id);
     return Material(
       color: AppColors.surface,
       borderRadius: BorderRadius.circular(17),
@@ -43,17 +45,7 @@ class _CategoryRoomTile extends StatelessWidget {
                           child: Stack(
                             fit: StackFit.expand,
                             children: [
-                              Image.asset(
-                                room.coverAsset,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, _, _) => const ColoredBox(
-                                  color: AppColors.forest,
-                                  child: Icon(
-                                    Icons.auto_awesome_rounded,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
+                              VibeCoverImage(image: room.coverImage),
                               Align(
                                 alignment: Alignment.topLeft,
                                 child: Container(
@@ -82,6 +74,31 @@ class _CategoryRoomTile extends StatelessWidget {
                                   ),
                                 ),
                               ),
+                              if (joined)
+                                Align(
+                                  alignment: Alignment.topRight,
+                                  child: Container(
+                                    margin: const EdgeInsets.all(5),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 3,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.surface.withValues(
+                                        alpha: .95,
+                                      ),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Text(
+                                      'JOINED',
+                                      style: AppTypography.caption.copyWith(
+                                        color: AppColors.forest,
+                                        fontSize: 8,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                  ),
+                                ),
                             ],
                           ),
                         ),

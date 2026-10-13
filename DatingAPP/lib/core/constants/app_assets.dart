@@ -1,4 +1,16 @@
 abstract final class AppAssets {
+  static const vibeCoffee = 'assets/images/vibes/coffee_chats.jpg';
+  static const vibeNight = 'assets/images/vibes/late_night_talks.jpg';
+  static const vibeMusic = 'assets/images/vibes/live_music.jpg';
+  static const vibeFood = 'assets/images/vibes/food_adventures.jpg';
+  static const vibeMountains = 'assets/images/vibes/mountain_travel.jpg';
+  static const vibeBeach = 'assets/images/vibes/beach_getaway.jpg';
+  static const vibeCity = 'assets/images/vibes/city_exploration.jpg';
+  static const vibeRomantic = 'assets/images/vibes/romantic_dinner.jpg';
+  static const vibeBoardGames = 'assets/images/vibes/board_games.jpg';
+  static const vibeArcade = 'assets/images/vibes/arcade_games.jpg';
+  static const vibeStudy = 'assets/images/vibes/study_dates.jpg';
+  static const vibeMovie = 'assets/images/vibes/movie_night.jpg';
   static const loginAmbient = 'assets/images/login/ambient_bokeh.png';
   static const loginPortrait =
       'assets/images/boys-images/cafe_hoodie_portrait.png';

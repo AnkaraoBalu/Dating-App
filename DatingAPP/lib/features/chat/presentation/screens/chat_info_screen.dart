@@ -12,9 +12,11 @@ class ChatInfoScreen extends StatelessWidget {
     super.key,
     required this.match,
     required this.messages,
+    this.onAudioCall,
   });
   final MatchRecord match;
   final List<ChatMessage> messages;
+  final VoidCallback? onAudioCall;
 
   Widget _sharedMediaPreview() {
     final sharedPhotos = messages
@@ -114,7 +116,8 @@ class ChatInfoScreen extends StatelessWidget {
             _infoAction(
               Icons.call_outlined,
               'Audio call',
-              () => showChatNotice(context, 'Voice calls are coming soon.'),
+              onAudioCall ??
+                  () => showChatNotice(context, 'Voice calls are unavailable.'),
             ),
             _infoAction(
               Icons.videocam_outlined,

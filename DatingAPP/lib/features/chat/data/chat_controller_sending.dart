@@ -28,6 +28,36 @@ extension _ChatControllerSending on ChatController {
     }
   }
 
+  Future<void> _uploadAndSendVoice(ChatMessage message) async {
+    final clientId = message.clientMessageId;
+    final conversation = conversationId;
+    final peerId = _peerUserId;
+    final path = message.mediaLocalPath;
+    if (clientId == null ||
+        conversation == null ||
+        peerId == null ||
+        path == null) {
+      return;
+    }
+    try {
+      final savedMessage = await api.sendVoice(
+        conversationId: conversation,
+        path: path,
+        durationMs: message.durationMs ?? 0,
+        clientMessageId: clientId,
+        peerUserId: peerId,
+      );
+      if (_disposed || conversation != conversationId) return;
+      // Keep the local file so the sender can replay it without downloading.
+      _merge(savedMessage.copyWith(mediaLocalPath: path));
+      _sendTimeouts.remove(clientId)?.cancel();
+      _notify();
+    } catch (exception) {
+      _markFailed(clientId);
+      _reportSendError(exception);
+    }
+  }
+
   void _sendTypedMessage(ChatMessage message) {
     final conversation = conversationId;
     final clientId = message.clientMessageId;

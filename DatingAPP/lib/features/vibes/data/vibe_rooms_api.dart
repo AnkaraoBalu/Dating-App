@@ -3,12 +3,39 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../models/vibe_room.dart';
+import '../models/vibe_game.dart';
 
 class VibeRoomsApi {
-  VibeRoomsApi({required this.baseUrl, required this.getSessionToken});
+  VibeRoomsApi({
+    required this.baseUrl,
+    required this.getSessionToken,
+    this.currentUserImage,
+  });
 
   final String baseUrl;
   final Future<String> Function() getSessionToken;
+  final String? currentUserImage;
+
+  Future<String?> loadCurrentUserImage() async {
+    final response = await http
+        .get(Uri.parse('$baseUrl/profile'), headers: await _headers())
+        .timeout(const Duration(seconds: 15));
+    final decoded = _decode(response);
+    if (decoded is! Map<String, dynamic>) return null;
+    final profile = decoded['profile'] is Map<String, dynamic>
+        ? decoded['profile'] as Map<String, dynamic>
+        : decoded;
+    final photos = profile['photos'] as List<dynamic>? ?? const [];
+    for (final photo in photos) {
+      final image = photo is Map
+          ? (photo['secureUrl'] ?? photo['url'])?.toString()
+          : photo?.toString();
+      if (image != null && image.trim().isNotEmpty) return image;
+    }
+    final image =
+        profile['image']?.toString() ?? profile['avatarUrl']?.toString();
+    return image == null || image.trim().isEmpty ? null : image;
+  }
 
   Future<List<VibeRoom>> listRooms({String? categoryId}) async {
     final query = <String, String>{
@@ -28,6 +55,51 @@ class VibeRoomsApi {
         .whereType<Map<String, dynamic>>()
         .map(_roomFromJson)
         .toList();
+  }
+
+  /// Rooms the signed-in member has joined, formatted as group chats.
+  Future<List<VibeRoomChat>> listChats() async {
+    final response = await http
+        .get(Uri.parse('$baseUrl/vibe-rooms/chats'), headers: await _headers())
+        .timeout(const Duration(seconds: 20));
+    final decoded = _decode(response);
+    if (decoded is! List) {
+      throw const FormatException('Invalid vibe room chats response.');
+    }
+    return decoded.whereType<Map<String, dynamic>>().map((json) {
+      final rawRoom = json['room'];
+      final rawMessage = json['lastMessage'];
+      if (rawRoom is! Map<String, dynamic>) {
+        throw const FormatException('Invalid vibe room chat.');
+      }
+      VibeRoomChatMessage? lastMessage;
+      if (rawMessage is Map<String, dynamic>) {
+        lastMessage = VibeRoomChatMessage(
+          text: rawMessage['text']?.toString() ?? '',
+          sender: rawMessage['sender']?.toString() ?? 'Member',
+          isMe: rawMessage['isMe'] == true,
+          kind: rawMessage['kind']?.toString() ?? 'text',
+        );
+      }
+      return VibeRoomChat(
+        room: _roomFromJson(rawRoom),
+        unreadCount: (json['unreadCount'] as num?)?.toInt() ?? 0,
+        lastActivityAt: DateTime.tryParse(
+          json['lastActivityAt']?.toString() ?? '',
+        )?.toLocal(),
+        lastMessage: lastMessage,
+      );
+    }).toList();
+  }
+
+  Future<void> markChatRead(String roomId) async {
+    final response = await http
+        .post(
+          Uri.parse('$baseUrl/vibe-rooms/${Uri.encodeComponent(roomId)}/read'),
+          headers: await _headers(),
+        )
+        .timeout(const Duration(seconds: 20));
+    _decode(response);
   }
 
   Future<VibeRoom> joinRoom(String roomId) async {
@@ -58,6 +130,43 @@ class VibeRoomsApi {
       throw const FormatException('Invalid leave room response.');
     }
     return _roomFromJson(decoded);
+  }
+
+  /// Requests a short-lived LiveKit token for an active room member.
+  /// The API secret remains on the backend and is never sent to this app.
+  Future<VibeVoiceCredentials> createVoiceToken(String roomId) async {
+    final response = await http
+        .post(
+          Uri.parse(
+            '$baseUrl/vibe-rooms/${Uri.encodeComponent(roomId)}/voice-token',
+          ),
+          headers: await _headers(),
+        )
+        .timeout(const Duration(seconds: 20));
+    final decoded = _decode(response);
+    if (decoded is! Map<String, dynamic>) {
+      throw const FormatException('Invalid voice room credentials.');
+    }
+    final credentials = VibeVoiceCredentials.fromJson(decoded);
+    if (credentials.serverUrl.isEmpty ||
+        credentials.participantToken.isEmpty ||
+        credentials.identity.isEmpty) {
+      throw const FormatException('Voice room credentials are incomplete.');
+    }
+    return credentials;
+  }
+
+  /// Host-only: mutes another member's microphone in the room's voice call.
+  Future<void> muteVoiceParticipant(String roomId, String participantId) async {
+    final response = await http
+        .post(
+          Uri.parse(
+            '$baseUrl/vibe-rooms/${Uri.encodeComponent(roomId)}/voice/participants/${Uri.encodeComponent(participantId)}/mute',
+          ),
+          headers: await _headers(),
+        )
+        .timeout(const Duration(seconds: 20));
+    _decode(response);
   }
 
   Future<List<VibeRoomMessage>> listMessages(
@@ -97,6 +206,34 @@ class VibeRoomsApi {
     final decoded = _decode(response);
     if (decoded is! Map<String, dynamic>) {
       throw const FormatException('Invalid sent vibe room message.');
+    }
+    return messageFromJson(decoded);
+  }
+
+  Future<VibeRoomMessage> sendVoiceMessage({
+    required String roomId,
+    required String clientMessageId,
+    required String path,
+    required int durationMs,
+  }) async {
+    final request =
+        http.MultipartRequest(
+            'POST',
+            Uri.parse(
+              '$baseUrl/vibe-rooms/${Uri.encodeComponent(roomId)}/messages/voice',
+            ),
+          )
+          ..headers.addAll((await _headers())..remove('Content-Type'))
+          ..fields['clientMessageId'] = clientMessageId
+          ..fields['durationMs'] = '$durationMs'
+          ..files.add(await http.MultipartFile.fromPath('file', path));
+    final streamed = await request.send().timeout(const Duration(seconds: 90));
+    final response = await http.Response.fromStream(
+      streamed,
+    ).timeout(const Duration(seconds: 30));
+    final decoded = _decode(response);
+    if (decoded is! Map<String, dynamic>) {
+      throw const FormatException('Invalid sent voice message.');
     }
     return messageFromJson(decoded);
   }
@@ -145,6 +282,101 @@ class VibeRoomsApi {
     _decode(response);
   }
 
+  Future<VibeGameSession?> getActiveGame(String roomId) async {
+    final response = await http
+        .get(
+          Uri.parse(
+            '$baseUrl/vibe-rooms/${Uri.encodeComponent(roomId)}/games/active',
+          ),
+          headers: await _headers(),
+        )
+        .timeout(const Duration(seconds: 15));
+    final decoded = _decode(response);
+    return decoded is Map<String, dynamic>
+        ? VibeGameSession.fromJson(decoded)
+        : null;
+  }
+
+  Future<VibeGameSession> createGame(
+    String roomId,
+    String gameType, {
+    Map<String, dynamic>? setup,
+  }) async {
+    final payload = <String, dynamic>{'gameType': gameType};
+    if (setup != null) payload['setup'] = setup;
+    final response = await http
+        .post(
+          Uri.parse('$baseUrl/vibe-rooms/${Uri.encodeComponent(roomId)}/games'),
+          headers: await _headers(),
+          body: jsonEncode(payload),
+        )
+        .timeout(const Duration(seconds: 15));
+    return VibeGameSession.fromJson(_asMap(_decode(response)));
+  }
+
+  Future<VibeGameSession> getGame(String roomId, String sessionId) async {
+    final response = await http
+        .get(
+          Uri.parse(
+            '$baseUrl/vibe-rooms/${Uri.encodeComponent(roomId)}/games/${Uri.encodeComponent(sessionId)}',
+          ),
+          headers: await _headers(),
+        )
+        .timeout(const Duration(seconds: 15));
+    return VibeGameSession.fromJson(_asMap(_decode(response)));
+  }
+
+  Future<VibeGameSession> joinGame(String roomId, String sessionId) =>
+      _gameAction(roomId, sessionId, 'join');
+
+  Future<VibeGameSession> startGame(String roomId, String sessionId) =>
+      _gameAction(roomId, sessionId, 'start');
+
+  Future<VibeGameSession> leaveGame(String roomId, String sessionId) =>
+      _gameAction(roomId, sessionId, 'leave');
+
+  Future<VibeGameSession> answerGame({
+    required String roomId,
+    required String sessionId,
+    required int questionIndex,
+    required int choiceIndex,
+  }) async {
+    final response = await http
+        .post(
+          Uri.parse(
+            '$baseUrl/vibe-rooms/${Uri.encodeComponent(roomId)}/games/${Uri.encodeComponent(sessionId)}/answers',
+          ),
+          headers: await _headers(),
+          body: jsonEncode({
+            'questionIndex': questionIndex,
+            'choiceIndex': choiceIndex,
+          }),
+        )
+        .timeout(const Duration(seconds: 15));
+    return VibeGameSession.fromJson(_asMap(_decode(response)));
+  }
+
+  Future<VibeGameSession> _gameAction(
+    String roomId,
+    String sessionId,
+    String action,
+  ) async {
+    final response = await http
+        .post(
+          Uri.parse(
+            '$baseUrl/vibe-rooms/${Uri.encodeComponent(roomId)}/games/${Uri.encodeComponent(sessionId)}/$action',
+          ),
+          headers: await _headers(),
+        )
+        .timeout(const Duration(seconds: 15));
+    return VibeGameSession.fromJson(_asMap(_decode(response)));
+  }
+
+  Map<String, dynamic> _asMap(Object? value) {
+    if (value is Map<String, dynamic>) return value;
+    throw const FormatException('Invalid game response.');
+  }
+
   Future<Map<String, String>> _headers() async => {
     'Authorization':
         'Bearer ${await getSessionToken().timeout(const Duration(seconds: 10))}',
@@ -189,7 +421,9 @@ class VibeRoomsApi {
             return VibeRoomMessage(
               id: message['id'] as String?,
               clientMessageId: message['clientMessageId'] as String?,
-              sender: message['sender'] as String? ?? 'Member',
+              sender: message['isMe'] == true
+                  ? 'You'
+                  : message['sender'] as String? ?? 'Member',
               avatar: message['avatar'] as String? ?? '',
               text: message['text'] as String? ?? '',
               time: _displayTime(message['time'] as String?),
@@ -234,11 +468,16 @@ class VibeRoomsApi {
   VibeRoomMessage messageFromJson(Map<String, dynamic> json) => VibeRoomMessage(
     id: json['id'] as String?,
     clientMessageId: json['clientMessageId'] as String?,
-    sender: json['sender'] as String? ?? 'Member',
+    sender: json['isMe'] == true
+        ? 'You'
+        : json['sender'] as String? ?? 'Member',
     avatar: json['avatar'] as String? ?? '',
     text: json['text'] as String? ?? '',
     time: _displayTime(json['time'] as String?),
     isMe: json['isMe'] as bool? ?? false,
+    kind: json['kind'] as String? ?? 'text',
+    mediaUrl: json['mediaUrl'] as String?,
+    durationMs: (json['durationMs'] as num?)?.toInt(),
   );
 
   String _displayTime(String? value) {

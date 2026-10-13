@@ -7,8 +7,8 @@ datasource db {
 }
 
 model User {
-  id                     String             @id @default(cuid())
-  clerkUserId            String             @unique
+  id                     String                @id @default(cuid())
+  clerkUserId            String                @unique
   email                  String?
   phoneNumber            String?
   username               String?
@@ -16,21 +16,25 @@ model User {
   lastName               String?
   imageUrl               String?
   lastActiveAt           DateTime?
-  createdAt              DateTime           @default(now())
-  updatedAt              DateTime           @updatedAt
+  createdAt              DateTime              @default(now())
+  updatedAt              DateTime              @updatedAt
   onboardingProfile      OnboardingProfile?
   profile                Profile?
-  likesSent              ProfileLike[]      @relation("ProfileLikesSent")
-  likesReceived          ProfileLike[]      @relation("ProfileLikesReceived")
-  passesSent             ProfilePass[]      @relation("ProfilePassesSent")
-  passesReceived         ProfilePass[]      @relation("ProfilePassesReceived")
-  conversationsAsUserOne Conversation[]     @relation("ConversationUserOne")
-  conversationsAsUserTwo Conversation[]     @relation("ConversationUserTwo")
-  sentMessages           Message[]          @relation("MessageSender")
-  hostedVibeRooms        VibeRoom[]         @relation("VibeRoomHost")
+  likesSent              ProfileLike[]         @relation("ProfileLikesSent")
+  likesReceived          ProfileLike[]         @relation("ProfileLikesReceived")
+  passesSent             ProfilePass[]         @relation("ProfilePassesSent")
+  passesReceived         ProfilePass[]         @relation("ProfilePassesReceived")
+  conversationsAsUserOne Conversation[]        @relation("ConversationUserOne")
+  conversationsAsUserTwo Conversation[]        @relation("ConversationUserTwo")
+  sentMessages           Message[]             @relation("MessageSender")
+  hostedVibeRooms        VibeRoom[]            @relation("VibeRoomHost")
   savedVibeRooms         VibeRoomSave[]
   vibeRoomMemberships    VibeRoomMember[]
-  vibeRoomMessages       VibeRoomMessage[]  @relation("VibeRoomMessageSender")
+  vibeRoomMessages       VibeRoomMessage[]     @relation("VibeRoomMessageSender")
+  callsMade              Call[]                @relation("CallCaller")
+  callsReceived          Call[]                @relation("CallCallee")
+  hostedVibeGames        VibeGameSession[]     @relation("VibeGameHost")
+  vibeGameParticipations VibeGameParticipant[]
   pushDevices            PushDevice[]
 
   @@index([email])
@@ -127,6 +131,7 @@ model Conversation {
   userOne            User      @relation("ConversationUserOne", fields: [userOneId], references: [id], onDelete: Cascade)
   userTwo            User      @relation("ConversationUserTwo", fields: [userTwoId], references: [id], onDelete: Cascade)
   messages           Message[]
+  calls              Call[]
 
   @@unique([userOneId, userTwoId])
   @@index([userOneId, updatedAt])
@@ -144,6 +149,8 @@ model Message {
   mediaPublicId   String?
   mediaMimeType   String?
   mediaSize       Int?
+  /// Length of a "voice" message's audio clip.
+  mediaDurationMs Int?
   latitude        Float?
   longitude       Float?
   savedInChat     Boolean      @default(false)
@@ -154,6 +161,26 @@ model Message {
 
   @@unique([senderId, clientMessageId])
   @@index([conversationId, createdAt, id])
+}
+
+/// A one-to-one voice call between the two members of a conversation.
+model Call {
+  id             String       @id @default(cuid())
+  conversationId String
+  callerId       String
+  calleeId       String
+  /// ringing → accepted → ended, or ringing → declined | missed | cancelled.
+  status         String       @default("ringing") @db.VarChar(16)
+  createdAt      DateTime     @default(now())
+  answeredAt     DateTime?
+  endedAt        DateTime?
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  caller         User         @relation("CallCaller", fields: [callerId], references: [id], onDelete: Cascade)
+  callee         User         @relation("CallCallee", fields: [calleeId], references: [id], onDelete: Cascade)
+
+  @@index([callerId, status])
+  @@index([calleeId, status])
+  @@index([conversationId, createdAt])
 }
 
 model VibeRoom {
@@ -177,6 +204,7 @@ model VibeRoom {
   saves            VibeRoomSave[]
   members          VibeRoomMember[]
   messages         VibeRoomMessage[]
+  games            VibeGameSession[]
 
   @@index([categoryId, isLive, participantCount])
   @@index([hostUserId, createdAt])
@@ -194,13 +222,15 @@ model VibeRoomSave {
 }
 
 model VibeRoomMember {
-  roomId   String
-  userId   String
-  role     String    @default("Listener") @db.VarChar(24)
-  joinedAt DateTime  @default(now())
-  leftAt   DateTime?
-  room     VibeRoom  @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roomId     String
+  userId     String
+  role       String    @default("Listener") @db.VarChar(24)
+  joinedAt   DateTime  @default(now())
+  leftAt     DateTime?
+  /// Messages after this (or after joinedAt) count as unread in the Chat tab.
+  lastReadAt DateTime?
+  room       VibeRoom  @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([roomId, userId])
   @@index([userId, leftAt, joinedAt])
@@ -212,12 +242,65 @@ model VibeRoomMessage {
   senderId        String
   clientMessageId String   @db.VarChar(80)
   text            String   @db.VarChar(1000)
+  /// "text" for chat messages, "voice" for voice messages, "join" for the
+  /// "… joined the room" line.
+  kind            String   @default("text") @db.VarChar(16)
+  mediaUrl        String?
+  mediaPublicId   String?
+  mediaDurationMs Int?
   createdAt       DateTime @default(now())
   room            VibeRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
   sender          User     @relation("VibeRoomMessageSender", fields: [senderId], references: [id], onDelete: Cascade)
 
   @@unique([senderId, clientMessageId])
   @@index([roomId, createdAt, id])
+}
+
+model VibeGameSession {
+  id               String                @id @default(cuid())
+  roomId           String
+  activeRoomId     String?               @unique
+  hostUserId       String
+  gameType         String                @db.VarChar(40)
+  setup            Json?
+  status           String                @default("waiting") @db.VarChar(16)
+  questionIndex    Int                   @default(0)
+  maxPlayers       Int                   @default(8)
+  startedAt        DateTime?
+  questionDeadline DateTime?
+  finishedAt       DateTime?
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  room             VibeRoom              @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  host             User                  @relation("VibeGameHost", fields: [hostUserId], references: [id], onDelete: Cascade)
+  participants     VibeGameParticipant[]
+
+  @@index([roomId, status, createdAt])
+}
+
+model VibeGameParticipant {
+  sessionId String
+  userId    String
+  joinedAt  DateTime         @default(now())
+  leftAt    DateTime?
+  session   VibeGameSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers   VibeGameAnswer[]
+
+  @@id([sessionId, userId])
+  @@index([userId, leftAt, joinedAt])
+}
+
+model VibeGameAnswer {
+  sessionId     String
+  userId        String
+  questionIndex Int
+  choiceIndex   Int
+  createdAt     DateTime            @default(now())
+  participant   VibeGameParticipant @relation(fields: [sessionId, userId], references: [sessionId, userId], onDelete: Cascade)
+
+  @@id([sessionId, userId, questionIndex])
+  @@index([sessionId, questionIndex])
 }
 
 model OnboardingProfile {

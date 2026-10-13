@@ -3,7 +3,7 @@ import { PrismaService } from "../../database/prisma.service";
 import { FirebasePushSender, type PushMessage } from "./firebase-push.sender";
 
 /** What the app needs to open the right screen when a notification is tapped. */
-export type NotificationType = "message" | "match" | "like";
+export type NotificationType = "message" | "match" | "like" | "vibe" | "call";
 
 /**
  * Every push notification the app sends goes through here: registering
@@ -57,6 +57,23 @@ export class NotificationsService {
     }));
   }
 
+  /** Rings a member whose app is closed or in the background. */
+  incomingCall(
+    recipientId: string,
+    call: { callId: string; callerId: string; conversationId: string },
+  ) {
+    return this.deliver(recipientId, async () => ({
+      title: await this.displayName(call.callerId),
+      body: "📞 Incoming voice call",
+      data: {
+        type: "call",
+        callId: call.callId,
+        conversationId: call.conversationId,
+      },
+      group: `call:${call.callId}`,
+    }));
+  }
+
   newMatch(recipientId: string, otherUserId: string) {
     return this.deliver(recipientId, async () => ({
       title: "It's a match! 🎉",
@@ -72,6 +89,47 @@ export class NotificationsService {
       body: "Open Matchify to see who.",
       data: { type: "like" },
     }));
+  }
+
+  /** Tells a room's host that someone new joined. */
+  vibeRoomJoined(
+    hostId: string,
+    room: { roomId: string; title: string; joinerId: string },
+  ) {
+    return this.deliver(hostId, async () => ({
+      title: room.title,
+      body: `${await this.displayName(room.joinerId)} joined your room 👋`,
+      data: { type: "vibe", roomId: room.roomId },
+      group: `vibe:${room.roomId}`,
+    }));
+  }
+
+  /**
+   * A message in a Vibe room, for members who don't have it open. One
+   * notification per room is kept on screen (it replaces the previous one).
+   */
+  async vibeRoomMessage(
+    recipientIds: string[],
+    message: {
+      roomId: string;
+      title: string;
+      senderId: string;
+      text: string;
+      type?: string;
+    },
+  ) {
+    if (recipientIds.length === 0) return;
+    const sender = await this.displayName(message.senderId);
+    await Promise.all(
+      recipientIds.map((recipientId) =>
+        this.deliver(recipientId, async () => ({
+          title: message.title,
+          body: `${sender}: ${messagePreview(message.type ?? "text", message.text)}`,
+          data: { type: "vibe", roomId: message.roomId },
+          group: `vibe:${message.roomId}`,
+        })),
+      ),
+    );
   }
 
   private async deliver(
@@ -120,6 +178,11 @@ export function messagePreview(type: string, text: string) {
   if (type === "image") return text.trim() ? `📷 ${text.trim()}` : "📷 Photo";
   if (type === "location") return "📍 Shared a location";
   if (type === "voice") return "🎤 Voice message";
+  if (type === "call") {
+    if (text === "missed") return "📞 Missed voice call";
+    if (text === "declined") return "📞 Declined voice call";
+    return "📞 Voice call";
+  }
   const trimmed = text.trim();
   return trimmed.length > 150 ? `${trimmed.slice(0, 147)}…` : trimmed;
 }

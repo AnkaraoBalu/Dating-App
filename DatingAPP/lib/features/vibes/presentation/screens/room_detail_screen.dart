@@ -33,11 +33,15 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
 
   Future<VibeRoom?> _joinRoom() async {
     if (_joining) return null;
+    final currentRoom = _store.byId(widget.room.id) ?? widget.room;
+    if (currentRoom.isJoined || _store.joinedIds.contains(currentRoom.id)) {
+      return currentRoom;
+    }
     setState(() => _joining = true);
     try {
       final room = widget.api == null
-          ? widget.room
-          : await widget.api!.joinRoom(widget.room.id);
+          ? currentRoom
+          : await widget.api!.joinRoom(currentRoom.id);
       if (widget.api == null) {
         _store.join(room);
       } else {
@@ -72,7 +76,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
   }
 
   Future<void> _toggleSaved() async {
-    final room = widget.room;
+    final room = _store.byId(widget.room.id) ?? widget.room;
     final shouldSave = widget.api == null
         ? !_store.savedIds.contains(room.id)
         : !room.isSaved;
@@ -98,7 +102,8 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: _store,
     builder: (context, _) {
-      final room = widget.room;
+      final room = _store.byId(widget.room.id) ?? widget.room;
+      final isJoined = room.isJoined || _store.joinedIds.contains(room.id);
       final saved = widget.api == null
           ? _store.savedIds.contains(room.id)
           : room.isSaved;
@@ -115,7 +120,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
                 foregroundColor: AppColors.textPrimary,
                 flexibleSpace: FlexibleSpaceBar(
                   background: VibeRoomCover(
-                    asset: room.coverAsset,
+                    asset: room.coverImage,
                     height: 250,
                     borderRadius: 0,
                     child: Align(
@@ -292,7 +297,9 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
                                 ? null
                                 : () => _enterRoom(voice: true),
                             icon: const Icon(Icons.headphones_rounded),
-                            label: const Text('Voice room'),
+                            label: Text(
+                              isJoined ? 'Open voice room' : 'Voice room',
+                            ),
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -304,7 +311,9 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
                               foregroundColor: Colors.white,
                             ),
                             icon: const Icon(Icons.chat_bubble_outline_rounded),
-                            label: const Text('Preview room'),
+                            label: Text(
+                              isJoined ? 'Open room chat' : 'Preview room',
+                            ),
                           ),
                         ),
                       ],
@@ -321,6 +330,8 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
             child: FilledButton(
               onPressed: _joining
                   ? null
+                  : isJoined
+                  ? () => _enterRoom()
                   : room.isLive
                   ? () => _enterRoom()
                   : _saveSpot,
@@ -332,6 +343,8 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
               child: Text(
                 _joining
                     ? 'Joining…'
+                    : isJoined
+                    ? 'Joined · Open room'
                     : room.isLive
                     ? 'Join this vibe'
                     : 'Save a spot',

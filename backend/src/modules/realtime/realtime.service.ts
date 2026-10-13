@@ -6,7 +6,8 @@ import type { Server } from "socket.io";
  * without polling. Payloads only name what changed; clients reload the details
  * over REST, which keeps per-viewer data (unread counts, names) authoritative.
  */
-export type RealtimeEvent = "inbox:changed" | "like:new" | "match:new";
+export type RealtimeEvent =
+  "inbox:changed" | "like:new" | "match:new" | "call:incoming" | "call:updated";
 
 @Injectable()
 export class RealtimeService {

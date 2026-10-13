@@ -1,3 +1,5 @@
+import '../data/vibe_artwork.dart';
+
 class VibeRoomMember {
   const VibeRoomMember({
     required this.id,
@@ -29,6 +31,10 @@ class VibeRoomMessage {
     this.id,
     this.clientMessageId,
     this.isMe = false,
+    this.kind = 'text',
+    this.mediaUrl,
+    this.mediaLocalPath,
+    this.durationMs,
   });
 
   final String? id;
@@ -38,6 +44,99 @@ class VibeRoomMessage {
   final String text;
   final String time;
   final bool isMe;
+
+  /// "text", "voice", or "join" for the "… joined the room" line.
+  final String kind;
+  final String? mediaUrl;
+
+  /// The sender's own recording, played before (and after) upload.
+  final String? mediaLocalPath;
+  final int? durationMs;
+
+  bool get isVoice => kind == 'voice';
+
+  VibeRoomMessage copyWith({String? avatar, String? mediaLocalPath}) =>
+      VibeRoomMessage(
+        id: id,
+        clientMessageId: clientMessageId,
+        sender: sender,
+        avatar: avatar ?? this.avatar,
+        text: text,
+        time: time,
+        isMe: isMe,
+        kind: kind,
+        mediaUrl: mediaUrl,
+        mediaLocalPath: mediaLocalPath ?? this.mediaLocalPath,
+        durationMs: durationMs,
+      );
+}
+
+/// A joined Vibe room presented as a group conversation in the Chat tab.
+class VibeRoomChat {
+  const VibeRoomChat({
+    required this.room,
+    required this.unreadCount,
+    required this.lastActivityAt,
+    this.lastMessage,
+  });
+
+  final VibeRoom room;
+  final int unreadCount;
+  final DateTime? lastActivityAt;
+  final VibeRoomChatMessage? lastMessage;
+}
+
+class VibeRoomChatMessage {
+  const VibeRoomChatMessage({
+    required this.text,
+    required this.sender,
+    required this.isMe,
+    required this.kind,
+  });
+
+  final String text;
+  final String sender;
+  final bool isMe;
+  final String kind;
+
+  String get preview {
+    if (kind == 'join') return '$sender joined the room';
+    final body = kind == 'voice' ? '🎤 Voice message' : text;
+    return isMe ? 'You: $body' : '$sender: $body';
+  }
+}
+
+class VibeVoiceCredentials {
+  const VibeVoiceCredentials({
+    required this.serverUrl,
+    required this.participantToken,
+    required this.identity,
+    required this.name,
+    required this.avatar,
+    required this.role,
+  });
+
+  final String serverUrl;
+  final String participantToken;
+  final String identity;
+  final String name;
+  final String avatar;
+  final String role;
+
+  factory VibeVoiceCredentials.fromJson(Map<String, dynamic> json) {
+    final participant = json['participant'];
+    if (participant is! Map<String, dynamic>) {
+      throw const FormatException('Invalid voice room credentials.');
+    }
+    return VibeVoiceCredentials(
+      serverUrl: json['serverUrl']?.toString() ?? '',
+      participantToken: json['participantToken']?.toString() ?? '',
+      identity: participant['identity']?.toString() ?? '',
+      name: participant['name']?.toString() ?? 'You',
+      avatar: participant['avatar']?.toString() ?? '',
+      role: participant['role']?.toString() ?? 'Listener',
+    );
+  }
 }
 
 class VibeRoom {
@@ -75,6 +174,8 @@ class VibeRoom {
   String categoryId;
   String emoji;
   String coverAsset;
+  String get coverImage =>
+      VibeArtwork.roomCover(coverAsset, categoryId: categoryId);
   String hostName;
   String hostAvatar;
   int participantCount;

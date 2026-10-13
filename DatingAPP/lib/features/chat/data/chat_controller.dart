@@ -323,6 +323,25 @@ class ChatController extends ChangeNotifier {
     await _uploadAndSendImage(message, image);
   }
 
+  Future<void> sendVoice(String path, Duration duration) async {
+    if (conversationId == null) return;
+    final clientMessageId = _newClientMessageId();
+    final message = ChatMessage(
+      id: 'local-$clientMessageId',
+      clientMessageId: clientMessageId,
+      text: '',
+      sentAt: DateTime.now(),
+      fromMe: true,
+      type: 'voice',
+      mediaLocalPath: path,
+      durationMs: duration.inMilliseconds,
+      pending: true,
+    );
+    _merge(message);
+    _notify();
+    await _uploadAndSendVoice(message);
+  }
+
   void sendLocation(double latitude, double longitude) {
     if (conversationId == null ||
         !latitude.isFinite ||
@@ -368,6 +387,10 @@ class ChatController extends ChangeNotifier {
       } else {
         unawaited(_uploadAndSendImage(message, XFile(path)));
       }
+      return;
+    }
+    if (message.type == 'voice') {
+      unawaited(_uploadAndSendVoice(message));
       return;
     }
     _sendTypedMessage(message);

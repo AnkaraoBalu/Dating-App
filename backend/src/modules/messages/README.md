@@ -14,6 +14,8 @@ members about persisted image messages.
   latest message previews, and unread counts.
 - `messages.gateway.ts` authenticates the Socket.IO connection with a Clerk
   token and relays message events to the conversation room.
+- `voice-note.storage.ts` validates voice clips and stores them in Cloudinary
+  for direct and Vibe room chats.
 - `message-media.service.ts` validates and stores chat images in Cloudinary,
   then persists the message before returning it.
 - `messages.module.ts` registers the controller, service, and gateway.
@@ -38,6 +40,11 @@ members about persisted image messages.
   JPEG, PNG, or WebP multipart image plus `clientMessageId` and optional
   `caption`. It stores the file, persists the message, broadcasts `message:new`,
   and returns the saved message.
+- `POST /api/v1/messages/conversations/:conversationId/voice` accepts one
+  multipart `.m4a` (AAC) voice clip up to 2 minutes and 5 MB, plus
+  `clientMessageId` and `durationMs`. It stores the audio in Cloudinary, saves a
+  `voice` message, broadcasts `message:new`, and returns the saved message.
+  Vibe rooms use the same storage via `POST /api/v1/vibe-rooms/:roomId/messages/voice`.
 - Pass the response `nextCursor` as `before` to load the next older page. The
   cursor is scoped to the requested conversation and ordered by creation time
   plus message ID so pages remain stable when timestamps tie.

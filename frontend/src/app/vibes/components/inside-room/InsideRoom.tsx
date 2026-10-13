@@ -44,13 +44,31 @@ const panels: { title: string; body: string; visual: ReactNode }[] = [
         </div>
         <div data-poll>
           <strong>Would You Rather?</strong>
-          <div data-option style={{ "--v": 0.64 } as CSSProperties}>
-            <span>Sunrise hike</span>
-            <i />
+          <div data-round>Where would you escape for the weekend?</div>
+          <div data-choices>
+            <div data-choice style={{ "--v": 0.64 } as CSSProperties}>
+              <img src="/images/vibes/beach_getaway.jpg" alt="" />
+              <span>Beach getaway</span>
+              <i />
+            </div>
+            <div data-choice style={{ "--v": 0.36 } as CSSProperties}>
+              <img src="/images/vibes/mountain_travel.jpg" alt="" />
+              <span>Mountain escape</span>
+              <i />
+            </div>
           </div>
-          <div data-option style={{ "--v": 0.36 } as CSSProperties}>
-            <span>Sunset picnic</span>
-            <i />
+          <div data-round>This or That: a cozy night in?</div>
+          <div data-choices>
+            <div data-choice style={{ "--v": 0.64 } as CSSProperties}>
+              <img src="/images/vibes/board_games.jpg" alt="" />
+              <span>Board game night</span>
+              <i />
+            </div>
+            <div data-choice style={{ "--v": 0.36 } as CSSProperties}>
+              <img src="/images/vibes/movie_night.jpg" alt="" />
+              <span>Movie night</span>
+              <i />
+            </div>
           </div>
         </div>
       </S.Games>

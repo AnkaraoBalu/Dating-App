@@ -11,6 +11,8 @@ import { AuthModule } from "./modules/demo-auth/auth.module";
 import { RealtimeModule } from "./modules/realtime/realtime.module";
 import { RateLimitModule } from "./modules/rate-limit/rate-limit.module";
 import { NotificationsModule } from "./modules/notifications/notifications.module";
+import { LiveKitModule } from "./modules/livekit/livekit.module";
+import { CallsModule } from "./modules/calls/calls.module";
 
 @Module({
   imports: [
@@ -21,10 +23,12 @@ import { NotificationsModule } from "./modules/notifications/notifications.modul
     RealtimeModule,
     RateLimitModule,
     NotificationsModule,
+    LiveKitModule,
     UsersModule,
     ProfileSetupModule,
     MessagesModule,
     VibeRoomsModule,
+    CallsModule,
   ],
 })
 export class AppModule {}

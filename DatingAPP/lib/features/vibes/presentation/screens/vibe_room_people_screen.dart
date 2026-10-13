@@ -177,11 +177,12 @@ class _VibeRoomPeopleScreenState extends State<VibeRoomPeopleScreen> {
 
   int _count(String tab, int total) {
     if (tab == 'All') return widget.room.participantCount;
-    if (tab == 'Speakers')
+    if (tab == 'Speakers') {
       return widget.room.members
               .where((member) => member.role != 'Listener')
               .length +
           2;
+    }
     return total - 4;
   }
 

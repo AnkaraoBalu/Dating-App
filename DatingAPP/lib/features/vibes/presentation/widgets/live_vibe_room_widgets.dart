@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/theme.dart';
+import '../../../../core/widgets/voice_note/voice_note_composer.dart';
+import '../../../../core/widgets/voice_note/voice_note_player.dart';
 import '../../models/vibe_room.dart';
 import 'vibe_room_widgets.dart';
 
@@ -158,15 +160,25 @@ class LiveVibeComposer extends StatelessWidget {
     super.key,
     required this.controller,
     required this.onSend,
+    required this.onSendVoice,
     required this.onOpenGames,
   });
 
   final TextEditingController controller;
   final VoidCallback onSend;
+  final ValueChanged<VoiceNote> onSendVoice;
   final VoidCallback onOpenGames;
 
   @override
-  Widget build(BuildContext context) => SafeArea(
+  Widget build(BuildContext context) => VoiceNoteComposer(
+    textController: controller,
+    onSendText: onSend,
+    onSendVoice: onSendVoice,
+    sendButtonSize: 19,
+    builder: _row,
+  );
+
+  Widget _row(BuildContext context, Widget actionButton) => SafeArea(
     top: false,
     child: Padding(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
@@ -199,14 +211,7 @@ class LiveVibeComposer extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 6),
-          IconButton.filled(
-            onPressed: onSend,
-            style: IconButton.styleFrom(
-              backgroundColor: AppColors.coral,
-              foregroundColor: Colors.white,
-            ),
-            icon: const Icon(Icons.send_rounded, size: 19),
-          ),
+          actionButton,
         ],
       ),
     ),
@@ -222,15 +227,25 @@ class LiveVibeMessageTile extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 7),
     child: Row(
+      mainAxisAlignment: message.isMe
+          ? MainAxisAlignment.end
+          : MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        VibeRoomAvatar(image: message.avatar, size: 35),
-        const SizedBox(width: 9),
-        Expanded(
+        if (!message.isMe) ...[
+          VibeRoomAvatar(image: message.avatar, size: 35),
+          const SizedBox(width: 9),
+        ],
+        Flexible(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: message.isMe
+                ? CrossAxisAlignment.end
+                : CrossAxisAlignment.start,
             children: [
               Row(
+                mainAxisAlignment: message.isMe
+                    ? MainAxisAlignment.end
+                    : MainAxisAlignment.start,
                 children: [
                   Text(
                     message.sender,
@@ -250,15 +265,38 @@ class LiveVibeMessageTile extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 2),
-              Text(
-                message.text,
-                style: AppTypography.bodySmall.copyWith(
-                  color: AppColors.textPrimary,
+              if (message.isVoice)
+                Container(
+                  margin: const EdgeInsets.only(top: 2),
+                  padding: const EdgeInsets.fromLTRB(4, 2, 12, 2),
+                  decoration: BoxDecoration(
+                    color: message.isMe
+                        ? AppColors.coral
+                        : AppColors.surfaceSecondary,
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: VoiceNotePlayer(
+                    url: message.mediaUrl,
+                    localPath: message.mediaLocalPath,
+                    duration: Duration(milliseconds: message.durationMs ?? 0),
+                    onAccent: message.isMe,
+                  ),
+                )
+              else
+                Text(
+                  message.text,
+                  textAlign: message.isMe ? TextAlign.right : TextAlign.left,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
                 ),
-              ),
             ],
           ),
         ),
+        if (message.isMe) ...[
+          const SizedBox(width: 9),
+          VibeRoomAvatar(image: message.avatar, size: 35),
+        ],
       ],
     ),
   );

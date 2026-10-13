@@ -173,6 +173,7 @@ export class MessagesService {
           mediaUrl: null,
           mediaMimeType: null,
           mediaSize: null,
+          mediaDurationMs: null,
           latitude: null,
           longitude: null,
         },
@@ -261,6 +262,7 @@ export class MessagesService {
         mediaPublicId: message.mediaPublicId,
         mediaMimeType: message.mediaMimeType,
         mediaSize: message.mediaSize,
+        mediaDurationMs: message.mediaDurationMs,
         latitude: message.latitude,
         longitude: message.longitude,
         savedInChat: message.savedInChat ?? false,
@@ -389,6 +391,7 @@ export class MessagesService {
     mediaPublicId: string | null;
     mediaMimeType: string | null;
     mediaSize: number | null;
+    mediaDurationMs?: number | null;
     latitude: number | null;
     longitude: number | null;
     savedInChat?: boolean;
@@ -406,6 +409,7 @@ export class MessagesService {
       mediaPublicId: message.mediaPublicId,
       mediaMimeType: message.mediaMimeType,
       mediaSize: message.mediaSize,
+      mediaDurationMs: message.mediaDurationMs ?? null,
       latitude: message.latitude,
       longitude: message.longitude,
       savedInChat: message.savedInChat ?? false,

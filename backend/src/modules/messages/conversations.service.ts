@@ -163,6 +163,10 @@ export class ConversationsService {
   }
 
   private previewText(type: string, text: string) {
+    // Call lines store their outcome ("missed", "completed") as text.
+    if (type === "call") {
+      return text === "missed" ? "Missed voice call" : "Voice call";
+    }
     if (text.trim()) return text;
     if (type === "image") return "Photo";
     if (type === "location") return "Location";

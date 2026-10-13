@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../models/vibe_room.dart';
+import '../../../core/constants/app_assets.dart';
 
 abstract final class VibeRoomSeeds {
   static const aanya = VibeRoomMember(
@@ -64,7 +65,7 @@ abstract final class VibeRoomSeeds {
           'Real conversations, good people, and a little bit of magic.',
       categoryId: 'late_night_talks',
       emoji: '🌙',
-      coverAsset: 'assets/images/girls-images/city_night_portrait.png',
+      coverAsset: AppAssets.vibeNight,
       hostName: 'Aanya',
       hostAvatar: aanya.avatar,
       participantCount: 124,
@@ -98,7 +99,7 @@ abstract final class VibeRoomSeeds {
           'Meet new people who love good coffee and easy conversation.',
       categoryId: 'coffee_chats',
       emoji: '☕',
-      coverAsset: 'assets/images/girls-images/cafe_coffee_portrait.png',
+      coverAsset: AppAssets.vibeCoffee,
       hostName: 'Meera',
       hostAvatar: meera.avatar,
       participantCount: 124,
@@ -131,7 +132,7 @@ abstract final class VibeRoomSeeds {
       description: 'Swap playlists, talk live gigs and find your next song.',
       categoryId: 'music_chill',
       emoji: '🎧',
-      coverAsset: 'assets/images/boys-images/acoustic_guitar_portrait.png',
+      coverAsset: AppAssets.vibeMusic,
       hostName: 'Kabir',
       hostAvatar: kabir.avatar,
       participantCount: 87,
@@ -158,7 +159,7 @@ abstract final class VibeRoomSeeds {
       description: 'Find your next destination and someone to explore it with.',
       categoryId: 'travel_buddies',
       emoji: '✈️',
-      coverAsset: 'assets/images/boys-images/rooftop_sunset_portrait.png',
+      coverAsset: AppAssets.vibeMountains,
       hostName: 'Rohan',
       hostAvatar: rohan.avatar,
       participantCount: 64,
@@ -174,7 +175,7 @@ abstract final class VibeRoomSeeds {
       description: 'Spoiler-free movie chat and cozy watch party plans.',
       categoryId: 'gaming_together',
       emoji: '🍿',
-      coverAsset: 'assets/images/girls-images/cozy_headphones_portrait.png',
+      coverAsset: AppAssets.vibeMovie,
       hostName: 'Diya',
       hostAvatar: diya.avatar,
       participantCount: 42,
@@ -188,7 +189,7 @@ abstract final class VibeRoomSeeds {
       description: 'Share your favourite bites and plan the next food walk.',
       categoryId: 'food_adventures',
       emoji: '🍜',
-      coverAsset: 'assets/images/girls-images/iced_coffee_portrait.png',
+      coverAsset: AppAssets.vibeFood,
       hostName: 'You',
       hostAvatar: me.avatar,
       participantCount: 24,

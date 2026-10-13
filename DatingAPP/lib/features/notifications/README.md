@@ -10,12 +10,14 @@ app lives in this folder; `HomeScreen` starts it for the signed-in session
   system tray, including the one that launched the app).
 - `data/notifications_api.dart`: `POST/DELETE /notifications/devices`.
 - `models/push_notification.dart`: notification types (`message`, `match`,
-  `like`) read from the push data.
+  `like`, `vibe`, `call`) read from the push data.
 - `presentation/widgets/in_app_notification.dart`: the banner shown while the
   app is open (the system only shows notifications in the background).
 
-Tapping a notification opens the conversation, the Matches tab, or Likes
-received. Log out unregisters the phone before signing out.
+Tapping a notification opens the conversation, the Matches tab, Likes
+received, or the related Vibe room. Room messages are pushed to joined members
+who are not already viewing that room live. Log out unregisters the phone
+before signing out.
 
 ## Setup
 
