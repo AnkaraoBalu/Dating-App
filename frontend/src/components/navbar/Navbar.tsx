@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { NavLink, useLocation } from "react-router-dom";
+import { BrandLogo } from "../brand-logo/BrandLogo";
 import { navigation } from "../../constants/navigation";
 import * as S from "./Navbar.styles";
 export function Navbar() {
@@ -35,8 +36,8 @@ export function Navbar() {
       <S.Skip href="#main-content">Skip to content</S.Skip>
       <S.Header>
         <S.Capsule>
-          <S.Brand to="/" aria-label="Matchify home">
-            matchify<span aria-hidden="true">✳</span>
+          <S.Brand to="/" aria-label="Just2 home">
+            <BrandLogo decorative />
           </S.Brand>
           <S.Desktop aria-label="Main navigation">
             {navigation.map((n) => (
@@ -66,7 +67,7 @@ export function Navbar() {
       >
         <div data-top>
           <S.Brand to="/" onClick={close}>
-            matchify ✳
+            <BrandLogo onDark />
           </S.Brand>
           <button onClick={close} aria-label="Close menu">
             ×

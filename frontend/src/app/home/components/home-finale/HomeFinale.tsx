@@ -32,7 +32,7 @@ export function HomeFinale() {
   usePinnedProgress(ref, !staticMode, apply, "enter");
 
   return (
-    <S.Root ref={ref} id="meet-matchify" tabIndex={-1} $static={staticMode}>
+    <S.Root ref={ref} id="meet-just2" tabIndex={-1} $static={staticMode}>
       <S.Stage $static={staticMode}>
         <S.Orbit $static={staticMode} aria-hidden="true">
           {faces.map((face) => (
@@ -65,7 +65,7 @@ export function HomeFinale() {
           </p>
           <div data-cta>
             <ButtonLink to="/download">
-              Meet Matchify <span aria-hidden="true">↗</span>
+              Meet Just2 <span aria-hidden="true">↗</span>
             </ButtonLink>
           </div>
         </S.Copy>

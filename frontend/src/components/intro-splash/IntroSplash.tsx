@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
+import { BrandLogo } from "../brand-logo/BrandLogo";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
 import * as S from "./IntroSplash.styles";
 
@@ -46,7 +47,7 @@ export function IntroSplash() {
     if (phase !== "fly") return;
     const el = logo.current;
     const target = document.querySelector<HTMLElement>(
-      'header a[aria-label="Matchify home"]',
+      'header a[aria-label="Just2 home"]',
     );
     if (!el || !target) return setPhase("done");
     const from = el.getBoundingClientRect();
@@ -69,7 +70,7 @@ export function IntroSplash() {
         style={{ "--fly": `${FLY}ms` } as CSSProperties}
       >
         <S.Logo ref={logo}>
-          matchify<span>✳</span>
+          <BrandLogo decorative />
         </S.Logo>
       </S.Overlay>
     </>

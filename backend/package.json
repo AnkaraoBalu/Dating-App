@@ -1,8 +1,8 @@
 {
-  "name": "matchify-backend",
+  "name": "just2-backend",
   "version": "0.1.0",
   "private": true,
-  "description": "Matchify API built with NestJS and TypeScript",
+  "description": "Just2 API built with NestJS and TypeScript",
   "engines": {
     "node": ">=22"
   },

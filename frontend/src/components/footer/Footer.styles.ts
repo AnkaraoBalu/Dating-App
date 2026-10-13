@@ -57,13 +57,8 @@ export const Top = styled.div`
 `;
 export const Brand = styled.div`
   > a {
-    font-size: 30px;
-    font-weight: 800;
-    letter-spacing: -1.2px;
-  }
-  > a span {
-    color: #bd3448;
-    margin-left: 2px;
+    display: block;
+    width: 140px;
   }
   p {
     margin-top: 12px;
@@ -86,20 +81,13 @@ export const Band = styled.div`
   }
 `;
 export const Wordmark = styled.div`
+  width: min(60vw, 600px);
+  opacity: 0.25;
   position: absolute;
   left: 50%;
   top: 46%;
   translate: -50% -50%;
-  font-weight: 800;
-  letter-spacing: -0.07em;
-  font-size: clamp(60px, 19vw, 280px);
-  line-height: 1;
-  white-space: nowrap;
-  color: #24574a;
   user-select: none;
-  span {
-    color: #ff667855;
-  }
 `;
 export const Pit = styled.div`
   position: absolute;

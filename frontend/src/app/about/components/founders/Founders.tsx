@@ -20,7 +20,7 @@ const founders: {
     name: "Vinod",
     role: "Co-founder",
     quote:
-      "The best connections start with the little things you share, not a perfect profile. We built Matchify to make room for those.",
+      "The best connections start with the little things you share, not a perfect profile. We built Just2 to make room for those.",
   },
   {
     name: "Ankarao",

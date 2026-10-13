@@ -2,7 +2,7 @@ export const questions = [
   {
     id: "start",
     category: "Getting started",
-    question: "How do I get started with Matchify?",
+    question: "How do I get started with Just2?",
     answer:
       "Sign in to the mobile app, complete your onboarding, and set up your profile with photos and details. Once your profile is ready, you can explore Discover and Vibes.",
   },

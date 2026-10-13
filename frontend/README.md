@@ -1,4 +1,4 @@
-# Matchify website
+# Just2 website
 
 React + TypeScript public website for introducing the mobile app. Read
 [ARCHITECTURE.md](ARCHITECTURE.md) for folder rules, routes, and future scope.
@@ -44,6 +44,6 @@ unknown paths, so routes like `/about` work on refresh.
 nginx on port 8080 (`nginx.conf` handles client-side routes and asset caching).
 
 ```sh
-docker build -t matchify-frontend ./frontend
-docker run -p 8080:8080 matchify-frontend
+docker build -t just2-frontend ./frontend
+docker run -p 8080:8080 just2-frontend
 ```

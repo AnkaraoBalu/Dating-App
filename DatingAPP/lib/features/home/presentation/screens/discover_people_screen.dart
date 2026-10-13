@@ -72,7 +72,7 @@ class _DiscoverPeopleScreenState extends State<DiscoverPeopleScreen> {
     DiscoverPeopleMode.nearby => 'People nearby',
     DiscoverPeopleMode.trending => 'Trending',
     DiscoverPeopleMode.online => 'Online now',
-    DiscoverPeopleMode.newFaces => 'New to Matchify',
+    DiscoverPeopleMode.newFaces => 'New to Just2',
   };
 
   String get _subtitle => switch (widget.mode) {

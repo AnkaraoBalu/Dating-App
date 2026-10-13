@@ -163,7 +163,7 @@ export class ProfileConnectionsService {
         likedAt: like.createdAt,
         profile: {
           id: person.id,
-          name: person.username?.trim() || "Matchify member",
+          name: person.username?.trim() || "Just2 member",
           age,
           image: photos[0] ?? "",
           photos,
@@ -231,7 +231,7 @@ export class ProfileConnectionsService {
     const normalizedSearch = search?.trim().toLocaleLowerCase();
     return reciprocal
       .filter((like) => {
-        const name = like.toUser.username?.trim() || "Matchify member";
+        const name = like.toUser.username?.trim() || "Just2 member";
         return (
           !normalizedSearch ||
           name.toLocaleLowerCase().includes(normalizedSearch)
@@ -283,7 +283,7 @@ export class ProfileConnectionsService {
           ).toISOString(),
           profile: {
             id: like.toUserId,
-            name: like.toUser.username?.trim() || "Matchify member",
+            name: like.toUser.username?.trim() || "Just2 member",
             age,
             image: photos[0] ?? "",
             photos,

@@ -58,7 +58,7 @@ class DemoAuthApi {
       throw Exception(message ?? 'Demo login failed (${response.statusCode}).');
     }
     if (value is! Map<String, dynamic>) {
-      throw const FormatException('Unexpected response from Matchify API.');
+      throw const FormatException('Unexpected response from Just2 API.');
     }
     return value;
   }

@@ -30,7 +30,7 @@ class _LocationScreenState extends State<LocationScreen> {
       if (permission == LocationPermission.deniedForever) {
         await Geolocator.openAppSettings();
         throw Exception(
-          'Enable location access for Matchify in device settings.',
+          'Enable location access for Just2 in device settings.',
         );
       }
       if (permission == LocationPermission.denied) {

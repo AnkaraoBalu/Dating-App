@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/theme.dart';
+import '../../../../core/widgets/brand_logo.dart';
 import '../../../home/data/discover_api.dart';
 import '../../../home/presentation/screens/discover_filters_screen.dart';
 import '../../../home/presentation/screens/discover_people_screen.dart';
@@ -133,22 +134,9 @@ class VibeExploreScreen extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: RichText(
-                  text: TextSpan(
-                    style: AppTypography.h3.copyWith(
-                      color: AppColors.textPrimary,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -.7,
-                    ),
-                    children: const [
-                      TextSpan(text: 'matchify'),
-                      TextSpan(
-                        text: '✦',
-                        style: TextStyle(color: AppColors.coral, fontSize: 26),
-                      ),
-                    ],
-                  ),
+                child: const Align(
+                  alignment: Alignment.centerLeft,
+                  child: BrandLogo(),
                 ),
               ),
               IconButton(

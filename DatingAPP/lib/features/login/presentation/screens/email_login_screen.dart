@@ -104,7 +104,7 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
           child: Text(
             _createAccount
                 ? LoginCopy.existingAccount
-                : LoginCopy.newToMatchify,
+                : LoginCopy.newToJust2,
           ),
         ),
       ],

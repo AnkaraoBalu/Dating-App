@@ -2,8 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:clerk_auth/clerk_auth.dart' as clerk;
 import 'package:clerk_flutter/clerk_flutter.dart';
-import '../../../../core/constants/app_constants.dart';
-import '../../../../core/constants/app_assets.dart';
+import '../../../../core/widgets/brand_logo.dart';
 import '../../../../core/theme/theme.dart';
 import '../../data/login_copy.dart';
 import '../../data/clerk_operation.dart';
@@ -63,12 +62,12 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final auth = ClerkAuth.of(context, listen: false);
       void onError(clerk.ClerkError error) {
-        debugPrint('[MatchifyAuth] Clerk Google OAuth error: ${error.message}');
+        debugPrint('[Just2Auth] Clerk Google OAuth error: ${error.message}');
         if (mounted) setState(() => _authError = error.message);
       }
 
       debugPrint(
-        '[MatchifyAuth] Starting Google ${_createAccount ? 'sign-up' : 'sign-in'}',
+        '[Just2Auth] Starting Google ${_createAccount ? 'sign-up' : 'sign-in'}',
       );
       await runClerkOperation<void>(
         errors: auth.errorStream,
@@ -91,13 +90,13 @@ class _LoginScreenState extends State<LoginScreen> {
         },
       );
       debugPrint(
-        '[MatchifyAuth] Google browser opened; awaiting OAuth callback',
+        '[Just2Auth] Google browser opened; awaiting OAuth callback',
       );
       if (mounted && auth.isSignedIn) {
         Navigator.of(context).popUntil((route) => route.isFirst);
       }
     } catch (error) {
-      debugPrint('[MatchifyAuth] Google flow threw: $error');
+      debugPrint('[Just2Auth] Google flow threw: $error');
       if (mounted) {
         setState(() => _authError = error.toString());
       }
@@ -143,16 +142,7 @@ class _LoginScreenState extends State<LoginScreen> {
         Center(
           child: Column(
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(AppRadius.lg),
-                child: Image.asset(AppAssets.logo, width: 64, height: 64),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                AppConstants.name,
-                style: AppTypography.hero,
-                textAlign: TextAlign.center,
-              ),
+              const BrandLogo(height: 78),
               const SizedBox(height: AppSpacing.sm),
               Text(
                 _createAccount ? 'Create your account' : 'Welcome back',

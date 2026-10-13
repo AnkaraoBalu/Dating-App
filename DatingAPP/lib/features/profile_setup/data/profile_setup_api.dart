@@ -52,7 +52,7 @@ class ProfileSetupApi {
     required void Function(double progress) onProgress,
   }) async {
     final token = await getSessionToken();
-    final boundary = 'matchify-${DateTime.now().microsecondsSinceEpoch}';
+    final boundary = 'just2-${DateTime.now().microsecondsSinceEpoch}';
     final request =
         http.StreamedRequest('POST', Uri.parse('$baseUrl/profile/photos'))
           ..headers.addAll({
@@ -129,7 +129,7 @@ class ProfileSetupApi {
       throw Exception(message ?? 'Request failed (${response.statusCode}).');
     }
     if (decoded is! Map<String, dynamic>) {
-      throw const FormatException('Unexpected response from Matchify API.');
+      throw const FormatException('Unexpected response from Just2 API.');
     }
     return decoded;
   }

@@ -4,22 +4,9 @@ extension _HomeHeaderFilters on _HomeScreenState {
   Widget _header() => Row(
     children: [
       Expanded(
-        child: RichText(
-          text: TextSpan(
-            style: AppTypography.h3.copyWith(
-              color: AppColors.textPrimary,
-              fontSize: 25,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.7,
-            ),
-            children: const [
-              TextSpan(text: 'matchify'),
-              TextSpan(
-                text: '✦',
-                style: TextStyle(color: AppColors.coral, fontSize: 27),
-              ),
-            ],
-          ),
+        child: const Align(
+          alignment: Alignment.centerLeft,
+          child: BrandLogo(),
         ),
       ),
       _headerAction(

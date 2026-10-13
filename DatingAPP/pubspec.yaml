@@ -77,7 +77,7 @@ flutter:
     - assets/images/welcome/shared_energy_polaroids.png
     - assets/images/welcome/real_connection_polaroids.png
     - assets/images/welcome/new_chapter_polaroids.png
-    - assets/images/branding/logo.png
+    - assets/images/branding/just2/
     - assets/images/location/location.png
     - assets/images/welcome/welcome_background.png
   fonts:

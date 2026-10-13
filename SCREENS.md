@@ -200,7 +200,7 @@ navigating anywhere. Each one needs backend support first.
 | Where | Action |
 |---|---|
 | HomeScreen person menu | Share profile, Report |
-| Home explore section | Matchify+ |
+| Home explore section | Just2+ |
 | ConversationScreen | Voice call, GIF search, Clear chat |
 | ChatInfoScreen | Audio call, Video call, Mute, Block, Report |
 | MatchedProfileScreen | ⋯ menu (unmatch, report) |

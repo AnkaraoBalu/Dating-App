@@ -22,7 +22,11 @@ abstract final class AppAssets {
       'assets/images/welcome/real_connection_polaroids.png';
   static const welcomeNewChapter =
       'assets/images/welcome/new_chapter_polaroids.png';
-  static const logo = 'assets/images/branding/logo.png';
+  static const logo = 'assets/images/branding/just2/just2-icon-light.png';
+  static const logoMark = 'assets/images/branding/just2/just2-mark.png';
+  static const logoWordmark = 'assets/images/branding/just2/just2-wordmark.png';
+  static const logoWordmarkLight = 'assets/images/branding/just2/just2-wordmark-light.png';
+  static const logoStackedLight = 'assets/images/branding/just2/just2-stacked-light.png';
   static const locationBackground = 'assets/images/location/location.png';
   static const welcomeBackground =
       'assets/images/welcome/welcome_background.png';

@@ -1,4 +1,4 @@
-// Vibe categories as they appear in the Matchify app. Messages are illustrative.
+// Vibe categories as they appear in the Just2 app. Messages are illustrative.
 export const vibes = [
   {
     id: "coffee",

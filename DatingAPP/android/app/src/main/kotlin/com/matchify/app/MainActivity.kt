@@ -120,7 +120,7 @@ class MainActivity : FlutterActivity() {
                     }
                     mainHandler.post { callback.processResponse(responseBlob) }
                 } catch (error: Exception) {
-                    Log.e("MatchifyFaceTec", "FaceTec test session request failed", error)
+                    Log.e("Just2FaceTec", "FaceTec test session request failed", error)
                     mainHandler.post {
                         callback.abortOnCatastrophicError()
                         finishWithError(
@@ -136,7 +136,7 @@ class MainActivity : FlutterActivity() {
     }
 
     companion object {
-        private const val CHANNEL = "matchify/facetec"
+        private const val CHANNEL = "just2/facetec"
         private const val TESTING_API_ENDPOINT =
             "https://api.facetec.com/api/v4/biometrics/process-request"
         private val FACETEC_IO = Executors.newSingleThreadExecutor()

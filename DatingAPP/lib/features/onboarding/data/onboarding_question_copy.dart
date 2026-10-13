@@ -4,7 +4,7 @@ abstract final class OnboardingQuestionCopy {
   static const vibeStepCount = 10;
   static const completedTitle = 'All set!\nNow let’s build your profile';
   static const completedSubtitle =
-      'Your Matchify vibe is ready. Add a few profile details and let your personality shine.';
+      'Your Just2 vibe is ready. Add a few profile details and let your personality shine.';
   static const createProfile = 'Create my profile';
   static const savedDialogTitle = 'Your vibe is saved';
   static const savedDialogMessage =

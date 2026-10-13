@@ -11,41 +11,13 @@ class WelcomeBrand extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     mainAxisSize: MainAxisSize.min,
     children: [
-      ExcludeSemantics(
-        child: SizedBox.square(
-          dimension: 88,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(AppRadius.xl),
-            clipBehavior: Clip.antiAlias,
-            child: Image.asset(AppAssets.logo, fit: BoxFit.cover),
-          ),
-        ),
-      ),
-      const SizedBox(height: AppSpacing.md),
-      Semantics(
-        header: true,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Flexible(
-              child: Text(
-                AppConstants.name,
-                style: AppTypography.welcomeBrand.copyWith(
-                  color: AppColors.textOnDark,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.xxs),
-            const ExcludeSemantics(
-              child: Icon(
-                Icons.auto_awesome_rounded,
-                color: AppColors.peach,
-                size: AppSizes.inputIcon,
-              ),
-            ),
-          ],
-        ),
+      Image.asset(
+        AppAssets.logoStackedLight,
+        width: 164,
+        height: 164,
+        fit: BoxFit.contain,
+        semanticLabel: AppConstants.name,
+        filterQuality: FilterQuality.high,
       ),
       const SizedBox(height: AppSpacing.md),
       Text(

@@ -44,7 +44,7 @@ export function StoryHero() {
           description={description}
         />
         <CommonContainer>
-          <S.PhotoRow aria-label="Illustrations of the Matchify community">
+          <S.PhotoRow aria-label="Illustrations of the Just2 community">
             {[photos.left, photos.center, photos.right].map(([image, alt]) => (
               <img key={image} src={`/images/${image}.png`} alt={alt} />
             ))}

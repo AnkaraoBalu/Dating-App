@@ -89,7 +89,7 @@ export class ConversationsService {
           : conversation.userOne;
       const profile = peer.profile;
       const onboarding = peer.onboardingProfile;
-      const name = peer.username?.trim() || "Matchify member";
+      const name = peer.username?.trim() || "Just2 member";
       if (
         normalizedSearch &&
         !name.toLocaleLowerCase().includes(normalizedSearch) &&

@@ -1,4 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
+import { BrandLogo } from "../brand-logo/BrandLogo";
 import { CommonContainer } from "../common-container";
 import { FallingFaces } from "./FallingFaces";
 import * as S from "./Footer.styles";
@@ -11,8 +12,8 @@ export function Footer() {
         <CommonContainer>
           <S.Top>
             <S.Brand>
-              <Link to="/" aria-label="Matchify home">
-                matchify<span aria-hidden="true">✳</span>
+              <Link to="/" aria-label="Just2 home">
+                <BrandLogo decorative />
               </Link>
               <p>
                 Find your people.
@@ -41,12 +42,12 @@ export function Footer() {
       </S.Panel>
       <S.Band>
         <S.Wordmark aria-hidden="true">
-          matchify<span>✳</span>
+          <BrandLogo onDark decorative />
         </S.Wordmark>
         <FallingFaces key={pathname} />
       </S.Band>
       <S.Bottom>
-        <span>© {new Date().getFullYear()} Matchify</span>
+        <span>© {new Date().getFullYear()} Just2</span>
         <span>Made for the possibility of something real.</span>
       </S.Bottom>
     </S.Root>

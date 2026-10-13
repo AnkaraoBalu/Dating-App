@@ -1,8 +1,8 @@
-# Matchify website architecture
+# Just2 website architecture
 
 ## Purpose and scope
 
-`frontend/` is the public React website introducing the Matchify mobile app.
+`frontend/` is the public React website introducing the Just2 mobile app.
 The initial site explains discovery, Vibes, mutual matches, and conversations.
 It is independent of the Flutter client and NestJS server, and currently uses
 local presentation content without authentication or backend requests.
@@ -21,7 +21,7 @@ adding product claims.
 - React Router for page routes and shared layout.
 - styled-components for separate, typed `*.styles.ts` files.
 - Yarn Classic 1.22.22 with a committed lockfile.
-- Matchify's Flutter forest, coral, and cream palette in one theme.
+- Just2's Flutter forest, coral, and cream palette in one theme.
 
 ## Source structure
 
@@ -182,7 +182,7 @@ This task prepares a local website; it does not publish a hosted site.
 ## Design reference and validation
 
 The site's editorial sections, sticky scroll storytelling, and mobile navigation
-were inspired by Rivet and adapted to Matchify's own content and palette. It uses
+were inspired by Rivet and adapted to Just2's own content and palette. It uses
 native browser motion without additional animation dependencies.
 
 Browser validation covered all ten route outcomes at 1440px, 390px, and 320px,

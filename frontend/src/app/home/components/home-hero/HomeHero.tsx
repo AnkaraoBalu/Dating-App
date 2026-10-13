@@ -45,13 +45,13 @@ export function HomeHero() {
                 actually feel right.
               </p>
               <Actions data-actions>
-                <ButtonLink to="/download">Meet Matchify ↗</ButtonLink>
+                <ButtonLink to="/download">Meet Just2 ↗</ButtonLink>
                 <TextLink to="/how-it-works">
                   How it works <span>→</span>
                 </TextLink>
               </Actions>
             </div>
-            <S.Art aria-label="Illustrative Matchify profiles">
+            <S.Art aria-label="Illustrative Just2 profiles">
               <S.Photo $side="left">
                 <img
                   src="/images/maya.png"
@@ -81,7 +81,7 @@ export function HomeHero() {
           </S.Hero>
           <S.ScrollHint>
             <span>A little curiosity goes a long way</span>
-            <ScrollMore target="discover" destination="discover Matchify" />
+            <ScrollMore target="discover" destination="discover Just2" />
           </S.ScrollHint>
         </CommonContainer>
       </S.Stage>

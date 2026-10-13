@@ -1,7 +1,7 @@
 Pod::Spec.new do |spec|
   spec.name = 'FaceTecSDK'
   spec.version = '10.1.23'
-  spec.summary = 'FaceTec iOS device SDK for Matchify verification.'
+  spec.summary = 'FaceTec iOS device SDK for Just2 verification.'
   spec.homepage = 'https://dev.facetec.com/'
   spec.license = { :type => 'Commercial' }
   spec.author = 'FaceTec'

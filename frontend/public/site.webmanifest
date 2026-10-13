@@ -1,0 +1,13 @@
+{
+  "name": "Just2",
+  "short_name": "Just2",
+  "description": "People, vibes, real connections.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFF9EF",
+  "theme_color": "#102D26",
+  "icons": [
+    { "src": "/images/branding/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/images/branding/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

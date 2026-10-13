@@ -14,7 +14,7 @@ class ProfileVerificationScreen extends StatefulWidget {
 }
 
 class _ProfileVerificationScreenState extends State<ProfileVerificationScreen> {
-  static const _faceTecChannel = MethodChannel('matchify/facetec');
+  static const _faceTecChannel = MethodChannel('just2/facetec');
   bool _openingCamera = false;
 
   String get _status =>
@@ -45,7 +45,7 @@ class _ProfileVerificationScreenState extends State<ProfileVerificationScreen> {
               const Text(
                 'FaceTec will open its live selfie check and send the encrypted '
                 'session directly to FaceTec’s developer Testing API. This is '
-                'for development only. Matchify has not connected a verification '
+                'for development only. Just2 has not connected a verification '
                 'backend yet, so this will not submit a result or add a badge.',
                 style: TextStyle(color: profileTextSecondary, height: 1.5),
               ),
@@ -87,7 +87,7 @@ class _ProfileVerificationScreenState extends State<ProfileVerificationScreen> {
           SnackBar(
             content: Text(
               completed == true
-                  ? 'FaceTec test session completed. No Matchify verification badge was changed.'
+                  ? 'FaceTec test session completed. No Just2 verification badge was changed.'
                   : 'FaceTec session was not completed.',
             ),
             behavior: SnackBarBehavior.floating,
@@ -145,7 +145,7 @@ class _ProfileVerificationScreenState extends State<ProfileVerificationScreen> {
             number: '3',
             title: 'Finish the developer test',
             detail:
-                'A completed test session does not verify your Matchify profile.',
+                'A completed test session does not verify your Just2 profile.',
             icon: Icons.verified_user_outlined,
           ),
           const SizedBox(height: 12),
@@ -166,7 +166,7 @@ class _ProfileVerificationScreenState extends State<ProfileVerificationScreen> {
                     'A real verification check needs a secure liveness and '
                     'photo-matching service. Until one is connected, this '
                     'development integration sends the FaceTec scan to its Testing API. '
-                    'No Matchify badge is granted by this test flow.',
+                    'No Just2 badge is granted by this test flow.',
                     style: TextStyle(
                       color: profileTextSecondary,
                       height: 1.45,

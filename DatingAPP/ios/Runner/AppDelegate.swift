@@ -7,7 +7,7 @@ import FaceTecSDK
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
     let channel = FlutterMethodChannel(
-      name: "matchify/facetec",
+      name: "just2/facetec",
       binaryMessenger: engineBridge.applicationRegistrar.messenger()
     )
     channel.setMethodCallHandler { call, result in
@@ -19,13 +19,13 @@ import FaceTecSDK
         result(FlutterError(code: "NO_PRESENTER", message: "Could not find the Flutter view controller.", details: nil))
         return
       }
-      MatchifyFaceTecBridge.shared.start(from: presenter, result: result)
+      Just2FaceTecBridge.shared.start(from: presenter, result: result)
     }
   }
 }
 
-private final class MatchifyFaceTecBridge: NSObject, FaceTecInitializeCallback, FaceTecSessionRequestProcessor {
-  static let shared = MatchifyFaceTecBridge()
+private final class Just2FaceTecBridge: NSObject, FaceTecInitializeCallback, FaceTecSessionRequestProcessor {
+  static let shared = Just2FaceTecBridge()
 
   private let deviceKeyIdentifier = "dRbnBk7c4UYUsDSYRoe3xbSLOk3C3W2m"
   private let testingApiEndpoint = URL(string: "https://api.facetec.com/api/v4/biometrics/process-request")!

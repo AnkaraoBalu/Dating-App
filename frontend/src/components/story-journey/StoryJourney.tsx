@@ -153,7 +153,7 @@ export function StoryJourney({ nextTarget }: { nextTarget?: string }) {
                   >
                     <img
                       src={`/images/${s.image}.png`}
-                      alt="Illustrative Matchify profile"
+                      alt="Illustrative Just2 profile"
                       loading="lazy"
                     />
                     <span>{s.tag}</span>

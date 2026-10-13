@@ -19,7 +19,7 @@ const links = [
     to: "/download",
     emoji: "📱",
     title: "Meet the app",
-    body: "Where Matchify is available and what’s coming.",
+    body: "Where Just2 is available and what’s coming.",
   },
 ];
 

@@ -15,7 +15,7 @@ export function DownloadPage() {
           </h1>
           <p data-copy>
             Discover people, follow your interests, and make room for a
-            connection that feels like you. Matchify brings it together in one
+            connection that feels like you. Just2 brings it together in one
             place.
           </p>
           <S.Stores aria-label="App availability">

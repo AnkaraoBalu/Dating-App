@@ -27,18 +27,12 @@ export const Capsule = styled.div`
   padding: 13px 16px 13px 30px;
 `;
 export const Brand = styled(Link)`
-  font-size: 28px;
-  font-weight: 800;
-  letter-spacing: -1.5px;
   display: flex;
   align-items: center;
-  gap: 3px;
-  span {
-    color: #bd3448;
-    font-size: 30px;
-  }
+  width: 112px;
+  flex-shrink: 0;
   @media (max-width: 480px) {
-    font-size: 23px;
+    width: 86px;
   }
 `;
 export const Desktop = styled.nav`

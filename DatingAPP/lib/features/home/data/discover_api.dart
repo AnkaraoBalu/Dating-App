@@ -157,7 +157,7 @@ class DiscoverApi extends ChangeNotifier {
     final rawDistance = json['distance']?.toString();
     return HomePerson(
       id: json['id']?.toString() ?? '',
-      name: json['name']?.toString() ?? 'Matchify member',
+      name: json['name']?.toString() ?? 'Just2 member',
       age: (json['age'] as num?)?.toInt() ?? 18,
       image: image,
       photos: photos,

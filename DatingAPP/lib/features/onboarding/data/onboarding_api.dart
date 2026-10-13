@@ -95,7 +95,7 @@ class OnboardingApi {
       throw Exception(message ?? 'Request failed (${response.statusCode}).');
     }
     if (decoded is! Map<String, dynamic>) {
-      throw const FormatException('Unexpected response from Matchify API.');
+      throw const FormatException('Unexpected response from Just2 API.');
     }
     return decoded;
   }

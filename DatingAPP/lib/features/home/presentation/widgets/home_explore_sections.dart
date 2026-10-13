@@ -121,7 +121,7 @@ extension _HomeExploreSections on _HomeScreenState {
           ),
         ),
         FilledButton.tonalIcon(
-          onPressed: () => _notice('Matchify+ is coming soon.'),
+          onPressed: () => _notice('Just2+ is coming soon.'),
           icon: const Icon(Icons.arrow_forward_rounded, size: 17),
           label: const Text('Upgrade'),
           style: FilledButton.styleFrom(

@@ -7,7 +7,7 @@ import {
 } from "../../../../hooks/usePinnedScene";
 import * as S from "./BeliefStatement.styles";
 
-const lead = "Matchify is a place for connection built on";
+const lead = "Just2 is a place for connection built on";
 const accent = "being yourself.";
 const body =
   "Where shared interests, honest profiles, and a mutual yes turn a little curiosity into something real.".split(

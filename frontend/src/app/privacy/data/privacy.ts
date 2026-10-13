@@ -3,7 +3,7 @@ import type { LegalSection } from "../../../components/legal-document";
 // DRAFT — written from how the app works today; needs legal review before launch.
 // Fill in every [bracketed] value.
 export const privacySummary = [
-  "We collect what you give us (your profile, photos, and messages) and a little about how you use Matchify.",
+  "We collect what you give us (your profile, photos, and messages) and a little about how you use Just2.",
   "Your profile is shown to other members so you can connect. Your messages are only shared with the person you’re talking to.",
   "Viewed messages can disappear; saved messages stay until either of you unsaves them.",
   "We never sell your personal information.",
@@ -15,7 +15,7 @@ export const privacySections: LegalSection[] = [
     id: "who-we-are",
     title: "Who we are",
     body: [
-      "Matchify is operated by [Company legal name], [registered address] (“Matchify”, “we”, “us”). We are responsible for the personal information described in this policy.",
+      "Just2 is operated by [Company legal name], [registered address] (“Just2”, “we”, “us”). We are responsible for the personal information described in this policy.",
       "Questions about privacy? Contact us at [privacy contact email].",
     ],
   },
@@ -31,7 +31,7 @@ export const privacySections: LegalSection[] = [
         "Vibe rooms you create, join, or save, and what you post in them.",
         "Reports you make about other members.",
       ],
-      "Information created as you use Matchify:",
+      "Information created as you use Just2:",
       [
         "Likes and passes, matches, and the rooms you take part in.",
         "Your approximate location, if you allow it, to show you people nearby and to filter by distance.",
@@ -46,7 +46,7 @@ export const privacySections: LegalSection[] = [
     body: [
       "Selfie verification is optional. If you choose to take part, our verification provider, FaceTec, guides you through a live selfie check using your camera, after you give permission.",
       "The check analyzes your face to confirm that you are a real, present person. This can involve biometric information. [Describe what is retained, by whom, for how long, and the legal basis or consent obtained, once the production verification flow is final.]",
-      "During development, selfie checks are sent to FaceTec’s testing service and do not change your Matchify profile or verification badge.",
+      "During development, selfie checks are sent to FaceTec’s testing service and do not change your Just2 profile or verification badge.",
     ],
   },
   {
@@ -57,7 +57,7 @@ export const privacySections: LegalSection[] = [
         "To create and run your account and show your profile to other members.",
         "To suggest people and rooms, and to apply the discovery filters you choose (like age, distance, and interests).",
         "To deliver messages and notifications.",
-        "To keep Matchify safe: preventing spam, fraud, and abuse, and reviewing reports.",
+        "To keep Just2 safe: preventing spam, fraud, and abuse, and reviewing reports.",
         "To fix problems and improve the service.",
         "To meet our legal obligations.",
       ],
@@ -86,7 +86,7 @@ export const privacySections: LegalSection[] = [
     id: "sharing",
     title: "Service providers we share with",
     body: [
-      "We use trusted providers to run Matchify. They may only use your information to provide their service to us:",
+      "We use trusted providers to run Just2. They may only use your information to provide their service to us:",
       [
         "Sign-in and account security: Clerk.",
         "Photo and image storage: Cloudinary.",
@@ -128,7 +128,7 @@ export const privacySections: LegalSection[] = [
     id: "age",
     title: "Age requirement",
     body: [
-      "Matchify is only for adults aged [18] or older. We do not knowingly collect information from anyone under that age. If you believe a minor is using Matchify, please report them in the app or contact us.",
+      "Just2 is only for adults aged [18] or older. We do not knowingly collect information from anyone under that age. If you believe a minor is using Just2, please report them in the app or contact us.",
     ],
   },
   {

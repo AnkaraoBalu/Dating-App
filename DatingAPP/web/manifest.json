@@ -1,9 +1,9 @@
 {
-    "name": "Matchify",
-    "short_name": "Matchify",
+    "name": "Just2",
+    "short_name": "Just2",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#FFF8F5",
+    "background_color": "#FFF9EF",
     "theme_color": "#CC4667",
     "description": "Real people. Meaningful connections.",
     "orientation": "portrait-primary",

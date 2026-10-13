@@ -1,7 +1,7 @@
-# Matchify API (NestJS + Prisma) — production image for Render.
+# Just2 API (NestJS + Prisma) — production image for Render.
 #
-# Build:  docker build -t matchify-backend ./backend
-# Run:    docker run -p 3000:3000 --env-file backend/.env matchify-backend
+# Build:  docker build -t just2-backend ./backend
+# Run:    docker run -p 3000:3000 --env-file backend/.env just2-backend
 #
 # Render injects PORT; the app already reads PORT and binds to 0.0.0.0.
 # Database migrations run on start (set RUN_MIGRATIONS=false to skip, e.g. if

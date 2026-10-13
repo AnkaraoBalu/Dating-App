@@ -92,7 +92,7 @@ export function LegalDocument({
       </S.Hero>
       <CommonContainer>
         <S.Draft role="note">
-          <strong>This is a draft.</strong> It describes how Matchify works
+          <strong>This is a draft.</strong> It describes how Just2 works
           today, but it hasn’t been reviewed by a lawyer and isn’t in effect
           yet. Text in [brackets] still needs to be filled in.
         </S.Draft>

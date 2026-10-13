@@ -61,7 +61,7 @@ export function HomeChat() {
               </div>
             </S.Text>
           </S.Layout>
-          <ScrollMore target="meet-matchify" destination="meet Matchify" />
+          <ScrollMore target="meet-just2" destination="meet Just2" />
         </CommonContainer>
       </S.Stage>
     </S.Root>

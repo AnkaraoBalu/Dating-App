@@ -6,7 +6,7 @@ import 'package:socket_io_client/socket_io_client.dart' as socket_io;
 
 import 'socket_zone.dart';
 
-/// A Socket.IO connection to the Matchify API that stays authenticated.
+/// A Socket.IO connection to the Just2 API that stays authenticated.
 ///
 /// - Sends a fresh session token on every (re)connect.
 /// - Reports [connected] only after the server's `chat:ready`, i.e. once it has

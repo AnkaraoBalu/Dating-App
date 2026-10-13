@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/theme/theme.dart';
+import '../../../../core/widgets/brand_logo.dart';
 import '../../data/home_discover_data.dart';
 import '../../data/discover_api.dart';
 import '../../data/home_discovery_preferences.dart';

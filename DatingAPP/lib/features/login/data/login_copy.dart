@@ -20,7 +20,7 @@ abstract final class LoginCopy {
   static const phoneHint = '98765 43210';
   static const emailLabel = 'Email address';
   static const phoneLabel = 'Phone number';
-  static const newToMatchify = 'New to Matchify? Create account';
+  static const newToJust2 = 'New to Just2? Create account';
   static const existingAccount = 'Already have an account? Sign in';
 
   static String resendCodeIn(int seconds) =>

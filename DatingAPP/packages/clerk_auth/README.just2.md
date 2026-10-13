@@ -1,4 +1,4 @@
-# Matchify Clerk auth patch
+# Just2 Clerk auth patch
 
 This is the `clerk_auth` 0.0.18-beta package used by `clerk_flutter`, copied
 locally under its MIT license. `DatingAPP/pubspec.yaml` selects it with a path

@@ -14,7 +14,11 @@ const titles: Record<string, string> = {
 export function RouteEffects() {
   const { pathname, hash } = useLocation();
   useEffect(() => {
-    document.title = `${titles[pathname] ?? "Page not found"} · Matchify`;
+    document.title = `${titles[pathname] ?? "Page not found"} · Just2`;
+    const pageUrl = new URL(pathname, "https://just2.in").href;
+    document.querySelector('link[rel="canonical"]')?.setAttribute("href", pageUrl);
+    document.querySelector('meta[property="og:url"]')?.setAttribute("content", pageUrl);
+    document.querySelector('meta[property="og:title"]')?.setAttribute("content", document.title);
     const frame = requestAnimationFrame(() => {
       if (hash) {
         document

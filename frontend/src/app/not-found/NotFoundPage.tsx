@@ -7,7 +7,7 @@ export function NotFoundPage() {
       <Content>
         <p>404</p>
         <h1>This page took a different path.</h1>
-        <Link to="/">Back to Matchify</Link>
+        <Link to="/">Back to Just2</Link>
       </Content>
     </CommonContainer>
   );

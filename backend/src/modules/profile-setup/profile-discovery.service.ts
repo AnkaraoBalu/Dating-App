@@ -10,13 +10,24 @@ import { DiscoverProfilesQueryDto } from "./dto/discover-profiles.dto";
 export class ProfileDiscoveryService {
   constructor(private readonly prisma: PrismaService) {}
   async discover(clerkUserId: string, query: DiscoverProfilesQueryDto) {
-    const current = await this.prisma.user.findUnique({
-      where: { clerkUserId },
-      include: {
-        onboardingProfile: true,
-        profile: { select: { location: true } },
-      },
-    });
+    // Load the member and who they already liked/passed in parallel.
+    const [current, sentLikes, sentPasses] = await Promise.all([
+      this.prisma.user.findUnique({
+        where: { clerkUserId },
+        include: {
+          onboardingProfile: true,
+          profile: { select: { location: true } },
+        },
+      }),
+      this.prisma.profileLike.findMany({
+        where: { fromUser: { clerkUserId } },
+        select: { toUserId: true },
+      }),
+      this.prisma.profilePass.findMany({
+        where: { fromUser: { clerkUserId } },
+        select: { toUserId: true },
+      }),
+    ]);
     if (!current?.onboardingProfile?.completedAt) {
       throw new NotFoundException(
         "Complete onboarding before discovering profiles.",
@@ -52,16 +63,6 @@ export class ProfileDiscoveryService {
     const radiusKm =
       query.radiusKm ?? current.onboardingProfile.preferredDistanceKm;
 
-    const [sentLikes, sentPasses] = await Promise.all([
-      this.prisma.profileLike.findMany({
-        where: { fromUserId: current.id },
-        select: { toUserId: true },
-      }),
-      this.prisma.profilePass.findMany({
-        where: { fromUserId: current.id },
-        select: { toUserId: true },
-      }),
-    ]);
     const excludedUserIds = [
       ...new Set([
         ...sentLikes.map(({ toUserId }) => toUserId),
@@ -244,7 +245,7 @@ export class ProfileDiscoveryService {
       return [
         {
           id: profile.userId,
-          name: profile.user.username?.trim() || "Matchify member",
+          name: profile.user.username?.trim() || "Just2 member",
           age,
           image: photos[0],
           photos,

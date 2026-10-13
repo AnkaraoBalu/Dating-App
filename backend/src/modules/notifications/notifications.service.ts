@@ -86,7 +86,7 @@ export class NotificationsService {
   newLike(recipientId: string) {
     return this.deliver(recipientId, async () => ({
       title: "Someone likes you 💘",
-      body: "Open Matchify to see who.",
+      body: "Open Just2 to see who.",
       data: { type: "like" },
     }));
   }

@@ -96,7 +96,7 @@ class _ClerkOAuthCallbackState extends State<_ClerkOAuthCallback> {
     final links = AppLinks();
     final auth = ClerkAuth.of(context, listen: false);
     _errorsSubscription = auth.errorStream.listen((error) {
-      debugPrint('[MatchifyAuth] Clerk error: ${error.message}');
+      debugPrint('[Just2Auth] Clerk error: ${error.message}');
       _callbackError = error.message;
     });
     _subscription = links.uriLinkStream.listen(_handleLink);
@@ -120,7 +120,7 @@ class _ClerkOAuthCallbackState extends State<_ClerkOAuthCallback> {
     if (auth.isSignedIn) return;
     _callbackError = null;
     debugPrint(
-      '[MatchifyAuth] OAuth callback received; '
+      '[Just2Auth] OAuth callback received; '
       'pending sign-up=${auth.signUp != null}, '
       'pending sign-in=${auth.signIn != null}, '
       'has callback token=${uri.queryParameters.containsKey('rotating_token_nonce')}',
@@ -140,14 +140,14 @@ class _ClerkOAuthCallbackState extends State<_ClerkOAuthCallback> {
           (auth.signIn?.isTransferable == true ||
               auth.signUp?.isTransferable == true)) {
         debugPrint(
-          '[MatchifyAuth] Google identity is transferable; switching '
+          '[Just2Auth] Google identity is transferable; switching '
           'between sign-in and sign-up.',
         );
         await auth.transfer();
       }
       if (!auth.isSignedIn) await auth.refreshClient();
       debugPrint(
-        '[MatchifyAuth] OAuth callback completed; '
+        '[Just2Auth] OAuth callback completed; '
         'signedIn=${auth.isSignedIn}, '
         'signUpStatus=${auth.signUp?.status.name ?? 'none'}, '
         'signInStatus=${auth.signIn?.status.name ?? 'none'}',
@@ -155,7 +155,7 @@ class _ClerkOAuthCallbackState extends State<_ClerkOAuthCallback> {
       final signUp = auth.signUp;
       if (signUp != null && !auth.isSignedIn) {
         debugPrint(
-          '[MatchifyAuth] Sign-up requirements: '
+          '[Just2Auth] Sign-up requirements: '
           'missing=${signUp.missingFields.map((field) => field.name).join(', ')}, '
           'unverified=${signUp.unverifiedFields.map((field) => field.name).join(', ')}, '
           'required=${signUp.requiredFields.map((field) => field.name).join(', ')}',
@@ -169,7 +169,7 @@ class _ClerkOAuthCallbackState extends State<_ClerkOAuthCallback> {
         );
       }
     } catch (error) {
-      debugPrint('[MatchifyAuth] OAuth callback failed: $error');
+      debugPrint('[Just2Auth] OAuth callback failed: $error');
       _showError(error.toString());
     }
   }

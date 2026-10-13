@@ -1,4 +1,4 @@
-# Matchify backend
+# Just2 backend
 
 NestJS API service written in TypeScript. It is independently installed and deployed from the Flutter app.
 
@@ -63,8 +63,8 @@ Deploy this API as a Node.js service or container, independently from the Flutte
 to skip migrations. Render injects `PORT`; health checks use `/api/v1/health`.
 
 ```sh
-docker build -t matchify-backend ./backend
-docker run -p 3000:3000 --env-file backend/.env matchify-backend
+docker build -t just2-backend ./backend
+docker run -p 3000:3000 --env-file backend/.env just2-backend
 ```
 
 The repository's `render.yaml` Blueprint deploys this image on every push to

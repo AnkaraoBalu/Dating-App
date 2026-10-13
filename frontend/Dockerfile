@@ -1,12 +1,12 @@
-# Matchify website (Vite + React) — static build served by nginx.
+# Just2 website (Vite + React) — static build served by nginx.
 #
 # Cloudflare Pages does not need this image: it builds the site from git
 # (build command `yarn ui:build`, output directory `dist`, root `frontend`).
 # Use this image for container hosts (e.g. Cloudflare Containers, Render, Fly)
 # or to run the production build locally:
 #
-#   docker build -t matchify-frontend ./frontend
-#   docker run -p 8080:8080 matchify-frontend
+#   docker build -t just2-frontend ./frontend
+#   docker run -p 8080:8080 just2-frontend
 
 # ---- build ----
 FROM node:22-bookworm-slim AS build

@@ -18,7 +18,7 @@ export function AppCta() {
           you.
         </p>
         <ButtonLink to="/download">
-          Meet Matchify <span aria-hidden="true">↗</span>
+          Meet Just2 <span aria-hidden="true">↗</span>
         </ButtonLink>
       </Reveal>
     </Root>

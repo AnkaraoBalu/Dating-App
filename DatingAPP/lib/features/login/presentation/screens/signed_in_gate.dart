@@ -55,7 +55,7 @@ class _SignedInGateState extends State<SignedInGate> {
         baseUrl: apiUrl,
         getSessionToken: _sessionToken,
       );
-      phase = 'loading your Matchify account';
+      phase = 'loading your Just2 account';
       final profile = await api.loadProfile();
       Map<String, dynamic>? savedProfile;
       if (profile?.completedAt != null) {
@@ -70,7 +70,7 @@ class _SignedInGateState extends State<SignedInGate> {
       _profile = profile;
       _savedProfile = savedProfile;
       debugPrint(
-        '[MatchifyAuth] API session verified; account data loaded. '
+        '[Just2Auth] API session verified; account data loaded. '
         'onboardingComplete=${profile?.completedAt != null}, '
         'profileComplete=${savedProfile?['completedAt'] != null}.',
       );
@@ -78,7 +78,7 @@ class _SignedInGateState extends State<SignedInGate> {
       final message = error is TimeoutException
           ? 'Timed out while $phase. Check that the API server is reachable from this device and responsive, then try again.'
           : 'Could not finish $phase: $error';
-      debugPrint('[MatchifyAuth] Startup failed while $phase: $error');
+      debugPrint('[Just2Auth] Startup failed while $phase: $error');
       if (mounted) setState(() => _error = message);
     } finally {
       if (mounted) {

@@ -1,4 +1,4 @@
-# Matchify
+# Just2
 
 A clean Flutter starter for Android and iOS. The app opens to a welcome screen and a four-page introductory carousel, with responsive layout, safe areas, and large-text support. The Dart package is `dating_app`; `com.example` identifiers are development placeholders.
 

@@ -1,4 +1,4 @@
-# Matchify design system
+# Just2 design system
 
 The palette and typography follow [the screen reference](../../../docs/design/All_Screens.png) and the supplied design notes. Screens consume `Theme.of(context)` and shared widgets, rather than defining their own colors and control styles.
 

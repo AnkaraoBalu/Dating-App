@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
-/// Registers this phone for push notifications with the Matchify API.
+/// Registers this phone for push notifications with the Just2 API.
 class NotificationsApi {
   NotificationsApi({
     required this.baseUrl,

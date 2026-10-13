@@ -3,11 +3,11 @@ import type { LegalSection } from "../../../components/legal-document";
 // DRAFT — written from how the app works today; needs legal review before launch.
 // Fill in every [bracketed] value.
 export const termsSummary = [
-  "You must be [18] or older to use Matchify.",
+  "You must be [18] or older to use Just2.",
   "Be honest, be kind, and follow our community guidelines.",
-  "You own what you post; you let us show it so Matchify can work.",
+  "You own what you post; you let us show it so Just2 can work.",
   "We can remove content or accounts that break these terms.",
-  "You can stop using Matchify and delete your account at any time.",
+  "You can stop using Just2 and delete your account at any time.",
 ];
 
 export const termsSections: LegalSection[] = [
@@ -15,17 +15,17 @@ export const termsSections: LegalSection[] = [
     id: "agreement",
     title: "Agreeing to these terms",
     body: [
-      "These terms are an agreement between you and [Company legal name] (“Matchify”, “we”, “us”). By creating an account or using Matchify, you agree to them and to our Privacy Policy.",
+      "These terms are an agreement between you and [Company legal name] (“Just2”, “we”, “us”). By creating an account or using Just2, you agree to them and to our Privacy Policy.",
     ],
   },
   {
     id: "eligibility",
-    title: "Who can use Matchify",
+    title: "Who can use Just2",
     body: [
       [
         "You are at least [18] years old.",
         "You can legally enter into this agreement where you live.",
-        "You haven’t been removed from Matchify before.",
+        "You haven’t been removed from Just2 before.",
         "You have one account, and it represents you.",
       ],
     ],
@@ -41,14 +41,14 @@ export const termsSections: LegalSection[] = [
     id: "community",
     title: "Community conduct",
     body: [
-      "Matchify works when people feel safe and respected. You agree not to:",
+      "Just2 works when people feel safe and respected. You agree not to:",
       [
         "Harass, threaten, bully, or pressure anyone.",
         "Post hateful, sexually explicit, violent, or illegal content.",
         "Pretend to be someone else or misrepresent yourself.",
-        "Use Matchify for spam, scams, advertising, or soliciting money.",
+        "Use Just2 for spam, scams, advertising, or soliciting money.",
         "Share someone else’s private information or photos without permission.",
-        "Interfere with Matchify or try to access it in unauthorized ways, such as scraping.",
+        "Interfere with Just2 or try to access it in unauthorized ways, such as scraping.",
       ],
       "Please also follow our Community guidelines. You can block or report anyone at any time.",
     ],
@@ -57,7 +57,7 @@ export const termsSections: LegalSection[] = [
     id: "content",
     title: "Your content",
     body: [
-      "You keep ownership of the photos, profile details, and messages you share. To run Matchify, you give us a [worldwide, non-exclusive, royalty-free] license to host, store, display, and process that content for as long as it’s on Matchify.",
+      "You keep ownership of the photos, profile details, and messages you share. To run Just2, you give us a [worldwide, non-exclusive, royalty-free] license to host, store, display, and process that content for as long as it’s on Just2.",
       "Only post content you have the right to share. You’re responsible for what you post.",
     ],
   },
@@ -95,7 +95,7 @@ export const termsSections: LegalSection[] = [
     id: "disclaimers",
     title: "Disclaimers and liability",
     body: [
-      "Matchify is provided “as is”. [Insert disclaimers and limitation of liability appropriate to your jurisdiction after legal review.]",
+      "Just2 is provided “as is”. [Insert disclaimers and limitation of liability appropriate to your jurisdiction after legal review.]",
     ],
   },
   {
@@ -109,7 +109,7 @@ export const termsSections: LegalSection[] = [
     id: "changes",
     title: "Changes to these terms",
     body: [
-      "We may update these terms as Matchify grows. If changes are significant, we’ll let you know in the app before they take effect. Questions? Contact us at [contact email].",
+      "We may update these terms as Just2 grows. If changes are significant, we’ll let you know in the app before they take effect. Questions? Contact us at [contact email].",
     ],
   },
 ];

@@ -13,9 +13,9 @@ class SystemNotifications {
   /// High importance so Android shows a heads-up banner, not just a tray icon.
   /// The backend sends background pushes to this channel too.
   static const channel = AndroidNotificationChannel(
-    'matchify_alerts',
+    'just2_alerts',
     'Messages, matches and likes',
-    description: 'New messages, matches and likes on Matchify.',
+    description: 'New messages, matches and likes on Just2.',
     importance: Importance.high,
   );
 

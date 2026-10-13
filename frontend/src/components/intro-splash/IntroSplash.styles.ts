@@ -5,7 +5,7 @@ export const IntroGlobal = createGlobalStyle`
   html[data-intro] body {
     overflow: hidden;
   }
-  html[data-intro] header a[aria-label="Matchify home"] {
+  html[data-intro] header a[aria-label="Just2 home"] {
     visibility: hidden;
   }
   html[data-intro="show"] main {
@@ -39,36 +39,18 @@ export const Overlay = styled.div`
     transition: background 0.5s ease;
   }
 `;
-// Same type styles as the navbar Brand, just larger, so the flight lands seamlessly.
+// Same wordmark as the navbar Brand, just larger, so the flight lands seamlessly.
 export const Logo = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.1em;
-  font-size: clamp(64px, 11vw, 150px);
-  font-weight: 800;
-  letter-spacing: -0.054em;
-  line-height: 1.2;
-  color: #173f35;
+  display: block;
+  width: min(72vw, 460px);
   transform-origin: center;
   animation: logoIn 0.8s cubic-bezier(0.2, 1.2, 0.4, 1) both;
   transition: transform var(--fly) cubic-bezier(0.65, 0, 0.25, 1);
-  span {
-    font-size: 1.07em;
-    color: #bd3448;
-    display: inline-block;
-    animation: spark 1.2s cubic-bezier(0.3, 1.3, 0.5, 1) 0.2s both;
-  }
   @keyframes logoIn {
     from {
       opacity: 0;
       scale: 0.86;
       filter: blur(8px);
-    }
-  }
-  @keyframes spark {
-    from {
-      rotate: -180deg;
-      scale: 0;
     }
   }
 `;

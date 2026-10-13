@@ -148,7 +148,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
             child: Text(
               _createAccount
                   ? LoginCopy.existingAccount
-                  : LoginCopy.newToMatchify,
+                  : LoginCopy.newToJust2,
             ),
           ),
         ],

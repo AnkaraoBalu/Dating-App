@@ -45,7 +45,7 @@ extension _HomeDiscoveryActions on _HomeScreenState {
         'onlineOnly': _filters.onlineOnly,
         'verifiedOnly': _filters.verifiedOnly,
       };
-      final people = await api.discover(
+      final peopleRequest = api.discover(
         mode: args['mode']! as String,
         minAge: args['minAge']! as int,
         maxAge: args['maxAge']! as int,
@@ -57,8 +57,9 @@ extension _HomeDiscoveryActions on _HomeScreenState {
         onlineOnly: args['onlineOnly']! as bool,
         verifiedOnly: args['verifiedOnly']! as bool,
       );
-      final nearby = nearbyAlso && _selectedTab == 0
-          ? await api.discover(
+      // Fetch the nearby strip at the same time instead of after the feed.
+      final nearbyRequest = nearbyAlso && _selectedTab == 0
+          ? api.discover(
               mode: 'nearby',
               minAge: _filters.minAge,
               maxAge: _filters.maxAge,
@@ -70,7 +71,13 @@ extension _HomeDiscoveryActions on _HomeScreenState {
               onlineOnly: _filters.onlineOnly,
               verifiedOnly: _filters.verifiedOnly,
             )
-          : people;
+          : null;
+      final results = await Future.wait([
+        peopleRequest,
+        ?nearbyRequest,
+      ]);
+      final people = results.first;
+      final nearby = results.last;
       if (!mounted) return;
       _refresh(() {
         _people = people

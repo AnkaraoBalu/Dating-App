@@ -358,7 +358,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
 
   Future<void> _share(BuildContext context, VibeRoom room) async {
     await Clipboard.setData(
-      ClipboardData(text: 'Join ${room.title} on Matchify · Room ${room.id}'),
+      ClipboardData(text: 'Join ${room.title} on Just2 · Room ${room.id}'),
     );
     if (!context.mounted) return;
     ScaffoldMessenger.of(

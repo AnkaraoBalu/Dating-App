@@ -19,7 +19,7 @@ const DEAD_TOKEN_ERRORS = new Set([
   "messaging/invalid-registration-token",
 ]);
 
-const APP_NAME = "matchify-push";
+const APP_NAME = "just2-push";
 
 /**
  * Sends Firebase Cloud Messaging pushes. Disabled (with one warning) until
@@ -66,7 +66,7 @@ export class FirebasePushSender {
           tag: message.group,
           // High-importance channel created by the app, so Android shows a
           // banner at the top (see SystemNotifications in the Flutter app).
-          channelId: "matchify_alerts",
+          channelId: "just2_alerts",
         },
       },
       apns: {
