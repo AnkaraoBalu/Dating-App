@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/theme.dart';
@@ -40,23 +42,45 @@ class VibeRoomsHomeScreen extends StatefulWidget {
 class _VibeRoomsHomeScreenState extends State<VibeRoomsHomeScreen> {
   final _store = VibeRoomStore.instance;
   String _category = 'All';
+  Timer? _roomRefresh;
+  bool _refreshingRooms = false;
 
   @override
   void initState() {
     super.initState();
-    if (widget.api != null) _loadDatabaseRooms();
+    if (widget.api != null) {
+      unawaited(_loadDatabaseRooms());
+      _roomRefresh = Timer.periodic(const Duration(seconds: 10), (_) {
+        if (mounted &&
+            ModalRoute.of(context)?.isCurrent == true &&
+            WidgetsBinding.instance.lifecycleState ==
+                AppLifecycleState.resumed) {
+          unawaited(_loadDatabaseRooms(silent: true));
+        }
+      });
+    }
   }
 
-  Future<void> _loadDatabaseRooms() async {
+  @override
+  void dispose() {
+    _roomRefresh?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _loadDatabaseRooms({bool silent = false}) async {
+    if (!mounted || widget.api == null || _refreshingRooms) return;
+    _refreshingRooms = true;
     try {
       final rooms = await widget.api!.listRooms();
       if (!mounted) return;
       _store.replaceRooms(rooms);
     } catch (error) {
-      if (!mounted) return;
+      if (!mounted || silent) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Could not sync vibe rooms: $error')),
       );
+    } finally {
+      _refreshingRooms = false;
     }
   }
 

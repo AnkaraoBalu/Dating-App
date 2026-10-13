@@ -87,7 +87,7 @@ extension _VibeRoomsHomeSections on _VibeRoomsHomeScreenState {
                 children: [
                   Row(
                     children: [
-                      _Badge(label: '✦ LIVE'),
+                      _Badge(label: room.isLive ? '✦ LIVE' : 'OPEN'),
                       const SizedBox(width: 7),
                       _Badge(label: '♟ ${room.participantCount} in room'),
                       const Spacer(),
@@ -132,7 +132,7 @@ extension _VibeRoomsHomeSections on _VibeRoomsHomeScreenState {
                               ),
                             ),
                             const SizedBox(height: 8),
-                            _memberStack(room.members.take(4).toList()),
+                            _memberStack(room),
                           ],
                         ),
                       ),
@@ -157,30 +157,38 @@ extension _VibeRoomsHomeSections on _VibeRoomsHomeScreenState {
     );
   }
 
-  Widget _memberStack(List<VibeRoomMember> members) => SizedBox(
-    height: 31,
-    child: Row(
-      children: [
-        for (var i = 0; i < members.length; i++)
-          Align(
-            widthFactor: .78,
-            child: VibeRoomAvatar(
-              image: members[i].avatar,
-              size: 31,
-              borderColor: Colors.white,
+  Widget _memberStack(VibeRoom room) {
+    final total = room.participantCount < 0 ? 0 : room.participantCount;
+    final members = room.members.take(total < 3 ? total : 3).toList();
+    final remaining = total - members.length;
+    return SizedBox(
+      height: 31,
+      child: Row(
+        children: [
+          for (final member in members)
+            Align(
+              widthFactor: .78,
+              child: VibeRoomAvatar(
+                image: member.avatar,
+                size: 31,
+                borderColor: Colors.white,
+              ),
             ),
-          ),
-        const SizedBox(width: 6),
-        Text(
-          '+120',
-          style: AppTypography.caption.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-      ],
-    ),
-  );
+          if (remaining > 0) ...[
+            const SizedBox(width: 6),
+            Text(
+              '+$remaining',
+              semanticsLabel: '$remaining more members',
+              style: AppTypography.caption.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 
   Widget _roomActions() => Row(
     children: [
