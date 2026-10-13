@@ -36,6 +36,9 @@ class _LiveVibeGameScreenState extends State<LiveVibeGameScreen> {
   int _requestVersion = 0;
   bool _refreshing = false;
   bool _refreshPending = false;
+  int? _pendingChoice;
+  int? _pendingQuestion;
+  int? _expiredQuestion;
   bool _loading = true;
   bool _busy = false;
   bool _leaving = false;
@@ -55,7 +58,13 @@ class _LiveVibeGameScreenState extends State<LiveVibeGameScreen> {
     live.live.addListener(_connectionChanged);
     live.connect();
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted && _session?.isPlaying == true) setState(() {});
+      if (!mounted || _session?.isPlaying != true) return;
+      setState(() {});
+      if (_secondsRemaining == 0 &&
+          _expiredQuestion != _session!.questionIndex) {
+        _expiredQuestion = _session!.questionIndex;
+        unawaited(_refresh());
+      }
     });
     // The server's round deadline advances even if a player disconnects.
     // Polling also recovers if the socket is temporarily unavailable.
@@ -155,7 +164,11 @@ class _LiveVibeGameScreenState extends State<LiveVibeGameScreen> {
     } finally {
       if (mounted) setState(() => _busy = false);
     }
-    if ((refreshAfter || _refreshPending) && mounted) await _refresh();
+    if (refreshAfter && mounted) {
+      await _refresh();
+    } else if (_refreshPending && mounted) {
+      unawaited(_refresh());
+    }
   }
 
   String _messageFor(Object error) {
@@ -396,7 +409,9 @@ class _LiveVibeGameScreenState extends State<LiveVibeGameScreen> {
         onRetry: _refresh,
       );
     }
-    final selected = session.myChoiceIndex;
+    final sending =
+        _pendingQuestion == session.questionIndex && _pendingChoice != null;
+    final selected = session.myChoiceIndex ?? (sending ? _pendingChoice : null);
     final choiceImages = VibeArtwork.forChoices(
       session.gameType,
       question.options,
@@ -517,9 +532,11 @@ class _LiveVibeGameScreenState extends State<LiveVibeGameScreen> {
         const SizedBox(height: 6),
         if (selected != null)
           _Notice(
-            text: session.allAnswered
+            text: sending && session.myChoiceIndex == null
+                ? 'Sending your answer…'
+                : session.allAnswered
                 ? 'Everyone answered. Moving to the next question…'
-                : 'Your answer is locked. ${session.answeredCount} of ${session.gameType == 'two_truths_and_a_lie' ? session.playerCount - 1 : session.playerCount} players answered.',
+                : 'Answer saved. ${session.answeredCount} of ${session.gameType == 'two_truths_and_a_lie' ? session.playerCount - 1 : session.playerCount} players answered. The next round starts when everyone answers or time runs out.',
           ),
         if (selected == null &&
             !(session.gameType == 'two_truths_and_a_lie' && session.isHost))
@@ -534,14 +551,36 @@ class _LiveVibeGameScreenState extends State<LiveVibeGameScreen> {
     );
   }
 
-  Future<void> _answer(VibeGameSession session, int choiceIndex) => _perform(
-    () => widget.api.answerGame(
-      roomId: widget.room.id,
-      sessionId: session.id,
-      questionIndex: session.questionIndex,
-      choiceIndex: choiceIndex,
-    ),
-  );
+  Future<void> _answer(VibeGameSession session, int choiceIndex) async {
+    if (_busy ||
+        _pendingChoice != null ||
+        session.myChoiceIndex != null ||
+        _session?.questionIndex != session.questionIndex ||
+        _secondsRemaining == 0) {
+      return;
+    }
+    setState(() {
+      _pendingChoice = choiceIndex;
+      _pendingQuestion = session.questionIndex;
+    });
+    try {
+      await _perform(
+        () => widget.api.answerGame(
+          roomId: widget.room.id,
+          sessionId: session.id,
+          questionIndex: session.questionIndex,
+          choiceIndex: choiceIndex,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _pendingChoice = null;
+          _pendingQuestion = null;
+        });
+      }
+    }
+  }
 
   Widget _results(VibeGameSession session) {
     final resultRows = session.results;

@@ -292,9 +292,12 @@ class VibeRoomsApi {
         )
         .timeout(const Duration(seconds: 15));
     final decoded = _decode(response);
-    return decoded is Map<String, dynamic>
-        ? VibeGameSession.fromJson(decoded)
-        : null;
+    // Nest may send an empty body when there is no active session. Never
+    // turn that into a default session with an empty ID and zero players.
+    if (decoded == null || (decoded is Map && decoded.isEmpty)) return null;
+    final data = _asMap(decoded);
+    final session = VibeGameSession.fromJson(data);
+    return session.isWaiting || session.isPlaying ? session : null;
   }
 
   Future<VibeGameSession> createGame(
@@ -373,7 +376,21 @@ class VibeRoomsApi {
   }
 
   Map<String, dynamic> _asMap(Object? value) {
-    if (value is Map<String, dynamic>) return value;
+    if (value is Map<String, dynamic> &&
+        value['id'] is String &&
+        (value['id'] as String).trim().isNotEmpty &&
+        value['roomId'] is String &&
+        (value['roomId'] as String).trim().isNotEmpty &&
+        value['gameType'] is String &&
+        (value['gameType'] as String).trim().isNotEmpty &&
+        const [
+          'waiting',
+          'playing',
+          'completed',
+          'cancelled',
+        ].contains(value['status'])) {
+      return value;
+    }
     throw const FormatException('Invalid game response.');
   }
 

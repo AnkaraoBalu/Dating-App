@@ -58,10 +58,16 @@ class _IcebreakerGamesScreenState extends State<IcebreakerGamesScreen> {
     if (api != null) {
       final live = VibeGameLiveService(api: api, roomId: widget.room.id);
       _live = live;
-      _changes = live.changes.listen((_) => unawaited(_refresh()));
+      _changes = live.changes.listen((_) {
+        if (mounted && ModalRoute.of(context)?.isCurrent == true) {
+          unawaited(_refresh());
+        }
+      });
       live.connect();
       _refreshTimer = Timer.periodic(const Duration(seconds: 5), (_) {
-        unawaited(_refresh());
+        if (mounted && ModalRoute.of(context)?.isCurrent == true) {
+          unawaited(_refresh());
+        }
       });
       unawaited(_refresh());
     } else {

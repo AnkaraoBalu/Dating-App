@@ -280,12 +280,7 @@ export class VibeRoomsController {
       body.questionIndex,
       body.choiceIndex,
     );
-    await this.gateway.broadcastGame(
-      roomId,
-      sessionId,
-      "answer_progress",
-      state.title,
-    );
+    this.gateway.broadcastGameProgress(roomId, sessionId, state.title);
     return state;
   }
 

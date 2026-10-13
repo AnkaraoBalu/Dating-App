@@ -91,6 +91,20 @@ export class VibeRoomsGateway {
     return viewers;
   }
 
+  /** Answer progress needs no viewer lookup or private answer payload. */
+  broadcastGameProgress(roomId: string, sessionId: string, title: string) {
+    try {
+      this.server.to(VibeRoomsGateway.room(roomId)).emit("vibe:game", {
+        roomId,
+        sessionId,
+        change: "answer_progress",
+        title,
+      });
+    } catch (error) {
+      this.logger.error("Vibe game progress could not be broadcast", error);
+    }
+  }
+
   /** Broadcasts only an invalidation, never a user's private answer state. */
   async broadcastGame(
     roomId: string,
