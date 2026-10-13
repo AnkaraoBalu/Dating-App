@@ -171,3 +171,8 @@ export const Popular = styled.div`
     border-color: #bd3448;
   }
 `;
+export const Contact = styled.p`
+  margin-top: 26px;
+  font-size: 14px;
+  color: #686b67;
+`;

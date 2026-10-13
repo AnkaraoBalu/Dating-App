@@ -4,10 +4,10 @@ import * as S from "./HelpMore.styles";
 
 const links = [
   {
-    to: "/how-it-works",
-    emoji: "🧭",
-    title: "How it works",
-    body: "From your first profile to a first hello, step by step.",
+    to: "/support",
+    emoji: "💬",
+    title: "Contact support",
+    body: "Email or call the Just2 team. A real person will help.",
   },
   {
     to: "/community-guidelines",

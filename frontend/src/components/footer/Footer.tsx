@@ -32,6 +32,7 @@ export function Footer() {
               <div>
                 <strong>Good to know</strong>
                 <Link to="/help">Help center</Link>
+                <Link to="/support">Support</Link>
                 <Link to="/community-guidelines">Community</Link>
                 <Link to="/privacy">Privacy</Link>
                 <Link to="/terms">Terms</Link>

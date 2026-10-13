@@ -5,6 +5,7 @@ import { AboutPage } from "../app/about";
 import { HowItWorksPage } from "../app/how-it-works";
 import { VibesPage } from "../app/vibes";
 import { HelpPage } from "../app/help";
+import { SupportPage } from "../app/support";
 import { DownloadPage } from "../app/download";
 import { CommunityPage } from "../app/community-guidelines";
 import { PrivacyPage } from "../app/privacy";
@@ -19,6 +20,7 @@ export function AppRouter() {
         <Route path="how-it-works" element={<HowItWorksPage />} />
         <Route path="vibes" element={<VibesPage />} />
         <Route path="help" element={<HelpPage />} />
+        <Route path="support" element={<SupportPage />} />
         <Route path="download" element={<DownloadPage />} />
         <Route path="community-guidelines" element={<CommunityPage />} />
         <Route path="privacy" element={<PrivacyPage />} />

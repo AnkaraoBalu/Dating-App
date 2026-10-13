@@ -109,7 +109,7 @@ export const termsSections: LegalSection[] = [
     id: "changes",
     title: "Changes to these terms",
     body: [
-      "We may update these terms as Just2 grows. If changes are significant, we’ll let you know in the app before they take effect. Questions? Contact us at [contact email].",
+      "We may update these terms as Just2 grows. If changes are significant, we’ll let you know in the app before they take effect. Questions? Contact us at ankaraovinod@gmail.com.",
     ],
   },
 ];

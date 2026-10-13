@@ -16,7 +16,7 @@ export const privacySections: LegalSection[] = [
     title: "Who we are",
     body: [
       "Just2 is operated by [Company legal name], [registered address] (“Just2”, “we”, “us”). We are responsible for the personal information described in this policy.",
-      "Questions about privacy? Contact us at [privacy contact email].",
+      "Questions about privacy? Contact us at ankaraovinod@gmail.com.",
     ],
   },
   {
@@ -112,7 +112,7 @@ export const privacySections: LegalSection[] = [
         "Edit your profile, photos, and details at any time in the app.",
         "Turn location and notifications on or off in your device settings.",
         "Delete your account from your profile options.",
-        "Ask us for a copy of your information, or to correct or delete it, by contacting [privacy contact email].",
+        "Ask us for a copy of your information, or to correct or delete it, by contacting ankaraovinod@gmail.com.",
       ],
       "Depending on where you live, you may have additional rights, including the right to complain to your local data protection authority.",
     ],

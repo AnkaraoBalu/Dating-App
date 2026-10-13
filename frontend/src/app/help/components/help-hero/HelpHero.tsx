@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { CSSProperties } from "react";
 import { CommonContainer } from "../../../../components";
-import { Eyebrow } from "../../../../components/ui";
+import { Eyebrow, TextLink } from "../../../../components/ui";
 import { useReducedMotion } from "../../../../hooks/useReducedMotion";
 import { popular, questions } from "../../data/questions";
 import * as S from "./HelpHero.styles";
@@ -113,6 +113,10 @@ export function HelpHero({
               );
             })}
           </S.Popular>
+          <S.Contact>
+            Can’t find what you need?{" "}
+            <TextLink to="/support">Contact support →</TextLink>
+          </S.Contact>
         </S.Content>
       </CommonContainer>
     </S.Root>
