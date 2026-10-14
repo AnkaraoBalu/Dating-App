@@ -101,8 +101,8 @@ class ProfileSettingsScreen extends StatelessWidget {
   }
 
   Future<void> _distancePreference(BuildContext context) async {
-    final storedValue = controller.profile!.onboarding['preferredDistanceKm'];
-    var distance = (storedValue is num ? storedValue.toDouble() : 25.0)
+    var distance = controller.profile!.preferredDistanceKm
+        .toDouble()
         .clamp(DistanceSlider.minKm, DistanceSlider.maxKm)
         .toDouble();
     final selectedDistance = await showModalBottomSheet<int>(
@@ -242,8 +242,7 @@ class ProfileSettingsScreen extends StatelessWidget {
           ),
           ProfileTile(
             title: 'Distance',
-            value:
-                '${controller.profile!.onboarding['preferredDistanceKm'] ?? 25} km',
+            value: '${controller.profile!.preferredDistanceKm} km',
             icon: Icons.location_on_outlined,
             onTap: () => _distancePreference(context),
           ),

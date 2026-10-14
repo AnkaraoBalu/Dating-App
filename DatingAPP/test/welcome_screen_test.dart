@@ -8,7 +8,12 @@ void main() {
   testWidgets('starts directly on the welcome screen', (tester) async {
     await tester.pumpWidget(const DatingApp());
     await tester.pumpAndSettle();
-    expect(find.text(AppConstants.name), findsOneWidget);
+    expect(
+      find.byWidgetPredicate(
+        (w) => w is Image && w.semanticLabel == AppConstants.name,
+      ),
+      findsOneWidget,
+    );
     expect(find.text(AppConstants.welcomeTitle), findsOneWidget);
     expect(find.byType(Scaffold), findsOneWidget);
     expect(tester.takeException(), isNull);

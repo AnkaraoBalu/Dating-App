@@ -1,4 +1,5 @@
 import 'package:dating_app/features/profile/data/profile_controller.dart';
+import 'package:dating_app/features/onboarding/data/onboarding_api.dart';
 import 'package:dating_app/features/profile/models/member_profile.dart';
 import 'package:dating_app/features/profile/presentation/screens/profile_edit_screen.dart';
 import 'package:dating_app/features/profile/presentation/screens/profile_basic_info_screen.dart';
@@ -38,6 +39,16 @@ Map<String, dynamic> fixture() => {
   'showOnlineStatus': true,
 };
 
+class DistanceOnboardingApi extends OnboardingApi {
+  DistanceOnboardingApi()
+    : super(baseUrl: 'http://unused', getSessionToken: () async => 'token');
+  bool fail = false;
+  @override
+  Future<void> update(Map<String, Object?> changes) async {
+    if (fail) throw Exception('Save failed');
+  }
+}
+
 class FakeProfileController extends ProfileController {
   FakeProfileController()
     : super(baseUrl: 'http://unused', getSessionToken: () async => 'token') {
@@ -55,6 +66,14 @@ class FakeProfileController extends ProfileController {
   @override
   Future<void> updateOnboarding(Map<String, Object?> changes) async {
     lastChanges = changes;
+    profile = MemberProfile({
+      ...profile!.data,
+      'user': {
+        ...profile!.user,
+        'onboardingProfile': {...profile!.onboarding, ...changes},
+      },
+    });
+    notifyListeners();
   }
 
   @override
@@ -65,6 +84,56 @@ class FakeProfileController extends ProfileController {
 }
 
 void main() {
+  test(
+    'confirmed distance writes update listeners; failed writes preserve the saved value',
+    () async {
+      final api = DistanceOnboardingApi();
+      final controller = ProfileController(
+        baseUrl: 'http://unused',
+        getSessionToken: () async => 'token',
+        onboardingApi: api,
+      )..profile = MemberProfile(fixture());
+      final observed = <int>[];
+      controller.addListener(
+        () => observed.add(controller.profile!.preferredDistanceKm),
+      );
+      await controller.updateOnboarding({'preferredDistanceKm': 60});
+      expect(controller.profile!.preferredDistanceKm, 60);
+      expect(observed.last, 60);
+      api.fail = true;
+      await expectLater(
+        controller.updateOnboarding({'preferredDistanceKm': 10}),
+        throwsException,
+      );
+      expect(controller.profile!.preferredDistanceKm, 60);
+      expect(controller.saving, isFalse);
+      controller.dispose();
+    },
+  );
+
+  testWidgets('Settings displays and saves the shared distance preference', (
+    tester,
+  ) async {
+    final controller = FakeProfileController();
+    await controller.updateOnboarding({'preferredDistanceKm': 42});
+    await tester.pumpWidget(
+      MaterialApp(home: ProfileSettingsScreen(controller: controller)),
+    );
+    await tester.ensureVisible(find.text('Distance'));
+    await tester.tap(find.text('Distance'));
+    await tester.pumpAndSettle();
+    expect(tester.widget<Slider>(find.byType(Slider)).value, 42);
+    tester.widget<Slider>(find.byType(Slider)).onChanged!(60);
+    await tester.pump();
+    await tester.tap(find.text('Save distance'));
+    await tester.pumpAndSettle();
+    expect(controller.lastChanges, {'preferredDistanceKm': 60});
+    expect(controller.profile!.preferredDistanceKm, 60);
+    expect(find.text('60 km'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+    controller.dispose();
+  });
+
   test('age changes only on birthday and completeness uses saved data', () {
     final p = MemberProfile(fixture());
     expect(p.ageAt(DateTime(2026, 10, 8)), 25);

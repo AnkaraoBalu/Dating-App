@@ -23,6 +23,17 @@ class DiscoverFilterOptions {
   final List<String> interests;
   final bool onlineOnly;
   final bool verifiedOnly;
+
+  DiscoverFilterOptions withRadius(int radiusKm) => DiscoverFilterOptions(
+    minAge: minAge,
+    maxAge: maxAge,
+    radiusKm: radiusKm,
+    gender: gender,
+    interest: interest,
+    interests: interests,
+    onlineOnly: onlineOnly,
+    verifiedOnly: verifiedOnly,
+  );
 }
 
 class DiscoverFiltersScreen extends StatefulWidget {

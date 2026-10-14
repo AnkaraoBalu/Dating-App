@@ -13,6 +13,7 @@ extension _HomeDiscoveryActions on _HomeScreenState {
   }
 
   Future<void> _loadPeople({bool nearbyAlso = true}) async {
+    final requestId = ++_peopleRequest;
     final api = widget.discoverApi;
     if (api == null) {
       if (mounted) {
@@ -41,7 +42,9 @@ extension _HomeDiscoveryActions on _HomeScreenState {
         'location': location,
         'interest': _selectedInterest ?? _filters.interest,
         'interests': _activeInterests,
-        'radiusKm': _filters.radiusKm,
+        'radiusKm': _profileController?.profile == null
+            ? null
+            : _filters.radiusKm,
         'onlineOnly': _filters.onlineOnly,
         'verifiedOnly': _filters.verifiedOnly,
       };
@@ -53,7 +56,7 @@ extension _HomeDiscoveryActions on _HomeScreenState {
         location: args['location'] as String?,
         interest: args['interest'] as String?,
         interests: args['interests']! as List<String>,
-        radiusKm: args['radiusKm']! as int,
+        radiusKm: args['radiusKm'] as int?,
         onlineOnly: args['onlineOnly']! as bool,
         verifiedOnly: args['verifiedOnly']! as bool,
       );
@@ -67,30 +70,29 @@ extension _HomeDiscoveryActions on _HomeScreenState {
               location: location,
               interest: _selectedInterest ?? _filters.interest,
               interests: _activeInterests,
-              radiusKm: _filters.radiusKm,
+              radiusKm: args['radiusKm'] as int?,
               onlineOnly: _filters.onlineOnly,
               verifiedOnly: _filters.verifiedOnly,
             )
           : null;
-      final results = await Future.wait([
-        peopleRequest,
-        ?nearbyRequest,
-      ]);
+      final results = await Future.wait([peopleRequest, ?nearbyRequest]);
       final people = results.first;
-      final nearby = results.last;
-      if (!mounted) return;
+      final nearby = nearbyRequest == null ? null : results.last;
+      if (!mounted || requestId != _peopleRequest) return;
       _refresh(() {
         _people = people
             .where((p) => !_dismissedUserIds.contains(p.id))
             .toList();
-        _nearby = nearby
-            .where((p) => !_dismissedUserIds.contains(p.id))
-            .toList();
+        if (nearby != null) {
+          _nearby = nearby
+              .where((p) => !_dismissedUserIds.contains(p.id))
+              .toList();
+        }
         _loadingPeople = false;
       });
       if (_feedController.hasClients) _feedController.jumpToPage(0);
     } catch (error) {
-      if (mounted) {
+      if (mounted && requestId == _peopleRequest) {
         _refresh(() {
           _loadingPeople = false;
           _peopleError = error.toString();

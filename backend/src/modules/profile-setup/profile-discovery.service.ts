@@ -5,6 +5,7 @@ import {
 } from "@nestjs/common";
 import { PrismaService } from "../../database/prisma.service";
 import { DiscoverProfilesQueryDto } from "./dto/discover-profiles.dto";
+import { discoveryCityCenter } from "./discovery-location";
 
 @Injectable()
 export class ProfileDiscoveryService {
@@ -54,12 +55,37 @@ export class ProfileDiscoveryService {
     ];
     const now = new Date();
     const onlineAfter = new Date(now.getTime() - 2 * 60 * 1000);
-    const centerLat = query.location
-      ? undefined
-      : (query.latitude ?? current.onboardingProfile.latitude ?? undefined);
-    const centerLng = query.location
-      ? undefined
-      : (query.longitude ?? current.onboardingProfile.longitude ?? undefined);
+    const travelLocation = query.location?.trim() || undefined;
+    if ((query.latitude == null) !== (query.longitude == null)) {
+      throw new BadRequestException("Provide both latitude and longitude.");
+    }
+    const travelCenter = discoveryCityCenter(travelLocation);
+    if (travelLocation && !travelCenter && query.latitude == null) {
+      throw new BadRequestException(
+        "Choose a supported travel city or provide its coordinates.",
+      );
+    }
+    const savedCoordinates =
+      current.onboardingProfile.latitude != null &&
+      current.onboardingProfile.longitude != null
+        ? {
+            latitude: current.onboardingProfile.latitude,
+            longitude: current.onboardingProfile.longitude,
+          }
+        : undefined;
+    const center =
+      query.latitude != null && query.longitude != null
+        ? { latitude: query.latitude, longitude: query.longitude }
+        : travelLocation
+          ? travelCenter
+          : savedCoordinates;
+    const centerLat = center?.latitude;
+    const centerLng = center?.longitude;
+    if (!center) {
+      throw new BadRequestException(
+        "Enable location to find people near you, or select a travel city.",
+      );
+    }
     const radiusKm =
       query.radiusKm ?? current.onboardingProfile.preferredDistanceKm;
 
@@ -158,22 +184,6 @@ export class ProfileDiscoveryService {
       )
         return [];
       if (
-        query.location &&
-        !profile.location
-          ?.toLocaleLowerCase()
-          .includes(query.location.toLocaleLowerCase())
-      )
-        return [];
-      if (
-        query.mode === "nearby" &&
-        centerLat == null &&
-        current.profile?.location &&
-        !profile.location
-          ?.toLocaleLowerCase()
-          .includes(current.profile.location.toLocaleLowerCase())
-      )
-        return [];
-      if (
         (query.onlineOnly || query.mode === "online") &&
         (!profile.showOnlineStatus ||
           !profile.user.lastActiveAt ||
@@ -210,15 +220,7 @@ export class ProfileDiscoveryService {
       if (
         centerLat != null &&
         centerLng != null &&
-        distanceKm != null &&
-        distanceKm > radiusKm
-      )
-        return [];
-      if (
-        query.mode === "nearby" &&
-        centerLat != null &&
-        centerLng != null &&
-        distanceKm == null
+        (distanceKm == null || distanceKm > radiusKm)
       )
         return [];
 
@@ -286,6 +288,7 @@ export class ProfileDiscoveryService {
           longitude: profile.showDistance ? approximateLongitude : null,
           verified: profile.verificationStatus === "verified",
           createdAt: profile.createdAt,
+          sortDistanceKm: distanceKm,
         },
       ];
     });
@@ -293,8 +296,8 @@ export class ProfileDiscoveryService {
     if (query.mode === "nearby")
       filtered.sort(
         (a, b) =>
-          (a.distanceKm ?? Number.MAX_VALUE) -
-          (b.distanceKm ?? Number.MAX_VALUE),
+          (a.sortDistanceKm ?? Number.MAX_VALUE) -
+          (b.sortDistanceKm ?? Number.MAX_VALUE),
       );
     else if (query.mode === "trending")
       filtered.sort((a, b) => b.match - a.match);
@@ -303,7 +306,10 @@ export class ProfileDiscoveryService {
     else filtered.sort((a, b) => b.match - a.match);
     return filtered
       .slice(0, query.limit ?? 60)
-      .map(({ createdAt: _createdAt, ...person }) => person);
+      .map(
+        ({ createdAt: _createdAt, sortDistanceKm: _distance, ...person }) =>
+          person,
+      );
   }
 
   private age(birthDate: Date, now: Date): number {

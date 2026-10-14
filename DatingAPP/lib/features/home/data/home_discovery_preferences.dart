@@ -7,7 +7,6 @@ class HomeDiscoveryPreferences {
     this.selectedVibeIds = const {},
     this.minAge = 21,
     this.maxAge = 34,
-    this.radiusKm = 25,
     this.gender = 'everyone',
     this.interest,
     this.interests = const [],
@@ -20,7 +19,6 @@ class HomeDiscoveryPreferences {
   final Set<String> selectedVibeIds;
   final int minAge;
   final int maxAge;
-  final int radiusKm;
   final String gender;
   final String? interest;
   final List<String> interests;
@@ -64,7 +62,6 @@ class HomeDiscoveryPreferencesStore {
             : const {},
         minAge: minAge,
         maxAge: maxAge,
-        radiusKm: _readInt(decoded['radiusKm'], 25).clamp(1, 100).toInt(),
         gender: gender,
         interest: _readOptionalString(decoded['interest']),
         interests: rawInterests is List
@@ -87,7 +84,6 @@ class HomeDiscoveryPreferencesStore {
         'selectedVibeIds': preferences.selectedVibeIds.toList(),
         'minAge': preferences.minAge,
         'maxAge': preferences.maxAge,
-        'radiusKm': preferences.radiusKm,
         'gender': preferences.gender,
         'interest': preferences.interest,
         'interests': preferences.interests,

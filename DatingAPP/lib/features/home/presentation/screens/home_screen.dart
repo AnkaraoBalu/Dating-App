@@ -102,6 +102,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final Set<String> _dismissedUserIds = {};
   final Set<String> _pendingLikeIds = {};
   bool _loadingPeople = true;
+  int _peopleRequest = 0;
   String? _peopleError;
   List<HomePerson> _people = const [];
   List<HomePerson> _nearby = const [];
@@ -112,6 +113,8 @@ class _HomeScreenState extends State<HomeScreen> {
   final HomeDiscoveryPreferencesStore _preferencesStore =
       HomeDiscoveryPreferencesStore();
   bool _preferencesReady = false;
+  bool _applyingFilters = false;
+  Future<void>? _initialProfileLoad;
   Timer? _activityTimer;
   Timer? _matchRefreshTimer;
   ProfileController? _profileController;
@@ -139,7 +142,15 @@ class _HomeScreenState extends State<HomeScreen> {
       _profileController?.profile?.photos.map((p) => p.url).toList() ??
       widget.photos;
   void _profileUpdated() {
-    if (mounted) setState(() {});
+    if (!mounted) return;
+    final radius = _profileController?.profile?.preferredDistanceKm;
+    final distanceChanged = radius != null && radius != _filters.radiusKm;
+    setState(() {
+      if (distanceChanged) _filters = _filters.withRadius(radius);
+    });
+    if (distanceChanged && _preferencesReady && !_applyingFilters) {
+      unawaited(_loadPeople());
+    }
   }
 
   void _refresh(VoidCallback mutation) => setState(mutation);
@@ -192,7 +203,7 @@ class _HomeScreenState extends State<HomeScreen> {
         getSessionToken: api.getSessionToken,
       );
       _profileController!.addListener(_profileUpdated);
-      _profileController!.load();
+      _initialProfileLoad = _profileController!.load();
     } else {
       _matchController = MatchController(
         api: MatchApi(baseUrl: '', getSessionToken: () async => ''),
@@ -251,7 +262,7 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (_) => DiscoverPeopleScreen(
         mode: mode,
         api: widget.discoverApi,
-        location: _travelLocation ?? widget.location,
+        location: _travelLocation,
         filters: _filters,
         interest: _selectedInterest,
       ),

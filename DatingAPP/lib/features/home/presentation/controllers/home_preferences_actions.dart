@@ -10,12 +10,13 @@ extension _HomePreferencesActions on _HomeScreenState {
       debugPrint('[HomePreferences] Could not load local preferences: $error');
       preferences = const HomeDiscoveryPreferences();
     }
+    await _initialProfileLoad;
     if (!mounted) return;
     _refresh(() {
       _filters = DiscoverFilterOptions(
         minAge: preferences.minAge,
         maxAge: preferences.maxAge,
-        radiusKm: preferences.radiusKm,
+        radiusKm: _profileController?.profile?.preferredDistanceKm ?? 25,
         gender: preferences.gender,
         interest: preferences.interest,
         interests: preferences.interests,
@@ -37,7 +38,6 @@ extension _HomePreferencesActions on _HomeScreenState {
           selectedVibeIds: _selectedVibeIds,
           minAge: _filters.minAge,
           maxAge: _filters.maxAge,
-          radiusKm: _filters.radiusKm,
           gender: _filters.gender,
           interest: _filters.interest,
           interests: _filters.interests,
@@ -53,13 +53,48 @@ extension _HomePreferencesActions on _HomeScreenState {
   }
 
   Future<void> _openFilters() async {
-    final filters = await Navigator.of(context).push<DiscoverFilterOptions>(
+    final controller = _profileController;
+    if (controller != null && controller.profile == null) {
+      await controller.load();
+      if (!mounted) return;
+      if (controller.profile == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not load your preferences. Try again.'),
+          ),
+        );
+        return;
+      }
+    }
+    var filters = await Navigator.of(context).push<DiscoverFilterOptions>(
       MaterialPageRoute(
         builder: (_) => DiscoverFiltersScreen(initial: _filters),
       ),
     );
     if (filters == null || !mounted) return;
-    _refresh(() => _filters = filters);
+    final savedRadius = controller?.profile?.preferredDistanceKm;
+    if (savedRadius != null && filters.radiusKm != savedRadius) {
+      _applyingFilters = true;
+      try {
+        await controller!.updateOnboarding({
+          'preferredDistanceKm': filters.radiusKm,
+        });
+      } catch (_) {
+        // Keep the saved distance but still apply the other filter changes.
+        filters = filters.withRadius(savedRadius);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Could not save your distance. Try again.'),
+            ),
+          );
+        }
+      } finally {
+        _applyingFilters = false;
+      }
+      if (!mounted) return;
+    }
+    _refresh(() => _filters = filters!);
     await _savePreferences();
     await _loadPeople();
   }

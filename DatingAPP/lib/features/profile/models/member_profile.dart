@@ -14,6 +14,11 @@ class MemberProfile {
       Map<String, dynamic>.from(data['user'] as Map? ?? {});
   Map<String, dynamic> get onboarding =>
       Map<String, dynamic>.from(user['onboardingProfile'] as Map? ?? {});
+  int get preferredDistanceKm {
+    final value = onboarding['preferredDistanceKm'];
+    return (value is num ? value.round() : 25).clamp(1, 100).toInt();
+  }
+
   String text(String key) => data[key]?.toString() ?? '';
   String onboardingText(String key) => onboarding[key]?.toString() ?? '';
   List<String> values(String key, {bool fromOnboarding = false}) =>

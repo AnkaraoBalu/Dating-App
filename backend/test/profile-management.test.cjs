@@ -65,7 +65,7 @@ function candidate(changes = {}) {
     ...changes,
   };
 }
-function discoveryMock(profiles) {
+function discoveryMock(profiles, onboardingChanges = {}) {
   let query;
   return {
     prisma: {
@@ -85,6 +85,7 @@ function discoveryMock(profiles) {
             preferredDistanceKm: 25,
             latitude: 17.38,
             longitude: 78.48,
+            ...onboardingChanges,
           },
         }),
       },
@@ -98,6 +99,133 @@ function discoveryMock(profiles) {
     query: () => query,
   };
 }
+
+function locatedCandidate(id, latitude, longitude, location = "Hyderabad") {
+  const profile = candidate({ userId: id, location });
+  Object.assign(profile.user.onboardingProfile, { latitude, longitude });
+  return profile;
+}
+
+test("discovery uses saved member coordinates and enforces radius in every mode", async () => {
+  const mock = discoveryMock([
+    locatedCandidate("near", 17.38, 78.48),
+    locatedCandidate("far", 19.076, 72.8777, "Mumbai"),
+    locatedCandidate("unknown", null, null),
+  ]);
+  for (const mode of ["for_you", "nearby", "trending", "online", "new"]) {
+    const people = await service(mock.prisma).discover("clerk-me", {
+      mode,
+      radiusKm: 1,
+    });
+    assert.deepEqual(
+      people.map((person) => person.id),
+      ["near"],
+    );
+  }
+});
+
+test("travel city replaces the member location and uses radius rather than city text", async () => {
+  const mock = discoveryMock([
+    locatedCandidate("travel", 19.076, 72.8777, "Mumbai"),
+    locatedCandidate("neighbor", 19.077, 72.878, "Different city label"),
+    locatedCandidate("outside", 19.2, 72.8777, "Mumbai"),
+    locatedCandidate("home", 17.38, 78.48),
+  ]);
+  for (const mode of ["for_you", "nearby"]) {
+    const people = await service(mock.prisma).discover("clerk-me", {
+      mode,
+      location: " Mumbai ",
+      radiusKm: 1,
+    });
+    assert.deepEqual(people.map((person) => person.id).sort(), [
+      "neighbor",
+      "travel",
+    ]);
+    assert.equal(people.find((person) => person.id === "travel").distanceKm, 0);
+  }
+});
+
+test("saved city does not replace missing GPS in normal discovery", async () => {
+  const mock = discoveryMock(
+    [
+      locatedCandidate("near", 17.385, 78.4867),
+      locatedCandidate("far", 19.076, 72.8777),
+    ],
+    { latitude: null, longitude: null },
+  );
+  for (const mode of ["for_you", "nearby", "trending"]) {
+    await assert.rejects(
+      service(mock.prisma).discover("clerk-me", { mode, radiusKm: 1 }),
+      /Enable location/,
+    );
+  }
+});
+
+test("nearby ranking uses exact distance without exposing hidden distances", async () => {
+  const hidden = locatedCandidate("hidden-near", 17.38, 78.48);
+  hidden.showDistance = false;
+  const mock = discoveryMock([
+    locatedCandidate("visible-far", 17.39, 78.48),
+    hidden,
+  ]);
+  const people = await service(mock.prisma).discover("clerk-me", {
+    mode: "nearby",
+  });
+  assert.deepEqual(
+    people.map((person) => person.id),
+    ["hidden-near", "visible-far"],
+  );
+  assert.equal(people[0].distanceKm, null);
+  assert.equal(people[0].latitude, null);
+  assert.equal(people[0].longitude, null);
+  assert.equal(
+    people.some((person) => "sortDistanceKm" in person),
+    false,
+  );
+});
+
+test("discovery uses the saved distance unless a radius is explicitly supplied", async () => {
+  const mock = discoveryMock(
+    [
+      locatedCandidate("near", 17.38, 78.48),
+      locatedCandidate("farther", 17.4, 78.48),
+    ],
+    { preferredDistanceKm: 1 },
+  );
+  const api = service(mock.prisma);
+  assert.deepEqual(
+    (await api.discover("clerk-me", {})).map((p) => p.id),
+    ["near"],
+  );
+  assert.equal((await api.discover("clerk-me", { radiusKm: 5 })).length, 2);
+});
+
+test("explicit coordinates are used as a pair and unsupported travel cities fail clearly", async () => {
+  const mock = discoveryMock([locatedCandidate("target", 0, 0)]);
+  const api = service(mock.prisma);
+  const people = await api.discover("clerk-me", {
+    location: "Custom destination",
+    latitude: 0,
+    longitude: 0,
+    radiusKm: 1,
+  });
+  assert.deepEqual(
+    people.map((person) => person.id),
+    ["target"],
+  );
+  await assert.rejects(
+    api.discover("clerk-me", { latitude: 0 }),
+    /both latitude and longitude/,
+  );
+  await assert.rejects(
+    api.discover("clerk-me", { location: "Unknown" }),
+    /supported travel city/,
+  );
+  await assert.rejects(
+    api.discover("clerk-me", { location: "constructor" }),
+    /supported travel city/,
+  );
+});
 
 test("discovery excludes paused profiles at the database and hides distance/map coordinates", async () => {
   const mock = discoveryMock([candidate({ showDistance: false })]);

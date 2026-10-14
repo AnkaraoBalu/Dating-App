@@ -7,12 +7,17 @@ import '../../onboarding/data/onboarding_api.dart';
 import '../models/member_profile.dart';
 
 class ProfileController extends ChangeNotifier {
-  ProfileController({required this.baseUrl, required this.getSessionToken})
-    : api = ProfileSetupApi(baseUrl: baseUrl, getSessionToken: getSessionToken),
-      onboardingApi = OnboardingApi(
-        baseUrl: baseUrl,
-        getSessionToken: getSessionToken,
-      );
+  ProfileController({
+    required this.baseUrl,
+    required this.getSessionToken,
+    OnboardingApi? onboardingApi,
+  }) : api = ProfileSetupApi(
+         baseUrl: baseUrl,
+         getSessionToken: getSessionToken,
+       ),
+       onboardingApi =
+           onboardingApi ??
+           OnboardingApi(baseUrl: baseUrl, getSessionToken: getSessionToken);
   final String baseUrl;
   final Future<String> Function() getSessionToken;
   final ProfileSetupApi api;
@@ -70,13 +75,16 @@ class ProfileController extends ChangeNotifier {
     return decoded as Map<String, dynamic>;
   }
 
-  Future<void> _save(Future<void> Function() action) async {
+  Future<void> _save(
+    Future<void> Function() action, {
+    bool reloadProfile = true,
+  }) async {
     if (saving) throw StateError('A profile update is already in progress.');
     saving = true;
     _notify();
     try {
       await action();
-      profile = MemberProfile(await api.load());
+      if (reloadProfile) profile = MemberProfile(await api.load());
     } finally {
       saving = false;
       _notify();
@@ -86,8 +94,23 @@ class ProfileController extends ChangeNotifier {
   Future<void> update(Map<String, Object?> changes) => _save(() async {
     await api.update(changes);
   });
-  Future<void> updateOnboarding(Map<String, Object?> changes) =>
-      _save(() => onboardingApi.update(changes));
+  Future<void> updateOnboarding(
+    Map<String, Object?> changes,
+  ) => _save(() async {
+    await onboardingApi.update(changes);
+    // The write has succeeded. Publish the confirmed values without depending
+    // on a second request that could fail and leave discovery using old values.
+    final current = profile;
+    if (current != null) {
+      profile = MemberProfile({
+        ...current.data,
+        'user': {
+          ...current.user,
+          'onboardingProfile': {...current.onboarding, ...changes},
+        },
+      });
+    }
+  }, reloadProfile: profile == null);
 
   /// Permanently deletes the account on the server (data, photos, login).
   Future<void> deleteAccount() => request('DELETE', '/users/me');
