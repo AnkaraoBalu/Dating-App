@@ -66,3 +66,20 @@ export function verifyDemoSessionToken(
 }
 
 export const demoSessionLifetimeSeconds = TOKEN_LIFETIME_SECONDS;
+
+type ConfigReader = { get<T = string>(key: string): T | undefined };
+
+/**
+ * Demo sign-in needs DEMO_AUTH_ENABLED and a 32+ character secret. Production
+ * servers additionally need DEMO_AUTH_ALLOW_IN_PRODUCTION=true, an explicit
+ * opt-in for closed testing that must be turned off before public launch.
+ * Returns the secret when demo sign-in is allowed, otherwise null.
+ */
+export function demoAuthSecret(config: ConfigReader): string | null {
+  const secret = config.get<string>("DEMO_AUTH_SECRET");
+  const allowed =
+    config.get<string>("DEMO_AUTH_ENABLED") === "true" &&
+    (config.get<string>("NODE_ENV") !== "production" ||
+      config.get<string>("DEMO_AUTH_ALLOW_IN_PRODUCTION") === "true");
+  return allowed && secret && secret.length >= 32 ? secret : null;
+}

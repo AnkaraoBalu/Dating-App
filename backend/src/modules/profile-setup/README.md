@@ -13,8 +13,12 @@ normal discovery asks the member to enable location. Travel mode supports
 Bangalore/Bengaluru, Mumbai, Delhi, and Hyderabad using the selected city's approximate
 center instead of the member's location. An explicit latitude/longitude pair
 overrides either origin; unsupported travel cities require that pair.
-When a center is available, every discovery mode enforces the radius and excludes
-profiles without coordinates. City labels do not restrict a geographic search,
+People within the radius always come first, ordered by the selected mode.
+People further away (or without coordinates) follow, nearest first, and are
+flagged `beyondRadius: true` so the app can label them. Members who turn on
+`onlyShowPeopleNearby` (off by default; migration
+`20261016090000_expand_discovery_by_default` resets everyone to off because the
+setting was not enforced before) see only people within the radius. City labels do not restrict a geographic search,
 so a profile across a city boundary can still appear within the radius.
 Saved profile city labels never replace device coordinates in normal discovery.
 Nearby ranks by actual distance even when a member hides their distance; the

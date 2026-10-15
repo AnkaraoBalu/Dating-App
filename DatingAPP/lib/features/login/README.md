@@ -30,7 +30,7 @@ The backend verifies Clerk session tokens and syncs authenticated users at `GET 
 
 Real users select **Continue with Google** or **Continue with Email**. Google opens Clerk's OAuth flow; email sends a Clerk verification code. Both use Clerk's session JWT to call the backend. `UsersService.syncFromClerk` reads the authenticated Clerk identity and creates or updates its Just2 user without replacing the saved onboarding answers or app display name.
 
-The debug-only **Continue with a demo user** button lives in `features/demo_auth/`. Its backend counterpart lives in `src/modules/demo-auth/`. Demo tokens require `DEMO_AUTH_ENABLED=true` and are rejected in production. Enabling demo login does not replace verification of real Clerk session tokens.
+The **Continue with a demo user** button (debug builds, or release builds made with `--dart-define=SHOW_DEMO_LOGIN=true`) lives in `features/demo_auth/`. Its backend counterpart lives in `src/modules/demo-auth/`. Demo tokens require `DEMO_AUTH_ENABLED=true` and are rejected in production. Enabling demo login does not replace verification of real Clerk session tokens.
 
 `data/clerk_operation.dart` captures Clerk's streamed errors for code sending, verification, resending and Google login. The app creates a new account gate when the Clerk user or session changes, so a previous user's profile cannot remain loaded. When no Clerk publishable key is configured, real login buttons are disabled and the login screen explains the configuration issue.
 

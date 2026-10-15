@@ -96,10 +96,9 @@ export class ProfileSetupService {
 
   async complete(clerkUserId: string) {
     const profile = await this.profiles.get(clerkUserId);
-    if (profile.photos.length < 4 || profile.prompts.length < 3) {
-      throw new BadRequestException(
-        "Add at least 4 photos and answer at least 3 prompts.",
-      );
+    // Prompts are optional; only the photo minimum gates completion.
+    if (profile.photos.length < 4) {
+      throw new BadRequestException("Add at least 4 photos.");
     }
     await this.prisma.profile.update({
       where: { id: profile.id },

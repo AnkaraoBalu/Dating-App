@@ -13,6 +13,7 @@ import {
   MaxLength,
   Max,
   Min,
+  ValidateIf,
 } from "class-validator";
 
 export const genderIdentityOptions = [
@@ -220,9 +221,23 @@ export class UpdateOnboardingDto {
   @IsIn(vibeTypeOptions)
   vibeType?: (typeof vibeTypeOptions)[number] | null;
 
+  @ValidateIf((_object, value) => value !== undefined)
+  @IsArray()
+  @ArrayMaxSize(3)
+  @ArrayUnique()
+  @IsIn(vibeTypeOptions, { each: true })
+  vibeTypes?: (typeof vibeTypeOptions)[number][];
+
   @IsOptional()
   @IsIn(idealFridayOptions)
   idealFriday?: (typeof idealFridayOptions)[number] | null;
+
+  @ValidateIf((_object, value) => value !== undefined)
+  @IsArray()
+  @ArrayMaxSize(3)
+  @ArrayUnique()
+  @IsIn(idealFridayOptions, { each: true })
+  idealFridays?: (typeof idealFridayOptions)[number][];
 
   @IsOptional()
   @IsArray()
@@ -250,6 +265,13 @@ export class UpdateOnboardingDto {
   @IsOptional()
   @IsIn(currentEraOptions)
   currentEra?: (typeof currentEraOptions)[number] | null;
+
+  @ValidateIf((_object, value) => value !== undefined)
+  @IsArray()
+  @ArrayMaxSize(2)
+  @ArrayUnique()
+  @IsIn(currentEraOptions, { each: true })
+  currentEras?: (typeof currentEraOptions)[number][];
 
   @IsOptional()
   @IsArray()

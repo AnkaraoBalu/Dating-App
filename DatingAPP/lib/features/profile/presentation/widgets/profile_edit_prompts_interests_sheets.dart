@@ -138,9 +138,9 @@ extension _ProfileEditPromptsInterestsSheets on _ProfileEditScreenState {
     final dealbreakers = profile
         .values('dealbreakers', fromOnboarding: true)
         .toSet();
-    var vibe = profile.onboarding['vibeType'] as String?;
-    var friday = profile.onboarding['idealFriday'] as String?;
-    var era = profile.onboarding['currentEra'] as String?;
+    final vibe = profile.lifestyleChoices('vibeTypes').toSet();
+    final friday = profile.lifestyleChoices('idealFridays').toSet();
+    final era = profile.lifestyleChoices('currentEras').toSet();
     final options = OnboardingQuestionOptions.interests;
     final musicOptions = OnboardingQuestionOptions.musicGenres
         .map((option) => (option.$1, option.$2))
@@ -222,25 +222,32 @@ extension _ProfileEditPromptsInterestsSheets on _ProfileEditScreenState {
                 limit: 5,
               ),
               const SizedBox(height: 18),
-              _dropdownField(
-                label: 'My vibe',
-                value: vibe,
-                items: vibeOptions,
-                onChanged: (value) => setSheetState(() => vibe = value),
+              _editorLabel('My vibe · ${vibe.length}/3'),
+              chips(
+                vibeOptions,
+                vibe,
+                (value) =>
+                    vibe.contains(value) ? vibe.remove(value) : vibe.add(value),
+                limit: 3,
               ),
               const SizedBox(height: 12),
-              _dropdownField(
-                label: 'My ideal Friday',
-                value: friday,
-                items: fridayOptions,
-                onChanged: (value) => setSheetState(() => friday = value),
+              _editorLabel('My ideal Friday · ${friday.length}/3'),
+              chips(
+                fridayOptions,
+                friday,
+                (value) => friday.contains(value)
+                    ? friday.remove(value)
+                    : friday.add(value),
+                limit: 3,
               ),
               const SizedBox(height: 12),
-              _dropdownField(
-                label: 'My current era',
-                value: era,
-                items: eraOptions,
-                onChanged: (value) => setSheetState(() => era = value),
+              _editorLabel('My current era · ${era.length}/2'),
+              chips(
+                eraOptions,
+                era,
+                (value) =>
+                    era.contains(value) ? era.remove(value) : era.add(value),
+                limit: 2,
               ),
               const SizedBox(height: 12),
               ExpansionTile(
@@ -307,9 +314,9 @@ extension _ProfileEditPromptsInterestsSheets on _ProfileEditScreenState {
         return profileAction(sheetContext, () async {
           await _controller.updateOnboarding({
             'interests': selected.toList(),
-            'vibeType': vibe,
-            'idealFriday': friday,
-            'currentEra': era,
+            'vibeTypes': vibe.toList(),
+            'idealFridays': friday.toList(),
+            'currentEras': era.toList(),
             'musicGenres': genres.toList(),
             'favoriteArtists': artists.toList(),
             'dealbreakers': dealbreakers.toList(),

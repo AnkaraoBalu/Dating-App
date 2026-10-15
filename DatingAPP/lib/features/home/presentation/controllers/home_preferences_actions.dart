@@ -17,6 +17,7 @@ extension _HomePreferencesActions on _HomeScreenState {
         minAge: preferences.minAge,
         maxAge: preferences.maxAge,
         radiusKm: _profileController?.profile?.preferredDistanceKm ?? 25,
+        nearbyOnly: _profileController?.profile?.onlyShowPeopleNearby ?? false,
         gender: preferences.gender,
         interest: preferences.interest,
         interests: preferences.interests,
@@ -72,16 +73,23 @@ extension _HomePreferencesActions on _HomeScreenState {
       ),
     );
     if (filters == null || !mounted) return;
-    final savedRadius = controller?.profile?.preferredDistanceKm;
-    if (savedRadius != null && filters.radiusKm != savedRadius) {
+    final saved = controller?.profile;
+    final changes = <String, Object?>{
+      if (saved != null && filters.radiusKm != saved.preferredDistanceKm)
+        'preferredDistanceKm': filters.radiusKm,
+      if (saved != null && filters.nearbyOnly != saved.onlyShowPeopleNearby)
+        'onlyShowPeopleNearby': filters.nearbyOnly,
+    };
+    if (saved != null && changes.isNotEmpty) {
       _applyingFilters = true;
       try {
-        await controller!.updateOnboarding({
-          'preferredDistanceKm': filters.radiusKm,
-        });
+        await controller!.updateOnboarding(changes);
       } catch (_) {
-        // Keep the saved distance but still apply the other filter changes.
-        filters = filters.withRadius(savedRadius);
+        // Keep the saved distance settings but still apply the other filters.
+        filters = filters.withDistance(
+          saved.preferredDistanceKm,
+          saved.onlyShowPeopleNearby,
+        );
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(

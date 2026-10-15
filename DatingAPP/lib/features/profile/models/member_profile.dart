@@ -1,3 +1,4 @@
+import '../../onboarding/models/onboarding_profile.dart';
 import '../../home/data/home_discover_data.dart';
 
 class MemberPhoto {
@@ -18,6 +19,16 @@ class MemberProfile {
     final value = onboarding['preferredDistanceKm'];
     return (value is num ? value.round() : 25).clamp(1, 100).toInt();
   }
+
+  bool get onlyShowPeopleNearby => onboarding['onlyShowPeopleNearby'] == true;
+
+  List<String> lifestyleChoices(String key) =>
+      readOnboardingChoices(onboarding, key, switch (key) {
+        'vibeTypes' => 'vibeType',
+        'idealFridays' => 'idealFriday',
+        'currentEras' => 'currentEra',
+        _ => key,
+      });
 
   String text(String key) => data[key]?.toString() ?? '';
   String onboardingText(String key) => onboarding[key]?.toString() ?? '';

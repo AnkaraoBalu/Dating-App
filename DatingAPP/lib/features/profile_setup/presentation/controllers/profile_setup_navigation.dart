@@ -13,42 +13,6 @@ extension _ProfileSetupNavigation on _ProfileSetupScreenState {
       );
       return;
     }
-    if ((_step == 4 || _step == 5) && _draft.selectedPrompts.length < 3) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Choose at least 3 prompts to continue.')),
-      );
-      return;
-    }
-    if (_step == 5 &&
-        _draft.selectedPrompts.any(
-          (prompt) => (_draft.answers[prompt] ?? '').trim().isEmpty,
-        )) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Answer each selected prompt to continue.'),
-        ),
-      );
-      return;
-    }
-    if (_step == 6 && _draft.selectedPrompts.length < 3) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Choose at least 3 prompts before saving.'),
-        ),
-      );
-      _refresh(() => _step = 4);
-      return;
-    }
-    if (_step == 6 &&
-        _draft.selectedPrompts.any(
-          (prompt) => (_draft.answers[prompt] ?? '').trim().isEmpty,
-        )) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Answer your prompts before saving.')),
-      );
-      _refresh(() => _step = 5);
-      return;
-    }
     if (_step == 11) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Profile verification is coming soon.')),

@@ -242,11 +242,11 @@ abstract final class HomeDiscoverSections {
                           ),
                         ],
                       ),
-                      _meta(Icons.location_on_rounded, person.distance),
+                      _meta(Icons.location_on_rounded, person.distanceLabel),
                     ],
                   )
                 else
-                  _meta(Icons.location_on_rounded, person.distance),
+                  _meta(Icons.location_on_rounded, person.distanceLabel),
                 const SizedBox(height: 8),
                 Text(
                   '“${person.bio}”',

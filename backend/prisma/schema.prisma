@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["relationJoins"]
 }
 
@@ -311,16 +311,19 @@ model OnboardingProfile {
   genderIdentity            String?
   interestedIn              String?
   datingIntentions          String[]  @default([])
+  vibeTypes                 String[]  @default([])
   vibeType                  String?
+  idealFridays              String[]  @default([])
   idealFriday               String?
   interests                 String[]  @default([])
   musicGenres               String[]  @default([])
   favoriteArtists           String[]  @default([])
   skippedQuestions          String[]  @default([])
+  currentEras               String[]  @default([])
   currentEra                String?
   dealbreakers              String[]  @default([])
   preferredDistanceKm       Int       @default(25)
-  onlyShowPeopleNearby      Boolean   @default(true)
+  onlyShowPeopleNearby      Boolean   @default(false)
   locationPermissionGranted Boolean   @default(false)
   latitude                  Float?
   longitude                 Float?

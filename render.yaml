@@ -24,6 +24,10 @@ services:
         sync: false
       - key: DEMO_AUTH_ENABLED
         value: "false"
+      # Closed testing only: set to "true" in the dashboard to allow demo
+      # sign-in on this production server. Turn off before public launch.
+      - key: DEMO_AUTH_ALLOW_IN_PRODUCTION
+        sync: false
       # Optional push notifications: upload the Firebase key as a Render
       # Secret File named firebase-admin.json, then set this to
       # /etc/secrets/firebase-admin.json. Leave empty to run without pushes.

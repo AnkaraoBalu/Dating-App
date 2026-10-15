@@ -5,16 +5,16 @@ class OnboardingProfile {
     this.genderIdentity,
     this.interestedIn,
     this.datingIntentions = const [],
-    this.vibeType,
-    this.idealFriday,
+    this.vibeTypes = const [],
+    this.idealFridays = const [],
     this.interests = const [],
     this.musicGenres = const [],
     this.favoriteArtists = const [],
     this.skippedQuestions = const [],
-    this.currentEra,
+    this.currentEras = const [],
     this.dealbreakers = const [],
     this.preferredDistanceKm = 25,
-    this.onlyShowPeopleNearby = true,
+    this.onlyShowPeopleNearby = false,
     this.locationPermissionGranted = false,
     this.completedAt,
   });
@@ -24,13 +24,13 @@ class OnboardingProfile {
   final String? genderIdentity;
   final String? interestedIn;
   final List<String> datingIntentions;
-  final String? vibeType;
-  final String? idealFriday;
+  final List<String> vibeTypes;
+  final List<String> idealFridays;
   final List<String> interests;
   final List<String> musicGenres;
   final List<String> favoriteArtists;
   final List<String> skippedQuestions;
-  final String? currentEra;
+  final List<String> currentEras;
   final List<String> dealbreakers;
   final int preferredDistanceKm;
   final bool onlyShowPeopleNearby;
@@ -47,19 +47,19 @@ class OnboardingProfile {
       interestedIn: json['interestedIn'] as String?,
       datingIntentions: (json['datingIntentions'] as List<dynamic>? ?? [])
           .cast<String>(),
-      vibeType: json['vibeType'] as String?,
-      idealFriday: json['idealFriday'] as String?,
+      vibeTypes: readOnboardingChoices(json, 'vibeTypes', 'vibeType'),
+      idealFridays: readOnboardingChoices(json, 'idealFridays', 'idealFriday'),
       interests: (json['interests'] as List<dynamic>? ?? []).cast<String>(),
       musicGenres: (json['musicGenres'] as List<dynamic>? ?? []).cast<String>(),
       favoriteArtists: (json['favoriteArtists'] as List<dynamic>? ?? [])
           .cast<String>(),
       skippedQuestions: (json['skippedQuestions'] as List<dynamic>? ?? [])
           .cast<String>(),
-      currentEra: json['currentEra'] as String?,
+      currentEras: readOnboardingChoices(json, 'currentEras', 'currentEra'),
       dealbreakers: (json['dealbreakers'] as List<dynamic>? ?? [])
           .cast<String>(),
       preferredDistanceKm: json['preferredDistanceKm'] as int? ?? 25,
-      onlyShowPeopleNearby: json['onlyShowPeopleNearby'] as bool? ?? true,
+      onlyShowPeopleNearby: json['onlyShowPeopleNearby'] as bool? ?? false,
       locationPermissionGranted:
           json['locationPermissionGranted'] as bool? ?? false,
       completedAt: json['completedAt'] == null
@@ -67,4 +67,15 @@ class OnboardingProfile {
           : DateTime.parse(json['completedAt'] as String),
     );
   }
+}
+
+List<String> readOnboardingChoices(
+  Map<String, dynamic> data,
+  String key,
+  String legacyKey,
+) {
+  final value = data[key];
+  if (value is List) return value.whereType<String>().toSet().toList();
+  final legacy = data[legacyKey];
+  return legacy is String && legacy.isNotEmpty ? [legacy] : [];
 }

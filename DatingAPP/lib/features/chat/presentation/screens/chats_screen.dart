@@ -14,9 +14,16 @@ import 'conversation_screen.dart';
 part '../widgets/chats_list_sections.dart';
 
 class ChatsScreen extends StatefulWidget {
-  const ChatsScreen({super.key, required this.controller});
+  const ChatsScreen({
+    super.key,
+    required this.controller,
+    required this.onExplorePeople,
+  });
 
   final MatchController controller;
+
+  /// Opens Discover from the empty chat list.
+  final VoidCallback onExplorePeople;
 
   @override
   State<ChatsScreen> createState() => _ChatsScreenState();

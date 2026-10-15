@@ -143,10 +143,18 @@ class _HomeScreenState extends State<HomeScreen> {
       widget.photos;
   void _profileUpdated() {
     if (!mounted) return;
-    final radius = _profileController?.profile?.preferredDistanceKm;
-    final distanceChanged = radius != null && radius != _filters.radiusKm;
+    final profile = _profileController?.profile;
+    final distanceChanged =
+        profile != null &&
+        (profile.preferredDistanceKm != _filters.radiusKm ||
+            profile.onlyShowPeopleNearby != _filters.nearbyOnly);
     setState(() {
-      if (distanceChanged) _filters = _filters.withRadius(radius);
+      if (distanceChanged) {
+        _filters = _filters.withDistance(
+          profile.preferredDistanceKm,
+          profile.onlyShowPeopleNearby,
+        );
+      }
     });
     if (distanceChanged && _preferencesReady && !_applyingFilters) {
       unawaited(_loadPeople());
@@ -368,7 +376,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                 : _memberPhotos.first,
                           )
                         : _selectedNav == 3
-                        ? ChatsScreen(controller: _matchController!)
+                        ? ChatsScreen(
+                            controller: _matchController!,
+                            onExplorePeople: () =>
+                                _refresh(() => _selectedNav = 0),
+                          )
                         : HomeTabPlaceholder(
                             tab: _navLabels[_selectedNav],
                             icon: _navIcons[_selectedNav],

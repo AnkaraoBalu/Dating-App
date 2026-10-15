@@ -44,9 +44,9 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
   late DateTime _birthDate;
   late String? _gender;
   late String? _interestedIn;
-  late String? _vibeType;
-  late String? _idealFriday;
-  late String? _currentEra;
+  late Set<String> _vibeType;
+  late Set<String> _idealFriday;
+  late Set<String> _currentEra;
   late Set<String> _intentions;
   late Set<String> _selectedInterests;
   late Set<String> _selectedGenres;
@@ -78,9 +78,9 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
         DateTime(today.year - 25, today.month, today.day);
     _gender = profile?.genderIdentity;
     _interestedIn = profile?.interestedIn;
-    _vibeType = profile?.vibeType;
-    _idealFriday = profile?.idealFriday;
-    _currentEra = profile?.currentEra;
+    _vibeType = {...?profile?.vibeTypes};
+    _idealFriday = {...?profile?.idealFridays};
+    _currentEra = {...?profile?.currentEras};
     _intentions = {...?profile?.datingIntentions};
     _selectedInterests = {...?profile?.interests};
     _selectedGenres = {...?profile?.musicGenres};
@@ -88,7 +88,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
     _dealbreakers = {...?profile?.dealbreakers};
     _skippedQuestions = {...?profile?.skippedQuestions};
     _preferredDistanceKm = profile?.preferredDistanceKm ?? 25;
-    _onlyShowPeopleNearby = profile?.onlyShowPeopleNearby ?? true;
+    _onlyShowPeopleNearby = profile?.onlyShowPeopleNearby ?? false;
     _step = _resumeStep(profile);
   }
 
@@ -114,6 +114,10 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
     } else if (_dealbreakers.length < 8) {
       _dealbreakers.add(value);
     }
+  }
+
+  void _toggleLifestyle(Set<String> selected, String value, int limit) {
+    if (!selected.remove(value) && selected.length < limit) selected.add(value);
   }
 
   void _toggleInterest(String value) {

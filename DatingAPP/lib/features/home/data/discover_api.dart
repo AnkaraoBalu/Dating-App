@@ -181,6 +181,7 @@ class DiscoverApi extends ChangeNotifier {
       languages: (json['languages'] as List<dynamic>? ?? [])
           .whereType<String>()
           .toList(),
+      beyondRadius: json['beyondRadius'] == true,
     );
   }
 }

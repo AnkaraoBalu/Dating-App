@@ -7,11 +7,11 @@ extension _OnboardingSummarySection on _OnboardingQuestionsScreenState {
       _summaryRow('Birthday', _birthDateLabel, 0),
       _summaryRow('Gender', _labelFor(_gender), 1),
       _summaryRow('Interested in', _labelFor(_interestedIn), 2),
-      _summaryRow('Energy', _labelFor(_vibeType), 4),
-      _summaryRow('Ideal Friday', _labelFor(_idealFriday), 5),
+      _summaryRow('Energy', _vibeType.map(_labelFor).join(', '), 4),
+      _summaryRow('Ideal Friday', _idealFriday.map(_labelFor).join(', '), 5),
       _summaryRow('Interests', _selectedInterests.map(_labelFor).join(', '), 6),
       _summaryRow('Music', _musicSummary, 7),
-      _summaryRow('Current era', _labelFor(_currentEra), 8),
+      _summaryRow('Current era', _currentEra.map(_labelFor).join(', '), 8),
       _summaryRow(
         'Deal-breakers',
         _dealbreakers.isEmpty
@@ -67,7 +67,7 @@ extension _OnboardingSummarySection on _OnboardingQuestionsScreenState {
                       : value.isEmpty
                       ? 'Not set'
                       : value,
-                  maxLines: 1,
+                  maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.label,
                 ),

@@ -1,5 +1,17 @@
 part of '../screens/profile_basics_screen.dart';
 
+bool _isOtherOption(String option) =>
+    option == 'Other' || option == 'Other city';
+
+const _otherPrompts = {
+  'location': 'Enter your city',
+  'education': 'Enter your education',
+  'fieldOfStudy': 'Enter your field of study',
+  'jobTitle': 'Enter your job title',
+  'company': 'Enter your company',
+  'languages': 'Add a language',
+};
+
 extension _ProfileBasicsShared on _ProfileBasicsScreenState {
   BoxDecoration _basicsCardDecoration({Color? color}) => BoxDecoration(
     color: color ?? AppColors.surface,
@@ -82,7 +94,11 @@ extension _ProfileBasicsShared on _ProfileBasicsScreenState {
             onChanged: (value) => _change(() => _search = value),
             decoration: InputDecoration(
               hintText: hint,
+              // Turn off the theme's outline and fill; the parent draws the box.
+              filled: false,
               border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
               isDense: true,
               contentPadding: const EdgeInsets.symmetric(vertical: 15),
             ),
@@ -108,12 +124,14 @@ extension _ProfileBasicsShared on _ProfileBasicsScreenState {
     return Column(
       children: [
         for (final item in filtered)
-          _choiceTile(
-            item,
-            keyName: keyName,
-            icon: icon,
-            selected: _values[keyName] == item,
-          ),
+          _isOtherOption(item)
+              ? _otherTile(keyName, item, options, icon: icon)
+              : _choiceTile(
+                  item,
+                  keyName: keyName,
+                  icon: icon,
+                  selected: _values[keyName] == item,
+                ),
         if (filtered.isEmpty)
           _choiceTile(
             'Use “$_search”',
@@ -125,6 +143,55 @@ extension _ProfileBasicsShared on _ProfileBasicsScreenState {
     );
   }
 
+  /// A value the member typed in, i.e. one that is not a listed option.
+  String? _customValue(String keyName, List<String> options) {
+    final value = _values[keyName]?.trim() ?? '';
+    return value.isEmpty ||
+            options.contains(value) ||
+            value == 'Current location'
+        ? null
+        : value;
+  }
+
+  /// "Other" opens a popup for the member's own value instead of saving
+  /// the word "Other". Once saved, the tile shows that value.
+  Widget _otherTile(
+    String keyName,
+    String item,
+    List<String> options, {
+    IconData? icon,
+  }) {
+    final custom = _customValue(keyName, options);
+    return _choiceTile(
+      custom == null ? item : '$item: $custom',
+      icon: icon,
+      selected: custom != null || _values[keyName] == item,
+      onTap: () async {
+        final value = await _askOtherValue(
+          _otherPrompts[keyName] ?? 'Enter your own',
+          initial: custom,
+        );
+        if (value != null && mounted) _choose(keyName, value);
+      },
+    );
+  }
+
+  Future<String?> _askOtherValue(
+    String title, {
+    String? initial,
+    int maxLength = 60,
+  }) => showModalBottomSheet<String>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    backgroundColor: AppColors.surface,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (_) =>
+        _OtherValueSheet(title: title, initial: initial, maxLength: maxLength),
+  );
+
   Widget _sectionLabel(String title) => Padding(
     padding: const EdgeInsets.only(bottom: 9, top: 4),
     child: Align(
@@ -132,6 +199,72 @@ extension _ProfileBasicsShared on _ProfileBasicsScreenState {
       child: Text(
         title,
         style: AppTypography.label.copyWith(color: AppColors.textSecondary),
+      ),
+    ),
+  );
+}
+
+class _OtherValueSheet extends StatefulWidget {
+  const _OtherValueSheet({
+    required this.title,
+    required this.initial,
+    required this.maxLength,
+  });
+
+  final String title;
+  final String? initial;
+  final int maxLength;
+
+  @override
+  State<_OtherValueSheet> createState() => _OtherValueSheetState();
+}
+
+class _OtherValueSheetState extends State<_OtherValueSheet> {
+  late final _value = TextEditingController(text: widget.initial);
+
+  @override
+  void dispose() {
+    _value.dispose();
+    super.dispose();
+  }
+
+  void _save() {
+    final value = _value.text.trim();
+    if (value.isNotEmpty) Navigator.pop(context, value);
+  }
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: EdgeInsets.fromLTRB(
+      20,
+      20,
+      20,
+      16 + MediaQuery.viewInsetsOf(context).bottom,
+    ),
+    child: ValueListenableBuilder<TextEditingValue>(
+      valueListenable: _value,
+      builder: (context, value, _) => Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(widget.title, style: AppTypography.h3),
+          const SizedBox(height: 12),
+          TextField(
+            key: const ValueKey('other-value-field'),
+            controller: _value,
+            autofocus: true,
+            maxLength: widget.maxLength,
+            textCapitalization: TextCapitalization.words,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _save(),
+          ),
+          const SizedBox(height: 8),
+          FilledButton(
+            key: const ValueKey('other-value-save'),
+            onPressed: value.text.trim().isEmpty ? null : _save,
+            child: const Text('Save'),
+          ),
+        ],
       ),
     ),
   );

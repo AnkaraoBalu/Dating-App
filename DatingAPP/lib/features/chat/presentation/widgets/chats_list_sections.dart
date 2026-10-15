@@ -46,11 +46,7 @@ extension _ChatsListSections on _ChatsScreenState {
             SizedBox(
               width: double.infinity,
               child: FilledButton(
-                onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Explore people to meet someone new.'),
-                  ),
-                ),
+                onPressed: widget.onExplorePeople,
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.coral,
                   foregroundColor: Colors.white,

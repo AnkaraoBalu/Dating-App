@@ -25,9 +25,12 @@ abstract final class AppAssets {
   static const logo = 'assets/images/branding/just2/just2-icon-light.png';
   static const logoMark = 'assets/images/branding/just2/just2-mark.png';
   static const logoWordmark = 'assets/images/branding/just2/just2-wordmark.png';
-  static const logoWordmarkLight = 'assets/images/branding/just2/just2-wordmark-light.png';
-  static const logoStackedLight = 'assets/images/branding/just2/just2-stacked-light.png';
+  static const logoWordmarkLight =
+      'assets/images/branding/just2/just2-wordmark-light.png';
+  static const logoStackedLight =
+      'assets/images/branding/just2/just2-stacked-light.png';
   static const locationBackground = 'assets/images/location/location.png';
+  static const setupBasics = 'assets/images/welcome/just2_rooftop_poster.jpg';
   static const welcomeBackground =
       'assets/images/welcome/welcome_background.png';
 }

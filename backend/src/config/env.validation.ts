@@ -11,6 +11,8 @@ const environmentSchema = z
     CLERK_SECRET_KEY: z.string().min(1),
     DEMO_AUTH_ENABLED: z.enum(["true", "false"]).default("false"),
     DEMO_AUTH_SECRET: z.string().min(32).optional(),
+    // Closed testing only: lets demo sign-in run on a production server.
+    DEMO_AUTH_ALLOW_IN_PRODUCTION: z.enum(["true", "false"]).default("false"),
     CLOUDINARY_CLOUD_NAME: z.string().min(1),
     CLOUDINARY_API_KEY: z.string().min(1),
     CLOUDINARY_API_SECRET: z.string().min(1),

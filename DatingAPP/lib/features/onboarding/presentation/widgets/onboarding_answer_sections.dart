@@ -12,9 +12,9 @@ extension _OnboardingAnswerSections on _OnboardingQuestionsScreenState {
         description: description,
         dark: true,
         leading: _vibeLeading(value),
-        selected: _vibeType == value,
-        enabled: !_busy,
-        onTap: () => _refresh(() => _vibeType = value),
+        selected: _vibeType.contains(value),
+        enabled: !_busy && (_vibeType.contains(value) || _vibeType.length < 3),
+        onTap: () => _refresh(() => _toggleLifestyle(_vibeType, value, 3)),
       );
     },
   );
@@ -53,24 +53,18 @@ extension _OnboardingAnswerSections on _OnboardingQuestionsScreenState {
         itemBuilder: (context, index) {
           final (value, label, icon) =
               OnboardingQuestionOptions.idealFridays[index];
-          final selected = _idealFriday == value;
-          final image = switch (value) {
-            'rooftop' => AppAssets.welcomeBackground,
-            'movie_and_food' => AppAssets.welcomeConnection,
-            'club' || 'house_party' || 'live_music' => AppAssets.loginAmbient,
-            'long_drive' =>
-              'assets/images/boys-images/sunset_jacket_portrait.png',
-            'cafe_hopping' =>
-              'assets/images/girls-images/cafe_coffee_portrait.png',
-            'quiet_evening' || 'cozy_night_in' => AppAssets.welcomeNewChapter,
-            _ => AppAssets.welcomeEnergy,
-          };
+          final selected = _idealFriday.contains(value);
+          final image = 'assets/images/onboarding/friday/$value.jpg';
           return Material(
             color: Colors.transparent,
             child: InkWell(
               splashFactory: NoSplash.splashFactory,
               overlayColor: const WidgetStatePropertyAll(Colors.transparent),
-              onTap: _busy ? null : () => _refresh(() => _idealFriday = value),
+              onTap: _busy || (!selected && _idealFriday.length >= 3)
+                  ? null
+                  : () => _refresh(
+                      () => _toggleLifestyle(_idealFriday, value, 3),
+                    ),
               borderRadius: BorderRadius.circular(16),
               child: Container(
                 decoration: BoxDecoration(
@@ -156,9 +150,10 @@ extension _OnboardingAnswerSections on _OnboardingQuestionsScreenState {
         label: label,
         icon: icon,
         dark: true,
-        selected: _currentEra == value,
-        enabled: !_busy,
-        onTap: () => _refresh(() => _currentEra = value),
+        selected: _currentEra.contains(value),
+        enabled:
+            !_busy && (_currentEra.contains(value) || _currentEra.length < 2),
+        onTap: () => _refresh(() => _toggleLifestyle(_currentEra, value, 2)),
       );
     },
   );

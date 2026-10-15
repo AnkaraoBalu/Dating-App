@@ -1,19 +1,79 @@
 part of '../screens/profile_setup_screen.dart';
 
 extension _ProfileSetupPromptAnswers on _ProfileSetupScreenState {
+  /// Opens the answer popup for [prompt]. A prompt is only added once its
+  /// answer is saved, so every selected prompt always has an answer.
+  Future<void> _editPromptAnswer(String prompt) async {
+    final selected = _draft.selectedPrompts.contains(prompt);
+    if (!selected && _draft.selectedPrompts.length >= 5) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Choose up to 5 prompts.')));
+      return;
+    }
+    final result = await showModalBottomSheet<_PromptAnswerResult>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => _PromptAnswerSheet(
+        prompt: prompt,
+        initialAnswer: _draft.answers[prompt],
+        canRemove: selected,
+      ),
+    );
+    if (!mounted || result == null) return;
+    _refresh(() {
+      if (result.remove) {
+        _draft.removePrompt(prompt);
+      } else {
+        _draft.selectedPrompts.add(prompt);
+        _draft.answers[prompt] = result.answer;
+      }
+    });
+  }
+
   Widget _answerPrompts() => Column(
     children: [
+      if (_draft.selectedPrompts.isEmpty)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 11),
+          child: Text(
+            'Prompts are optional. Add one whenever you like.',
+            textAlign: TextAlign.center,
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ),
       for (final prompt in _draft.selectedPrompts)
         Container(
           margin: const EdgeInsets.only(bottom: 11),
-          padding: const EdgeInsets.fromLTRB(15, 11, 12, 6),
           decoration: _cardDecoration(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+          child: InkWell(
+            borderRadius: BorderRadius.circular(15),
+            onTap: () => _editPromptAnswer(prompt),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(15, 11, 4, 13),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(child: Text(prompt, style: AppTypography.label)),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(prompt, style: AppTypography.label),
+                        const SizedBox(height: 5),
+                        Text(
+                          _draft.answers[prompt] ?? '',
+                          style: AppTypography.body,
+                        ),
+                      ],
+                    ),
+                  ),
                   IconButton(
                     tooltip: 'Remove prompt',
                     onPressed: () =>
@@ -26,20 +86,7 @@ extension _ProfileSetupPromptAnswers on _ProfileSetupScreenState {
                   ),
                 ],
               ),
-              TextFormField(
-                key: ValueKey(prompt),
-                initialValue: _draft.answers[prompt],
-                maxLength: 150,
-                minLines: 2,
-                maxLines: 4,
-                decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  hintText: 'Your answer…',
-                  contentPadding: EdgeInsets.zero,
-                ),
-                onChanged: (value) => _draft.answers[prompt] = value,
-              ),
-            ],
+            ),
           ),
         ),
       InkWell(
@@ -70,7 +117,12 @@ extension _ProfileSetupPromptAnswers on _ProfileSetupScreenState {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Add another prompt', style: AppTypography.label),
+                    Text(
+                      _draft.selectedPrompts.isEmpty
+                          ? 'Add a prompt'
+                          : 'Add another prompt',
+                      style: AppTypography.label,
+                    ),
                     Text(
                       'Show more sides of you',
                       style: AppTypography.caption,
@@ -199,5 +251,85 @@ extension _ProfileSetupPromptAnswers on _ProfileSetupScreenState {
         ),
       ),
     ],
+  );
+}
+
+typedef _PromptAnswerResult = ({bool remove, String answer});
+
+class _PromptAnswerSheet extends StatefulWidget {
+  const _PromptAnswerSheet({
+    required this.prompt,
+    required this.initialAnswer,
+    required this.canRemove,
+  });
+
+  final String prompt;
+  final String? initialAnswer;
+  final bool canRemove;
+
+  @override
+  State<_PromptAnswerSheet> createState() => _PromptAnswerSheetState();
+}
+
+class _PromptAnswerSheetState extends State<_PromptAnswerSheet> {
+  late final _answer = TextEditingController(text: widget.initialAnswer);
+
+  @override
+  void dispose() {
+    _answer.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: EdgeInsets.fromLTRB(
+      20,
+      20,
+      20,
+      16 + MediaQuery.viewInsetsOf(context).bottom,
+    ),
+    child: ValueListenableBuilder<TextEditingValue>(
+      valueListenable: _answer,
+      builder: (context, value, _) {
+        final answer = value.text.trim();
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(widget.prompt, style: AppTypography.h3),
+            const SizedBox(height: 12),
+            TextField(
+              key: const ValueKey('prompt-answer-field'),
+              controller: _answer,
+              autofocus: true,
+              maxLength: 150,
+              minLines: 3,
+              maxLines: 5,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: const InputDecoration(hintText: 'Your answer…'),
+            ),
+            const SizedBox(height: 8),
+            FilledButton(
+              key: const ValueKey('prompt-answer-save'),
+              onPressed: answer.isEmpty
+                  ? null
+                  : () => Navigator.pop<_PromptAnswerResult>(context, (
+                      remove: false,
+                      answer: answer,
+                    )),
+              child: const Text('Save'),
+            ),
+            if (widget.canRemove)
+              TextButton(
+                onPressed: () => Navigator.pop<_PromptAnswerResult>(context, (
+                  remove: true,
+                  answer: '',
+                )),
+                child: const Text('Remove prompt'),
+              ),
+          ],
+        );
+      },
+    ),
   );
 }

@@ -182,14 +182,17 @@ class ProfilePreviewScreen extends StatelessWidget {
                 icon: Icons.favorite_outline,
               ),
             for (final field in {
-              'vibeType': 'My vibe',
-              'idealFriday': 'My ideal Friday',
-              'currentEra': 'My current era',
+              'vibeTypes': 'My vibe',
+              'idealFridays': 'My ideal Friday',
+              'currentEras': 'My current era',
             }.entries)
-              if (p.onboardingText(field.key).isNotEmpty)
+              if (p.lifestyleChoices(field.key).isNotEmpty)
                 ProfileTile(
                   title: field.value,
-                  value: displayValue(p.onboardingText(field.key)),
+                  value: p
+                      .lifestyleChoices(field.key)
+                      .map(displayValue)
+                      .join(', '),
                   icon: Icons.auto_awesome_outlined,
                 ),
             for (final field in {

@@ -71,12 +71,19 @@ extension _ProfileBasicsSelectionSections on _ProfileBasicsScreenState {
   Widget _educationSection() => Column(
     children: [
       for (final item in ProfileBasicsOptions.education)
-        _choiceTile(
-          item,
-          keyName: 'education',
-          icon: Icons.school_outlined,
-          selected: _values['education'] == item,
-        ),
+        _isOtherOption(item)
+            ? _otherTile(
+                'education',
+                item,
+                ProfileBasicsOptions.education,
+                icon: Icons.school_outlined,
+              )
+            : _choiceTile(
+                item,
+                keyName: 'education',
+                icon: Icons.school_outlined,
+                selected: _values['education'] == item,
+              ),
     ],
   );
 
@@ -232,42 +239,66 @@ extension _ProfileBasicsSelectionSections on _ProfileBasicsScreenState {
     ],
   );
 
-  Widget _languagesSection() => Container(
-    decoration: _basicsCardDecoration(),
-    child: Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(16),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: [
-          for (
-            var index = 0;
-            index < ProfileBasicsOptions.languages.length;
-            index++
-          )
-            CheckboxListTile(
-              dense: true,
-              value: _languages.contains(ProfileBasicsOptions.languages[index]),
-              activeColor: AppColors.coral,
-              title: Text(
-                ProfileBasicsOptions.languages[index],
-                style: AppTypography.body,
-              ),
-              onChanged: (value) => _change(() {
-                final language = ProfileBasicsOptions.languages[index];
-                value == true
-                    ? _languages.add(language)
-                    : _languages.remove(language);
-                _values['languages'] = _languages.join(', ');
-              }),
-              secondary: const Icon(
-                Icons.translate_rounded,
-                size: 18,
-                color: AppColors.textSecondary,
-              ),
-            ),
-        ],
+  Widget _languagesSection() {
+    const options = ProfileBasicsOptions.languages;
+    final custom = _languages.where((l) => !options.contains(l)).toList();
+    Widget tile(
+      String language, {
+      required bool checked,
+      ValueChanged<bool>? onChanged,
+    }) => CheckboxListTile(
+      dense: true,
+      value: checked,
+      activeColor: AppColors.coral,
+      title: Text(language, style: AppTypography.body),
+      onChanged: (value) => onChanged?.call(value == true),
+      secondary: const Icon(
+        Icons.translate_rounded,
+        size: 18,
+        color: AppColors.textSecondary,
       ),
-    ),
-  );
+    );
+    void setLanguage(String language, bool checked) => _change(() {
+      checked ? _languages.add(language) : _languages.remove(language);
+      _values['languages'] = _languages.join(', ');
+    });
+    return Container(
+      decoration: _basicsCardDecoration(),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          children: [
+            for (final language in options)
+              if (_isOtherOption(language))
+                // "Other" asks for the language and adds it as its own row.
+                tile(
+                  custom.isEmpty ? language : 'Add another language',
+                  checked: false,
+                  onChanged: (_) async {
+                    final value = await _askOtherValue(
+                      _otherPrompts['languages']!,
+                      maxLength: 40,
+                    );
+                    if (value != null && mounted) setLanguage(value, true);
+                  },
+                )
+              else
+                tile(
+                  language,
+                  checked: _languages.contains(language),
+                  onChanged: (checked) => setLanguage(language, checked),
+                ),
+            for (final language in custom)
+              tile(
+                language,
+                checked: true,
+                onChanged: (checked) => setLanguage(language, checked),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 }

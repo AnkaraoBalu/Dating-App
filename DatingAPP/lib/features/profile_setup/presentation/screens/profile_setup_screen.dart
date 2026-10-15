@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/widgets/adaptive_flow_column.dart';
 import '../../data/profile_setup_copy.dart';
 import '../../data/profile_setup_options.dart';
 import '../../models/profile_setup_draft.dart';
 import '../../data/profile_setup_api.dart';
+import '../widgets/setup_image_hero.dart';
 import '../../../home/presentation/screens/home_screen.dart';
 import '../../../home/data/discover_api.dart';
 import 'profile_basics_screen.dart';

@@ -6,8 +6,12 @@ extension _OnboardingFlowActions on _OnboardingQuestionsScreenState {
     if (profile?.genderIdentity == null) return 1;
     if (profile?.interestedIn == null) return 2;
     final skipped = profile?.skippedQuestions ?? const <String>[];
-    if (profile?.vibeType == null && !skipped.contains('vibe_type')) return 4;
-    if (profile?.idealFriday == null && !skipped.contains('ideal_friday')) {
+    if ((profile?.vibeTypes.isEmpty ?? true) &&
+        !skipped.contains('vibe_type')) {
+      return 4;
+    }
+    if ((profile?.idealFridays.isEmpty ?? true) &&
+        !skipped.contains('ideal_friday')) {
       return 5;
     }
     if ((profile?.interests.isEmpty ?? true) &&
@@ -19,7 +23,8 @@ extension _OnboardingFlowActions on _OnboardingQuestionsScreenState {
         !skipped.contains('music')) {
       return 7;
     }
-    if (profile?.currentEra == null && !skipped.contains('current_era')) {
+    if ((profile?.currentEras.isEmpty ?? true) &&
+        !skipped.contains('current_era')) {
       return 8;
     }
     if ((profile?.dealbreakers.isEmpty ?? true) &&
@@ -48,13 +53,13 @@ extension _OnboardingFlowActions on _OnboardingQuestionsScreenState {
     1 => _gender != null,
     2 => _interestedIn != null,
     3 => true,
-    4 => _vibeType != null,
-    5 => _idealFriday != null,
+    4 => _vibeType.isNotEmpty && _vibeType.length <= 3,
+    5 => _idealFriday.isNotEmpty && _idealFriday.length <= 3,
     6 => _selectedInterests.isNotEmpty && _selectedInterests.length <= 5,
     7 =>
       (_selectedGenres.isNotEmpty || _selectedArtists.isNotEmpty) &&
           _selectedGenres.length + _selectedArtists.length <= 5,
-    8 => _currentEra != null,
+    8 => _currentEra.isNotEmpty && _currentEra.length <= 2,
     9 =>
       _dealbreakers.length <= 8 &&
           !(_dealbreakers.contains('no_hard_dealbreakers') &&
@@ -79,14 +84,14 @@ extension _OnboardingFlowActions on _OnboardingQuestionsScreenState {
         1 => <String, Object?>{'genderIdentity': _gender},
         2 => <String, Object?>{'interestedIn': _interestedIn},
         3 => <String, Object?>{},
-        4 => <String, Object?>{'vibeType': _vibeType},
-        5 => <String, Object?>{'idealFriday': _idealFriday},
+        4 => <String, Object?>{'vibeTypes': _vibeType.toList()},
+        5 => <String, Object?>{'idealFridays': _idealFriday.toList()},
         6 => <String, Object?>{'interests': _selectedInterests.toList()},
         7 => <String, Object?>{
           'musicGenres': _selectedGenres.toList(),
           'favoriteArtists': _selectedArtists.toList(),
         },
-        8 => <String, Object?>{'currentEra': _currentEra},
+        8 => <String, Object?>{'currentEras': _currentEra.toList()},
         9 => <String, Object?>{'dealbreakers': _dealbreakers.toList()},
         10 => <String, Object?>{'datingIntentions': _intentions.toList()},
         11 => <String, Object?>{
@@ -156,10 +161,10 @@ extension _OnboardingFlowActions on _OnboardingQuestionsScreenState {
       final changes = <String, Object?>{'skippedQuestions': skipped.toList()};
       switch (_step) {
         case 4:
-          changes['vibeType'] = null;
+          changes['vibeTypes'] = <String>[];
           break;
         case 5:
-          changes['idealFriday'] = null;
+          changes['idealFridays'] = <String>[];
           break;
         case 6:
           changes['interests'] = <String>[];
@@ -169,7 +174,7 @@ extension _OnboardingFlowActions on _OnboardingQuestionsScreenState {
           changes['favoriteArtists'] = <String>[];
           break;
         case 8:
-          changes['currentEra'] = null;
+          changes['currentEras'] = <String>[];
           break;
         case 9:
           changes['dealbreakers'] = <String>[];
@@ -184,10 +189,10 @@ extension _OnboardingFlowActions on _OnboardingQuestionsScreenState {
         _skippedQuestions = skipped;
         switch (_step) {
           case 4:
-            _vibeType = null;
+            _vibeType.clear();
             break;
           case 5:
-            _idealFriday = null;
+            _idealFriday.clear();
             break;
           case 6:
             _selectedInterests.clear();
@@ -197,7 +202,7 @@ extension _OnboardingFlowActions on _OnboardingQuestionsScreenState {
             _selectedArtists.clear();
             break;
           case 8:
-            _currentEra = null;
+            _currentEra.clear();
             break;
           case 9:
             _dealbreakers.clear();

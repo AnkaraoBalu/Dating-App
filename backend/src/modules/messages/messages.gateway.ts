@@ -13,7 +13,10 @@ import { verifyToken } from "@clerk/backend";
 import { Server, Socket } from "socket.io";
 import { PrismaService } from "../../database/prisma.service";
 import { MessagesService } from "./messages.service";
-import { verifyDemoSessionToken } from "../demo-auth/demo-session";
+import {
+  demoAuthSecret,
+  verifyDemoSessionToken,
+} from "../demo-auth/demo-session";
 import { RealtimeService } from "../realtime/realtime.service";
 import { NotificationsService } from "../notifications/notifications.service";
 import {
@@ -52,13 +55,10 @@ export class MessagesGateway
       if (typeof token !== "string" || token.trim().length === 0) {
         throw new Error("Missing bearer token");
       }
-      const demoSecret = this.config.get<string>("DEMO_AUTH_SECRET");
-      const demoUserId =
-        this.config.get<string>("NODE_ENV") !== "production" &&
-        this.config.get<string>("DEMO_AUTH_ENABLED") === "true" &&
-        demoSecret
-          ? verifyDemoSessionToken(token, demoSecret)
-          : null;
+      const demoSecret = demoAuthSecret(this.config);
+      const demoUserId = demoSecret
+        ? verifyDemoSessionToken(token, demoSecret)
+        : null;
       const clerkUserId =
         demoUserId ??
         (

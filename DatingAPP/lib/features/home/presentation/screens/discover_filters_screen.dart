@@ -8,6 +8,7 @@ class DiscoverFilterOptions {
     this.minAge = 21,
     this.maxAge = 34,
     this.radiusKm = 25,
+    this.nearbyOnly = false,
     this.gender = 'everyone',
     this.interest,
     this.interests = const [],
@@ -18,22 +19,27 @@ class DiscoverFilterOptions {
   final int minAge;
   final int maxAge;
   final int radiusKm;
+
+  /// Only people within [radiusKm]; otherwise people further away follow.
+  final bool nearbyOnly;
   final String gender;
   final String? interest;
   final List<String> interests;
   final bool onlineOnly;
   final bool verifiedOnly;
 
-  DiscoverFilterOptions withRadius(int radiusKm) => DiscoverFilterOptions(
-    minAge: minAge,
-    maxAge: maxAge,
-    radiusKm: radiusKm,
-    gender: gender,
-    interest: interest,
-    interests: interests,
-    onlineOnly: onlineOnly,
-    verifiedOnly: verifiedOnly,
-  );
+  DiscoverFilterOptions withDistance(int radiusKm, bool nearbyOnly) =>
+      DiscoverFilterOptions(
+        minAge: minAge,
+        maxAge: maxAge,
+        radiusKm: radiusKm,
+        nearbyOnly: nearbyOnly,
+        gender: gender,
+        interest: interest,
+        interests: interests,
+        onlineOnly: onlineOnly,
+        verifiedOnly: verifiedOnly,
+      );
 }
 
 class DiscoverFiltersScreen extends StatefulWidget {
@@ -51,6 +57,7 @@ class DiscoverFiltersScreen extends StatefulWidget {
 class _DiscoverFiltersScreenState extends State<DiscoverFiltersScreen> {
   late RangeValues _ages;
   late double _distance;
+  late bool _nearbyOnly;
   late String _gender;
   late bool _online;
   late bool _verified;
@@ -72,6 +79,7 @@ class _DiscoverFiltersScreenState extends State<DiscoverFiltersScreen> {
     final initial = widget.initial;
     _ages = RangeValues(initial.minAge.toDouble(), initial.maxAge.toDouble());
     _distance = initial.radiusKm.toDouble();
+    _nearbyOnly = initial.nearbyOnly;
     _gender = switch (initial.gender) {
       'man' => 'Men',
       'woman' => 'Women',
@@ -120,6 +128,7 @@ class _DiscoverFiltersScreenState extends State<DiscoverFiltersScreen> {
           onPressed: () => setState(() {
             _ages = const RangeValues(21, 34);
             _distance = 25;
+            _nearbyOnly = false;
             _gender = 'Everyone';
             _interests.clear();
             _online = false;
@@ -139,6 +148,27 @@ class _DiscoverFiltersScreenState extends State<DiscoverFiltersScreen> {
         DistanceSlider(
           value: _distance,
           onChanged: (value) => setState(() => _distance = value),
+        ),
+        SwitchListTile(
+          key: const ValueKey('filters-nearby-only'),
+          contentPadding: EdgeInsets.zero,
+          title: Text(
+            'Only show people within this distance',
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.textPrimary,
+            ),
+          ),
+          subtitle: Text(
+            _nearbyOnly
+                ? 'People further away are hidden.'
+                : 'People further away appear after those nearby.',
+            style: AppTypography.caption.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          value: _nearbyOnly,
+          activeTrackColor: AppColors.coral,
+          onChanged: (value) => setState(() => _nearbyOnly = value),
         ),
         const SizedBox(height: 12),
         _label('Age range', '${_ages.start.round()} – ${_ages.end.round()}'),
@@ -232,6 +262,7 @@ class _DiscoverFiltersScreenState extends State<DiscoverFiltersScreen> {
               minAge: _ages.start.round(),
               maxAge: _ages.end.round(),
               radiusKm: _distance.round(),
+              nearbyOnly: _nearbyOnly,
               gender: switch (_gender) {
                 'Men' => 'man',
                 'Women' => 'woman',

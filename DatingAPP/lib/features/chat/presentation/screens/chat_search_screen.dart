@@ -47,7 +47,11 @@ class _ChatSearchScreenState extends State<ChatSearchScreen> {
           decoration: const InputDecoration(
             hintText: 'Search in conversation...',
             hintStyle: TextStyle(color: AppColors.textTertiary),
+            // Plain field in the app bar: no theme outline or fill.
+            filled: false,
             border: InputBorder.none,
+            enabledBorder: InputBorder.none,
+            focusedBorder: InputBorder.none,
           ),
         ),
       ),

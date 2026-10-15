@@ -88,6 +88,10 @@ export class ProfileDiscoveryService {
     }
     const radiusKm =
       query.radiusKm ?? current.onboardingProfile.preferredDistanceKm;
+    // Nearby-only members see just their radius. Everyone else sees nearby
+    // people first, then people further away so the feed is never empty
+    // while profiles exist elsewhere.
+    const nearbyOnly = current.onboardingProfile.onlyShowPeopleNearby;
 
     const excludedUserIds = [
       ...new Set([
@@ -217,12 +221,8 @@ export class ProfileDiscoveryService {
               onboarding.longitude,
             )
           : null;
-      if (
-        centerLat != null &&
-        centerLng != null &&
-        (distanceKm == null || distanceKm > radiusKm)
-      )
-        return [];
+      const beyondRadius = distanceKm == null || distanceKm > radiusKm;
+      if (beyondRadius && nearbyOnly) return [];
 
       const currentInterests = this.profileInterests(
         current.onboardingProfile!.interests,
@@ -287,23 +287,33 @@ export class ProfileDiscoveryService {
           latitude: profile.showDistance ? approximateLatitude : null,
           longitude: profile.showDistance ? approximateLongitude : null,
           verified: profile.verificationStatus === "verified",
+          beyondRadius,
           createdAt: profile.createdAt,
           sortDistanceKm: distanceKm,
         },
       ];
     });
 
-    if (query.mode === "nearby")
-      filtered.sort(
-        (a, b) =>
-          (a.sortDistanceKm ?? Number.MAX_VALUE) -
-          (b.sortDistanceKm ?? Number.MAX_VALUE),
-      );
-    else if (query.mode === "trending")
-      filtered.sort((a, b) => b.match - a.match);
-    else if (query.mode === "new")
-      filtered.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-    else filtered.sort((a, b) => b.match - a.match);
+    type Person = (typeof filtered)[number];
+    const byDistance = (a: Person, b: Person) =>
+      (a.sortDistanceKm ?? Number.MAX_VALUE) -
+      (b.sortDistanceKm ?? Number.MAX_VALUE);
+    const byMode =
+      query.mode === "nearby"
+        ? byDistance
+        : query.mode === "new"
+          ? (a: Person, b: Person) =>
+              b.createdAt.getTime() - a.createdAt.getTime()
+          : (a: Person, b: Person) => b.match - a.match;
+    // People within the radius always come first, ordered by the tab; people
+    // further away follow, nearest first.
+    filtered.sort((a, b) =>
+      a.beyondRadius !== b.beyondRadius
+        ? Number(a.beyondRadius) - Number(b.beyondRadius)
+        : a.beyondRadius
+          ? byDistance(a, b)
+          : byMode(a, b),
+    );
     return filtered
       .slice(0, query.limit ?? 60)
       .map(

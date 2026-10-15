@@ -7,6 +7,7 @@ import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "../../database/prisma.service";
 import {
   createDemoSessionToken,
+  demoAuthSecret,
   DEMO_USER_PREFIX,
   demoSessionLifetimeSeconds,
 } from "./demo-session";
@@ -88,10 +89,7 @@ export class DemoAuthService {
   }
 
   private assertEnabled() {
-    const enabled = this.config.get<string>("DEMO_AUTH_ENABLED") === "true";
-    const production = this.config.get<string>("NODE_ENV") === "production";
-    const secret = this.config.get<string>("DEMO_AUTH_SECRET");
-    if (!enabled || production || !secret || secret.length < 32) {
+    if (!demoAuthSecret(this.config)) {
       throw new ServiceUnavailableException(
         "Demo sign-in is not enabled for this server.",
       );

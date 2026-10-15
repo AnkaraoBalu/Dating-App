@@ -69,8 +69,7 @@ extension _HomeFeedLayout on _HomeScreenState {
         child: _sectionHeading('Explore your interests', _openCategories),
       ),
     ),
-    if (!_loadingPeople && _peopleError == null && _people.isNotEmpty)
-      SliverToBoxAdapter(child: _exploreModes()),
+    SliverToBoxAdapter(child: _exploreModes()),
     SliverPadding(
       padding: const EdgeInsets.fromLTRB(18, 16, 18, 28),
       sliver: SliverToBoxAdapter(child: _upgradeBanner()),

@@ -13,7 +13,11 @@ extension _ProfileSetupDetailsSections on _ProfileSetupScreenState {
           minLines: 7,
           maxLines: 9,
           decoration: const InputDecoration(
+            // Turn off the theme's outline and fill; the parent draws the box.
+            filled: false,
             border: InputBorder.none,
+            enabledBorder: InputBorder.none,
+            focusedBorder: InputBorder.none,
             hintText:
                 'Engineer by day, playlists by night. I love good food and conversations…',
           ),
@@ -30,19 +34,10 @@ extension _ProfileSetupDetailsSections on _ProfileSetupScreenState {
 
   Widget _basicsIntro() => Column(
     children: [
-      const SizedBox(height: 24),
-      Container(
-        width: 180,
-        height: 180,
-        decoration: BoxDecoration(
-          color: AppColors.coralSoft,
-          borderRadius: BorderRadius.circular(36),
-        ),
-        child: const Icon(
-          Icons.badge_outlined,
-          color: AppColors.coral,
-          size: 96,
-        ),
+      const SizedBox(height: 16),
+      const SetupImageHero(
+        image: AppAssets.setupBasics,
+        icon: Icons.badge_outlined,
       ),
       const SizedBox(height: 24),
       _tipBox('Your basics help you', [

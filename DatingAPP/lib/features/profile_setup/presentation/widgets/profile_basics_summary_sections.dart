@@ -92,19 +92,12 @@ extension _ProfileBasicsSummarySections on _ProfileBasicsScreenState {
 
   Widget _completeSection() => Column(
     children: [
-      const SizedBox(height: 24),
-      Container(
-        width: 112,
-        height: 112,
-        decoration: const BoxDecoration(
-          color: AppColors.coralSoft,
-          shape: BoxShape.circle,
-        ),
-        child: const Icon(
-          Icons.check_rounded,
-          color: AppColors.coralPressed,
-          size: 62,
-        ),
+      const SizedBox(height: 16),
+      const SetupImageHero(
+        image: AppAssets.welcomeNewChapter,
+        icon: Icons.check_rounded,
+        height: 230,
+        fade: false,
       ),
       const SizedBox(height: 24),
       Container(

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/widgets/adaptive_flow_column.dart';
 import '../../data/profile_basics_options.dart';
 import '../../data/profile_setup_api.dart';
+import '../widgets/setup_image_hero.dart';
 
 part '../widgets/profile_basics_selection_sections.dart';
 part '../widgets/profile_basics_summary_sections.dart';

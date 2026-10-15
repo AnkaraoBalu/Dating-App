@@ -13,6 +13,10 @@ import '../widgets/social_login_button.dart';
 import 'email_login_screen.dart';
 import '../../../demo_auth/presentation/screens/demo_login_screen.dart';
 
+// Debug builds always offer demo login; tester release builds opt in with
+// --dart-define=SHOW_DEMO_LOGIN=true. Store builds leave it off.
+const _showDemoLogin = kDebugMode || bool.fromEnvironment('SHOW_DEMO_LOGIN');
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -89,9 +93,7 @@ class _LoginScreenState extends State<LoginScreen> {
           }
         },
       );
-      debugPrint(
-        '[Just2Auth] Google browser opened; awaiting OAuth callback',
-      );
+      debugPrint('[Just2Auth] Google browser opened; awaiting OAuth callback');
       if (mounted && auth.isSignedIn) {
         Navigator.of(context).popUntil((route) => route.isFirst);
       }
@@ -197,7 +199,7 @@ class _LoginScreenState extends State<LoginScreen> {
             textAlign: TextAlign.center,
           ),
         ],
-        if (kDebugMode) ...[
+        if (_showDemoLogin) ...[
           const SizedBox(height: AppSpacing.sm),
           OutlinedButton.icon(
             onPressed: () =>

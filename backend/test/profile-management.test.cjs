@@ -106,12 +106,17 @@ function locatedCandidate(id, latitude, longitude, location = "Hyderabad") {
   return profile;
 }
 
-test("discovery uses saved member coordinates and enforces radius in every mode", async () => {
-  const mock = discoveryMock([
-    locatedCandidate("near", 17.38, 78.48),
-    locatedCandidate("far", 19.076, 72.8777, "Mumbai"),
-    locatedCandidate("unknown", null, null),
-  ]);
+const nearbyOnly = { onlyShowPeopleNearby: true };
+
+test("nearby-only members get just their radius in every mode", async () => {
+  const mock = discoveryMock(
+    [
+      locatedCandidate("near", 17.38, 78.48),
+      locatedCandidate("far", 19.076, 72.8777, "Mumbai"),
+      locatedCandidate("unknown", null, null),
+    ],
+    nearbyOnly,
+  );
   for (const mode of ["for_you", "nearby", "trending", "online", "new"]) {
     const people = await service(mock.prisma).discover("clerk-me", {
       mode,
@@ -125,12 +130,15 @@ test("discovery uses saved member coordinates and enforces radius in every mode"
 });
 
 test("travel city replaces the member location and uses radius rather than city text", async () => {
-  const mock = discoveryMock([
-    locatedCandidate("travel", 19.076, 72.8777, "Mumbai"),
-    locatedCandidate("neighbor", 19.077, 72.878, "Different city label"),
-    locatedCandidate("outside", 19.2, 72.8777, "Mumbai"),
-    locatedCandidate("home", 17.38, 78.48),
-  ]);
+  const mock = discoveryMock(
+    [
+      locatedCandidate("travel", 19.076, 72.8777, "Mumbai"),
+      locatedCandidate("neighbor", 19.077, 72.878, "Different city label"),
+      locatedCandidate("outside", 19.2, 72.8777, "Mumbai"),
+      locatedCandidate("home", 17.38, 78.48),
+    ],
+    nearbyOnly,
+  );
   for (const mode of ["for_you", "nearby"]) {
     const people = await service(mock.prisma).discover("clerk-me", {
       mode,
@@ -190,7 +198,7 @@ test("discovery uses the saved distance unless a radius is explicitly supplied",
       locatedCandidate("near", 17.38, 78.48),
       locatedCandidate("farther", 17.4, 78.48),
     ],
-    { preferredDistanceKm: 1 },
+    { preferredDistanceKm: 1, ...nearbyOnly },
   );
   const api = service(mock.prisma);
   assert.deepEqual(
@@ -404,4 +412,70 @@ test("delete account retry still removes Clerk user and ignores Clerk 404", asyn
   };
   assert.deepEqual(await api.deleteAccount("clerk-user"), { deleted: true });
   assert.deepEqual(calls, ["clerk-user"]);
+});
+
+test("profile completion requires 4 photos but prompts are optional", async () => {
+  const photo = { id: "p" };
+  let profile = { id: "profile-1", photos: [photo, photo, photo], prompts: [] };
+  let completedAt;
+  const setup = new ProfileSetupService(
+    {
+      profile: { update: async ({ data }) => (completedAt = data.completedAt) },
+    },
+    { get: async () => profile },
+  );
+  await assert.rejects(setup.complete("clerk-me"), /at least 4 photos/);
+  assert.equal(completedAt, undefined);
+  profile = { ...profile, photos: [photo, photo, photo, photo] };
+  await setup.complete("clerk-me");
+  assert.ok(completedAt instanceof Date);
+});
+
+test("people beyond the radius follow nearby people, nearest first, and are flagged", async () => {
+  const mock = discoveryMock([
+    locatedCandidate("mumbai", 19.076, 72.8777, "Mumbai"),
+    locatedCandidate("unknown", null, null),
+    locatedCandidate("near", 17.38, 78.48),
+    locatedCandidate("pune", 18.52, 73.86, "Pune"),
+  ]);
+  for (const mode of ["for_you", "nearby", "trending", "new"]) {
+    const people = await service(mock.prisma).discover("clerk-me", {
+      mode,
+      radiusKm: 1,
+    });
+    assert.deepEqual(
+      people.map((person) => [person.id, person.beyondRadius]),
+      [
+        ["near", false],
+        ["pune", true],
+        ["mumbai", true],
+        ["unknown", true],
+      ],
+      mode,
+    );
+  }
+});
+
+test("a member in a city with nobody nearby still sees profiles elsewhere", async () => {
+  // The member is in Warangal; every profile is in Hyderabad (~140 km away).
+  const mock = discoveryMock(
+    [
+      locatedCandidate("hyd-1", 17.38, 78.48),
+      locatedCandidate("hyd-2", 17.4, 78.5),
+    ],
+    { latitude: 17.97, longitude: 79.59, preferredDistanceKm: 25 },
+  );
+  const people = await service(mock.prisma).discover("clerk-me", {});
+  assert.deepEqual(people.map((person) => person.id).sort(), [
+    "hyd-1",
+    "hyd-2",
+  ]);
+  assert.ok(people.every((person) => person.beyondRadius));
+
+  const strict = discoveryMock([locatedCandidate("hyd-1", 17.38, 78.48)], {
+    latitude: 17.97,
+    longitude: 79.59,
+    ...nearbyOnly,
+  });
+  assert.deepEqual(await service(strict.prisma).discover("clerk-me", {}), []);
 });

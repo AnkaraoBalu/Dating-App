@@ -97,9 +97,9 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
               title: 'Interests & lifestyle',
               subtitle: _summary(
                 profile.interests.map(displayValue).toList()..addAll([
-                  displayValue(profile.onboardingText('vibeType')),
-                  displayValue(profile.onboardingText('idealFriday')),
-                  displayValue(profile.onboardingText('currentEra')),
+                  ...profile.lifestyleChoices('vibeTypes').map(displayValue),
+                  ...profile.lifestyleChoices('idealFridays').map(displayValue),
+                  ...profile.lifestyleChoices('currentEras').map(displayValue),
                   ...profile
                       .values('musicGenres', fromOnboarding: true)
                       .map(displayValue),

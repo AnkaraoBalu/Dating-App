@@ -21,6 +21,7 @@ class HomePerson {
     this.heightCm,
     this.zodiac,
     this.languages = const [],
+    this.beyondRadius = false,
   });
 
   final String name;
@@ -44,6 +45,13 @@ class HomePerson {
   final int? heightCm;
   final String? zodiac;
   final List<String> languages;
+
+  /// True when this person is outside the member's distance; they are shown
+  /// after nearby people so the feed is not empty.
+  final bool beyondRadius;
+
+  String get distanceLabel =>
+      beyondRadius ? '$distance · outside your range' : distance;
 }
 
 abstract final class HomeDiscoverData {

@@ -1,8 +1,9 @@
 part of '../screens/home_screen.dart';
 
 extension _HomeExploreSections on _HomeScreenState {
+  // Grow with the system text size so the two text lines always fit.
   Widget _exploreModes() => SizedBox(
-    height: 105,
+    height: 49 + MediaQuery.textScalerOf(context).scale(56),
     child: ListView(
       scrollDirection: Axis.horizontal,
       children: [
@@ -62,10 +63,14 @@ extension _HomeExploreSections on _HomeScreenState {
             const Spacer(),
             Text(
               title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: AppTypography.label.copyWith(color: AppColors.textPrimary),
             ),
             Text(
               subtitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: AppTypography.caption.copyWith(
                 color: AppColors.textSecondary,
               ),

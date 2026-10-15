@@ -8,7 +8,10 @@ import {
 import { ConfigService } from "@nestjs/config";
 import { verifyToken } from "@clerk/backend";
 import type { Request } from "express";
-import { verifyDemoSessionToken } from "../demo-auth/demo-session";
+import {
+  demoAuthSecret,
+  verifyDemoSessionToken,
+} from "../demo-auth/demo-session";
 
 export type ClerkRequest = Request & {
   auth: { userId: string };
@@ -34,12 +37,8 @@ export class ClerkAuthGuard implements CanActivate {
       throw new UnauthorizedException("Bearer token required");
     }
 
-    const demoSecret = this.config.get<string>("DEMO_AUTH_SECRET");
-    if (
-      this.config.get<string>("NODE_ENV") !== "production" &&
-      this.config.get<string>("DEMO_AUTH_ENABLED") === "true" &&
-      demoSecret
-    ) {
+    const demoSecret = demoAuthSecret(this.config);
+    if (demoSecret) {
       const demoUserId = verifyDemoSessionToken(token, demoSecret);
       if (demoUserId) {
         request.auth = { userId: demoUserId };

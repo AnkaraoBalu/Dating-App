@@ -78,7 +78,7 @@ class HomePersonCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    person.distance,
+                    person.distanceLabel,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppTypography.caption.copyWith(

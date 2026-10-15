@@ -106,6 +106,32 @@ test("real Clerk authentication and demo isolation", async (t) => {
     );
   });
   await t.test(
+    "production accepts demo sessions only with the explicit opt-in",
+    async () => {
+      const token = createDemoSessionToken("demo_matchify_maya", demoSecret);
+      const context = requestContext(token);
+      assert.equal(
+        await new ClerkAuthGuard(
+          config({
+            NODE_ENV: "production",
+            DEMO_AUTH_ALLOW_IN_PRODUCTION: "true",
+          }),
+        ).canActivate(context),
+        true,
+      );
+      assert.equal(context.request.auth.userId, "demo_matchify_maya");
+      await assert.rejects(
+        new ClerkAuthGuard(
+          config({
+            NODE_ENV: "production",
+            DEMO_AUTH_ALLOW_IN_PRODUCTION: "false",
+          }),
+        ).canActivate(requestContext(token)),
+        { status: 401 },
+      );
+    },
+  );
+  await t.test(
     "demo session works only in explicitly enabled development",
     async () => {
       const token = createDemoSessionToken("demo_matchify_maya", demoSecret);
@@ -118,6 +144,7 @@ test("real Clerk authentication and demo isolation", async (t) => {
       for (const changes of [
         { NODE_ENV: "production" },
         { DEMO_AUTH_ENABLED: "false" },
+        { DEMO_AUTH_ALLOW_IN_PRODUCTION: "true", DEMO_AUTH_ENABLED: "false" },
       ]) {
         await assert.rejects(
           new ClerkAuthGuard(config(changes)).canActivate(

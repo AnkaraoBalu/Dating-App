@@ -142,31 +142,34 @@ extension _ProfileSetupPromptSections on _ProfileSetupScreenState {
 
   Widget _pickPromptRow(String prompt) {
     final selected = _draft.selectedPrompts.contains(prompt);
+    final answer = _draft.answers[prompt];
     return Container(
       margin: const EdgeInsets.only(bottom: 5),
       decoration: _cardDecoration(),
       child: InkWell(
         borderRadius: BorderRadius.circular(15),
-        onTap: () {
-          if (!selected && _draft.selectedPrompts.length >= 5) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Choose up to 5 prompts.')),
-            );
-            return;
-          }
-          _refresh(() {
-            if (selected) {
-              _draft.removePrompt(prompt);
-            } else {
-              _draft.selectedPrompts.add(prompt);
-            }
-          });
-        },
+        onTap: () => _editPromptAnswer(prompt),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
           child: Row(
             children: [
-              Expanded(child: Text(prompt, style: AppTypography.body)),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(prompt, style: AppTypography.body),
+                    if (selected && answer != null)
+                      Text(
+                        answer,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.caption.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
               Icon(
                 selected
                     ? Icons.check_circle_rounded

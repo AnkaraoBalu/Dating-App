@@ -55,7 +55,9 @@ extension _HomePeopleSections on _HomeScreenState {
     }
     final message = _peopleError != null
         ? 'Could not load profiles. Check your connection and try again.'
-        : 'No profiles match these filters yet. Try a wider age range or distance.';
+        : _filters.nearbyOnly
+        ? 'No one within ${_filters.radiusKm} km yet. Turn off “Only show people within this distance” in Filters to see people further away.'
+        : 'No profiles match these filters yet. Try a wider age range or fewer filters.';
     return Column(
       children: [
         Icon(

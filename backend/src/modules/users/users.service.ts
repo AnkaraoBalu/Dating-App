@@ -113,6 +113,27 @@ export class UsersService {
         "Choose no hard deal-breakers by itself, or select specific values.",
       );
     }
+    const vibeTypes =
+      dto.vibeTypes ??
+      (dto.vibeType === undefined
+        ? undefined
+        : dto.vibeType === null
+          ? []
+          : [dto.vibeType]);
+    const idealFridays =
+      dto.idealFridays ??
+      (dto.idealFriday === undefined
+        ? undefined
+        : dto.idealFriday === null
+          ? []
+          : [dto.idealFriday]);
+    const currentEras =
+      dto.currentEras ??
+      (dto.currentEra === undefined
+        ? undefined
+        : dto.currentEra === null
+          ? []
+          : [dto.currentEra]);
     const data = {
       ...(dto.birthDate ? { birthDate: new Date(dto.birthDate) } : {}),
       ...(dto.genderIdentity ? { genderIdentity: dto.genderIdentity } : {}),
@@ -123,14 +144,18 @@ export class UsersService {
       ...(dto.skippedQuestions !== undefined
         ? { skippedQuestions: dto.skippedQuestions }
         : {}),
-      ...(dto.vibeType !== undefined ? { vibeType: dto.vibeType } : {}),
-      ...(dto.idealFriday !== undefined
-        ? { idealFriday: dto.idealFriday }
+      ...(vibeTypes !== undefined
+        ? { vibeTypes, vibeType: vibeTypes[0] ?? null }
+        : {}),
+      ...(idealFridays !== undefined
+        ? { idealFridays, idealFriday: idealFridays[0] ?? null }
         : {}),
       ...(dto.interests ? { interests: dto.interests } : {}),
       ...(dto.musicGenres ? { musicGenres: dto.musicGenres } : {}),
       ...(dto.favoriteArtists ? { favoriteArtists: dto.favoriteArtists } : {}),
-      ...(dto.currentEra !== undefined ? { currentEra: dto.currentEra } : {}),
+      ...(currentEras !== undefined
+        ? { currentEras, currentEra: currentEras[0] ?? null }
+        : {}),
       ...(dto.dealbreakers ? { dealbreakers: dto.dealbreakers } : {}),
       ...(dto.preferredDistanceKm !== undefined
         ? { preferredDistanceKm: dto.preferredDistanceKm }
