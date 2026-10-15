@@ -28,18 +28,22 @@ class DiscoverFilterOptions {
   final bool onlineOnly;
   final bool verifiedOnly;
 
-  DiscoverFilterOptions withDistance(int radiusKm, bool nearbyOnly) =>
-      DiscoverFilterOptions(
-        minAge: minAge,
-        maxAge: maxAge,
-        radiusKm: radiusKm,
-        nearbyOnly: nearbyOnly,
-        gender: gender,
-        interest: interest,
-        interests: interests,
-        onlineOnly: onlineOnly,
-        verifiedOnly: verifiedOnly,
-      );
+  /// Replaces the values that are saved on the member's profile.
+  DiscoverFilterOptions withProfilePreferences({
+    required int radiusKm,
+    required bool nearbyOnly,
+    required String gender,
+  }) => DiscoverFilterOptions(
+    minAge: minAge,
+    maxAge: maxAge,
+    radiusKm: radiusKm,
+    nearbyOnly: nearbyOnly,
+    gender: gender,
+    interest: interest,
+    interests: interests,
+    onlineOnly: onlineOnly,
+    verifiedOnly: verifiedOnly,
+  );
 }
 
 class DiscoverFiltersScreen extends StatefulWidget {

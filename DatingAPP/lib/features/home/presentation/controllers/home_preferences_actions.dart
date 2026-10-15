@@ -18,7 +18,7 @@ extension _HomePreferencesActions on _HomeScreenState {
         maxAge: preferences.maxAge,
         radiusKm: _profileController?.profile?.preferredDistanceKm ?? 25,
         nearbyOnly: _profileController?.profile?.onlyShowPeopleNearby ?? false,
-        gender: preferences.gender,
+        gender: _profileController?.profile?.discoveryGender ?? 'everyone',
         interest: preferences.interest,
         interests: preferences.interests,
         onlineOnly: preferences.onlineOnly,
@@ -39,7 +39,6 @@ extension _HomePreferencesActions on _HomeScreenState {
           selectedVibeIds: _selectedVibeIds,
           minAge: _filters.minAge,
           maxAge: _filters.maxAge,
-          gender: _filters.gender,
           interest: _filters.interest,
           interests: _filters.interests,
           onlineOnly: _filters.onlineOnly,
@@ -79,21 +78,24 @@ extension _HomePreferencesActions on _HomeScreenState {
         'preferredDistanceKm': filters.radiusKm,
       if (saved != null && filters.nearbyOnly != saved.onlyShowPeopleNearby)
         'onlyShowPeopleNearby': filters.nearbyOnly,
+      if (saved != null && filters.gender != saved.discoveryGender)
+        'interestedIn': MemberProfile.interestedInFor(filters.gender),
     };
     if (saved != null && changes.isNotEmpty) {
       _applyingFilters = true;
       try {
         await controller!.updateOnboarding(changes);
       } catch (_) {
-        // Keep the saved distance settings but still apply the other filters.
-        filters = filters.withDistance(
-          saved.preferredDistanceKm,
-          saved.onlyShowPeopleNearby,
+        // Keep the saved profile settings but still apply the other filters.
+        filters = filters.withProfilePreferences(
+          radiusKm: saved.preferredDistanceKm,
+          nearbyOnly: saved.onlyShowPeopleNearby,
+          gender: saved.discoveryGender,
         );
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Could not save your distance. Try again.'),
+              content: Text('Could not save your preferences. Try again.'),
             ),
           );
         }

@@ -9,6 +9,7 @@ import '../../data/home_discover_data.dart';
 import '../../data/discover_api.dart';
 import '../../data/home_discovery_preferences.dart';
 import '../../../profile/data/profile_controller.dart';
+import '../../../profile/models/member_profile.dart';
 import '../../../profile/presentation/screens/profile_main_screen.dart';
 import '../../../profile/presentation/widgets/profile_widgets.dart'
     show ProfilePhotoView;
@@ -147,12 +148,14 @@ class _HomeScreenState extends State<HomeScreen> {
     final distanceChanged =
         profile != null &&
         (profile.preferredDistanceKm != _filters.radiusKm ||
-            profile.onlyShowPeopleNearby != _filters.nearbyOnly);
+            profile.onlyShowPeopleNearby != _filters.nearbyOnly ||
+            profile.discoveryGender != _filters.gender);
     setState(() {
       if (distanceChanged) {
-        _filters = _filters.withDistance(
-          profile.preferredDistanceKm,
-          profile.onlyShowPeopleNearby,
+        _filters = _filters.withProfilePreferences(
+          radiusKm: profile.preferredDistanceKm,
+          nearbyOnly: profile.onlyShowPeopleNearby,
+          gender: profile.discoveryGender,
         );
       }
     });

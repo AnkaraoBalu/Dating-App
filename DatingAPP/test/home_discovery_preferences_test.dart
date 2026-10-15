@@ -13,7 +13,7 @@ void main() {
   });
 
   test(
-    'legacy local distance is removed while other discovery filters survive',
+    'legacy local distance and gender are removed while other filters survive',
     () async {
       final storage = SharedPreferencesAsync();
       await storage.setString(
@@ -38,7 +38,7 @@ void main() {
       expect(saved.containsKey('radiusKm'), isFalse);
       expect(saved['minAge'], 24);
       expect(saved['maxAge'], 40);
-      expect(saved['gender'], 'woman');
+      expect(saved.containsKey('gender'), isFalse);
       expect(saved['interests'], ['coffee']);
       expect(saved['travelLocation'], 'Mumbai');
     },

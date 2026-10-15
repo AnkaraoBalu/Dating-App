@@ -22,6 +22,21 @@ class MemberProfile {
 
   bool get onlyShowPeopleNearby => onboarding['onlyShowPeopleNearby'] == true;
 
+  /// Discovery "Show me" value (man/woman/everyone) from the onboarding
+  /// "Who are you interested in?" answer, which is the single source of truth.
+  String get discoveryGender => switch (onboarding['interestedIn']) {
+    'women' => 'woman',
+    'men' => 'man',
+    _ => 'everyone',
+  };
+
+  static String interestedInFor(String discoveryGender) =>
+      switch (discoveryGender) {
+        'woman' => 'women',
+        'man' => 'men',
+        _ => 'everyone',
+      };
+
   List<String> lifestyleChoices(String key) =>
       readOnboardingChoices(onboarding, key, switch (key) {
         'vibeTypes' => 'vibeType',

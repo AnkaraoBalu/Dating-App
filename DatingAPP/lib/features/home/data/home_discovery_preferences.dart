@@ -7,7 +7,6 @@ class HomeDiscoveryPreferences {
     this.selectedVibeIds = const {},
     this.minAge = 21,
     this.maxAge = 34,
-    this.gender = 'everyone',
     this.interest,
     this.interests = const [],
     this.onlineOnly = false,
@@ -19,7 +18,6 @@ class HomeDiscoveryPreferences {
   final Set<String> selectedVibeIds;
   final int minAge;
   final int maxAge;
-  final String gender;
   final String? interest;
   final List<String> interests;
   final bool onlineOnly;
@@ -48,11 +46,6 @@ class HomeDiscoveryPreferencesStore {
 
       final minAge = _readInt(decoded['minAge'], 21).clamp(18, 70).toInt();
       final maxAge = _readInt(decoded['maxAge'], 34).clamp(minAge, 70).toInt();
-      final gender = switch (decoded['gender']) {
-        'man' => 'man',
-        'woman' => 'woman',
-        _ => 'everyone',
-      };
       final rawVibes = decoded['selectedVibeIds'];
       final rawInterests = decoded['interests'];
 
@@ -62,7 +55,6 @@ class HomeDiscoveryPreferencesStore {
             : const {},
         minAge: minAge,
         maxAge: maxAge,
-        gender: gender,
         interest: _readOptionalString(decoded['interest']),
         interests: rawInterests is List
             ? rawInterests.whereType<String>().toList()
@@ -84,7 +76,6 @@ class HomeDiscoveryPreferencesStore {
         'selectedVibeIds': preferences.selectedVibeIds.toList(),
         'minAge': preferences.minAge,
         'maxAge': preferences.maxAge,
-        'gender': preferences.gender,
         'interest': preferences.interest,
         'interests': preferences.interests,
         'onlineOnly': preferences.onlineOnly,
