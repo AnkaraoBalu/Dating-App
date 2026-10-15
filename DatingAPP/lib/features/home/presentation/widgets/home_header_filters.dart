@@ -16,12 +16,6 @@ extension _HomeHeaderFilters on _HomeScreenState {
         _openLikes,
         color: AppColors.coralPressed,
       ),
-      _headerAction(
-        Icons.notifications_none_rounded,
-        'Notifications',
-        0,
-        _openLikes,
-      ),
       GestureDetector(
         onTap: () => _refresh(() => _selectedNav = 4),
         child: Container(

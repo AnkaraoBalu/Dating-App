@@ -32,7 +32,7 @@ class ProfileHero extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [Colors.black26, Colors.transparent, Color(0xE5080A09)],
+                colors: [Colors.black26, Colors.transparent, profileBackground],
                 stops: [0, .4, 1],
               ),
             ),

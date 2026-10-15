@@ -51,18 +51,20 @@ extension _HomeFeedLayout on _HomeScreenState {
           ),
         ),
       ),
-    if (!_loadingPeople && _peopleError == null && _people.isNotEmpty)
-      SliverPadding(
-        padding: const EdgeInsets.fromLTRB(18, 10, 18, 10),
-        sliver: SliverToBoxAdapter(
-          child: _sectionHeading(
-            'People near you',
-            () => _openPeople(DiscoverPeopleMode.nearby),
-          ),
-        ),
-      ),
-    if (!_loadingPeople && _peopleError == null && _people.isNotEmpty)
-      SliverToBoxAdapter(child: _nearbyPeople()),
+    // "People near you" row is hidden for now; restore these two slivers to
+    // bring it back.
+    // if (!_loadingPeople && _peopleError == null && _people.isNotEmpty)
+    //   SliverPadding(
+    //     padding: const EdgeInsets.fromLTRB(18, 10, 18, 10),
+    //     sliver: SliverToBoxAdapter(
+    //       child: _sectionHeading(
+    //         'People near you',
+    //         () => _openPeople(DiscoverPeopleMode.nearby),
+    //       ),
+    //     ),
+    //   ),
+    // if (!_loadingPeople && _peopleError == null && _people.isNotEmpty)
+    //   SliverToBoxAdapter(child: _nearbyPeople()),
     SliverPadding(
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 8),
       sliver: SliverToBoxAdapter(

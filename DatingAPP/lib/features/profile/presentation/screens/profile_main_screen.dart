@@ -84,7 +84,7 @@ class ProfileMainScreen extends StatelessWidget {
                             child: Text(
                               '${p.name.isEmpty ? 'Your profile' : p.name}${p.age == null ? '' : ', ${p.age}'}',
                               style: const TextStyle(
-                                color: AppColors.textPrimary,
+                                color: profileTextPrimary,
                                 fontSize: 28,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -105,7 +105,7 @@ class ProfileMainScreen extends StatelessWidget {
                             children: [
                               const Icon(
                                 Icons.school_outlined,
-                                color: AppColors.textSecondary,
+                                color: profileTextSecondary,
                                 size: 16,
                               ),
                               const SizedBox(width: 8),
@@ -116,7 +116,7 @@ class ProfileMainScreen extends StatelessWidget {
                                     p.text('fieldOfStudy'),
                                   ].where((s) => s.isNotEmpty).join(', '),
                                   style: const TextStyle(
-                                    color: AppColors.textSecondary,
+                                    color: profileTextSecondary,
                                   ),
                                 ),
                               ),
@@ -130,7 +130,7 @@ class ProfileMainScreen extends StatelessWidget {
                             children: [
                               const Icon(
                                 Icons.location_on_outlined,
-                                color: AppColors.textSecondary,
+                                color: profileTextSecondary,
                                 size: 16,
                               ),
                               const SizedBox(width: 8),
@@ -138,7 +138,7 @@ class ProfileMainScreen extends StatelessWidget {
                                 child: Text(
                                   p.text('location'),
                                   style: const TextStyle(
-                                    color: AppColors.textSecondary,
+                                    color: profileTextSecondary,
                                   ),
                                 ),
                               ),
@@ -160,12 +160,12 @@ class ProfileMainScreen extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: profileSurface,
                             borderRadius: BorderRadius.circular(18),
-                            border: Border.all(color: AppColors.border),
+                            border: Border.all(color: profileBorder),
                           ),
                           child: Text(
                             '“${p.text('bio')}”',
                             style: const TextStyle(
-                              color: AppColors.textPrimary,
+                              color: profileTextPrimary,
                               height: 1.5,
                             ),
                           ),
@@ -177,16 +177,23 @@ class ProfileMainScreen extends StatelessWidget {
                         children: p.interests
                             .take(5)
                             .map(
-                              (s) => Chip(
-                                backgroundColor: profileSurface,
-                                label: Text(
+                              (s) => Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: profileSurface,
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(color: profileBorder),
+                                ),
+                                child: Text(
                                   displayValue(s),
                                   style: const TextStyle(
-                                    color: AppColors.textPrimary,
+                                    color: profileTextPrimary,
                                     fontSize: 12,
                                   ),
                                 ),
-                                side: const BorderSide(color: AppColors.border),
                               ),
                             )
                             .toList(),
@@ -266,7 +273,7 @@ class ProfileMainScreen extends StatelessWidget {
                       if (controller.error != null)
                         const Text(
                           'Connection statistics could not refresh. Pull down to try again.',
-                          style: TextStyle(color: AppColors.textTertiary),
+                          style: TextStyle(color: profileTextSecondary),
                         ),
                     ],
                   ),
@@ -287,14 +294,14 @@ class ProfileMainScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: profileSurface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: profileBorder),
       ),
       child: Column(
         children: [
           Text(
             value,
             style: const TextStyle(
-              color: AppColors.textPrimary,
+              color: profileTextPrimary,
               fontSize: 22,
               fontWeight: FontWeight.w700,
             ),
@@ -302,10 +309,7 @@ class ProfileMainScreen extends StatelessWidget {
           const SizedBox(height: 5),
           Text(
             label,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 12,
-            ),
+            style: const TextStyle(color: profileTextSecondary, fontSize: 12),
           ),
         ],
       ),

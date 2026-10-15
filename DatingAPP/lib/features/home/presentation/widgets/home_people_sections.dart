@@ -19,6 +19,8 @@ extension _HomePeopleSections on _HomeScreenState {
     ],
   );
 
+  // Kept while the "People near you" row is hidden in home_feed_layout.dart.
+  // ignore: unused_element
   Widget _nearbyPeople() {
     final people = _nearby;
     if (people.isEmpty) {

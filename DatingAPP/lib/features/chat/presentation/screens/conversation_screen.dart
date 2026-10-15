@@ -8,6 +8,7 @@ import '../../../../core/theme/theme.dart';
 import '../../../calls/data/call_coordinator.dart';
 import '../../../calls/data/calls_api.dart';
 import '../../../calls/presentation/screens/voice_call_screen.dart';
+import '../../../calls/presentation/widgets/call_microphone_permission.dart';
 import '../../../matches/models/match_model.dart';
 import '../../data/chat_api.dart';
 import '../../models/chat_models.dart';
@@ -406,6 +407,13 @@ class _ConversationScreenState extends State<ConversationScreen>
       return;
     }
     if (CallCoordinator.instance.screenOpen) return;
+    if (!await ensureCallMicrophone(
+          context,
+          peerName: widget.match.person.name,
+        ) ||
+        !mounted) {
+      return;
+    }
     await Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute<void>(
         builder: (_) => VoiceCallScreen.outgoing(

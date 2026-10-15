@@ -9,6 +9,7 @@ import '../../../chat/presentation/widgets/chat_media.dart';
 import '../../data/call_coordinator.dart';
 import '../../data/calls_api.dart';
 import '../../models/voice_call.dart';
+import '../widgets/call_microphone_permission.dart';
 
 enum _Phase { starting, ringing, incoming, connecting, connected, ended }
 
@@ -136,6 +137,13 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
     if (call == null || _busy) return;
     _busy = true;
     await _stopRingtone();
+    if (!mounted || _phase == _Phase.ended) return;
+    // Without the microphone the call cannot connect; stay on the incoming
+    // screen so the member can try again or decline.
+    if (!await ensureCallMicrophone(context, peerName: widget.peerName)) {
+      _busy = false;
+      return;
+    }
     if (!mounted || _phase == _Phase.ended) return;
     setState(() => _phase = _Phase.connecting);
     try {

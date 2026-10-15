@@ -42,7 +42,7 @@
 	<key>NSCameraUsageDescription</key>
 	<string>Just2 uses the camera when you choose to take a chat photo or complete a guided profile selfie check.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Just2 uses the microphone to record voice messages and when you choose to speak in a Vibe room.</string>
+	<string>Just2 uses the microphone for voice calls, voice messages, and when you choose to speak in a Vibe room. Calls are never recorded.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Just2 uses your location to show nearby profiles and, only when you choose, share an approximate one-time location in chat.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

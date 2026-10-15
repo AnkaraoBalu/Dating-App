@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../../../core/theme/theme.dart';
 import '../../data/profile_controller.dart';
 import '../screens/profile_edit_screen.dart';
 import '../screens/profile_preview_screen.dart';
@@ -13,7 +12,7 @@ Future<void> showProfileOptions(
 ) async {
   final action = await showModalBottomSheet<String>(
     context: context,
-    backgroundColor: AppColors.surface,
+    backgroundColor: profileSurface,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
@@ -38,10 +37,10 @@ Future<void> showProfileOptions(
                 ),
               ])
                 ListTile(
-                  leading: Icon(item.$3, color: AppColors.textPrimary),
+                  leading: Icon(item.$3, color: profileTextPrimary),
                   title: Text(
                     item.$2,
-                    style: const TextStyle(color: AppColors.textPrimary),
+                    style: const TextStyle(color: profileTextPrimary),
                   ),
                   onTap: () => Navigator.pop(context, item.$1),
                 ),
@@ -49,7 +48,7 @@ Future<void> showProfileOptions(
                 onPressed: () => Navigator.pop(context),
                 child: const Text(
                   'Cancel',
-                  style: TextStyle(color: AppColors.textPrimary),
+                  style: TextStyle(color: profileTextPrimary),
                 ),
               ),
             ],

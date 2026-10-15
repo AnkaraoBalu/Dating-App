@@ -2,16 +2,19 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/theme.dart';
 import '../../data/profile_controller.dart';
 
-const profileBackground = AppColors.background;
-const profileSurface = AppColors.surface;
-const profileSurfaceSecondary = AppColors.surfaceSecondary;
+// Profile screens use the website's forest green with cream text. Surfaces are
+// opaque blends of white over the green so sheets and dialogs match too.
+const profileBackground = AppColors.forest;
+const profileSurface = Color(0xFF2A4E45);
+const profileSurfaceSecondary = Color(0xFF35584F);
 const profileAccent = AppColors.coral;
-const profileAccentSoft = AppColors.coralSoft;
-const profileTextPrimary = AppColors.textPrimary;
-const profileTextSecondary = AppColors.textSecondary;
-const profileTextTertiary = AppColors.textTertiary;
-const profileBorder = AppColors.border;
-const profileSuccess = AppColors.success;
+const profileAccentSoft = Color(0xFF584A48);
+const profileTextPrimary = AppColors.background;
+const profileTextSecondary = Color(0xFFC5CAC0);
+const profileTextTertiary = Color(0xFF97A59B);
+const profileBorder = Color(0xFF3C5E55);
+// Lighter mint so success states stand out on the green background.
+const profileSuccess = Color(0xFF7FD6AC);
 
 void profileNotice(BuildContext context, String message) =>
     ScaffoldMessenger.of(context)
@@ -50,47 +53,61 @@ class ProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Theme(
     data: Theme.of(context).copyWith(
-      brightness: Brightness.light,
+      brightness: Brightness.dark,
       scaffoldBackgroundColor: profileBackground,
       canvasColor: profileSurface,
       popupMenuTheme: const PopupMenuThemeData(
         color: profileSurface,
-        textStyle: TextStyle(color: AppColors.textPrimary),
+        textStyle: TextStyle(color: profileTextPrimary),
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: profileBackground,
-        foregroundColor: AppColors.textPrimary,
+        foregroundColor: profileTextPrimary,
         titleTextStyle: TextStyle(
-          color: AppColors.textPrimary,
+          color: profileTextPrimary,
           fontSize: 17,
           fontWeight: FontWeight.w700,
         ),
-        iconTheme: IconThemeData(color: AppColors.textPrimary),
+        iconTheme: IconThemeData(color: profileTextPrimary),
       ),
-      colorScheme: const ColorScheme.light(
+      colorScheme: const ColorScheme.dark(
         primary: profileAccent,
+        onPrimary: Colors.white,
+        secondary: profileAccent,
         surface: profileSurface,
-        onSurface: AppColors.textPrimary,
+        onSurface: profileTextPrimary,
+        onSurfaceVariant: profileTextSecondary,
+        outline: profileBorder,
+        outlineVariant: profileBorder,
       ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: profileSurface,
+        modalBackgroundColor: profileSurface,
+      ),
+      dialogTheme: const DialogThemeData(backgroundColor: profileSurface),
+      dividerColor: profileBorder,
+      chipTheme: Theme.of(
+        context,
+      ).chipTheme.copyWith(checkmarkColor: profileTextPrimary),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.surfaceSecondary,
-        labelStyle: const TextStyle(color: AppColors.textSecondary),
-        floatingLabelStyle: const TextStyle(color: AppColors.textPrimary),
-        hintStyle: const TextStyle(color: AppColors.textTertiary),
-        helperStyle: const TextStyle(color: AppColors.textSecondary),
-        counterStyle: const TextStyle(color: AppColors.textTertiary),
+        fillColor: profileSurfaceSecondary,
+        labelStyle: const TextStyle(color: profileTextSecondary),
+        floatingLabelStyle: const TextStyle(color: profileTextPrimary),
+        hintStyle: const TextStyle(color: profileTextTertiary),
+        helperStyle: const TextStyle(color: profileTextSecondary),
+        counterStyle: const TextStyle(color: profileTextTertiary),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 17,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: const BorderSide(color: profileBorder),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: const BorderSide(color: profileBorder),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -106,12 +123,12 @@ class ProfilePage extends StatelessWidget {
         ),
       ),
       dropdownMenuTheme: const DropdownMenuThemeData(
-        textStyle: TextStyle(color: AppColors.textPrimary),
+        textStyle: TextStyle(color: profileTextPrimary),
       ),
-      iconTheme: const IconThemeData(color: AppColors.textSecondary),
+      iconTheme: const IconThemeData(color: profileTextSecondary),
       textTheme: Theme.of(context).textTheme.apply(
-        bodyColor: AppColors.textPrimary,
-        displayColor: AppColors.textPrimary,
+        bodyColor: profileTextPrimary,
+        displayColor: profileTextPrimary,
       ),
     ),
     child: Scaffold(
@@ -123,7 +140,7 @@ class ProfilePage extends StatelessWidget {
         ),
         centerTitle: true,
         backgroundColor: profileBackground,
-        foregroundColor: AppColors.textPrimary,
+        foregroundColor: profileTextPrimary,
         actions: actions,
       ),
       body: SafeArea(
@@ -138,7 +155,7 @@ class ProfilePage extends StatelessWidget {
                       child: LinearProgressIndicator(
                         value: step! / 5,
                         color: profileAccent,
-                        backgroundColor: AppColors.border,
+                        backgroundColor: profileBorder,
                         borderRadius: BorderRadius.circular(20),
                       ),
                     ),
@@ -146,7 +163,7 @@ class ProfilePage extends StatelessWidget {
                     Text(
                       '$step/5',
                       style: const TextStyle(
-                        color: AppColors.textTertiary,
+                        color: profileTextTertiary,
                         fontSize: 12,
                       ),
                     ),
@@ -212,6 +229,7 @@ class ProfileTile extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onTap;
   final Widget? trailing;
+
   @override
   Widget build(BuildContext context) => Container(
     margin: const EdgeInsets.only(bottom: 10),
@@ -219,7 +237,7 @@ class ProfileTile extends StatelessWidget {
       color: profileSurface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: AppColors.border),
+        side: const BorderSide(color: profileBorder),
       ),
       clipBehavior: Clip.antiAlias,
       child: ListTile(
@@ -227,9 +245,7 @@ class ProfileTile extends StatelessWidget {
         title: Text(
           title,
           style: TextStyle(
-            color: value == null
-                ? AppColors.textPrimary
-                : AppColors.textSecondary,
+            color: value == null ? profileTextPrimary : profileTextSecondary,
             fontSize: value == null ? 14 : 12,
           ),
         ),
@@ -237,19 +253,13 @@ class ProfileTile extends StatelessWidget {
             ? null
             : Text(
                 value!.isEmpty ? 'Not added' : value!,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: profileTextPrimary, fontSize: 14),
               ),
         trailing:
             trailing ??
             (onTap == null
                 ? null
-                : const Icon(
-                    Icons.chevron_right,
-                    color: AppColors.textTertiary,
-                  )),
+                : Icon(Icons.chevron_right, color: profileTextSecondary)),
         onTap: onTap,
       ),
     ),
@@ -269,7 +279,7 @@ class ProfileSection extends StatelessWidget {
         Text(
           title,
           style: AppTypography.h3.copyWith(
-            color: AppColors.textPrimary,
+            color: profileTextPrimary,
             fontSize: 17,
           ),
         ),
@@ -277,10 +287,7 @@ class ProfileSection extends StatelessWidget {
           const SizedBox(height: 5),
           Text(
             subtitle!,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 12,
-            ),
+            style: const TextStyle(color: profileTextSecondary, fontSize: 12),
           ),
         ],
       ],
@@ -308,7 +315,7 @@ class ProfilePhotoView extends StatelessWidget {
           url!,
           fit: fit,
           errorBuilder: (_, _, _) => const ColoredBox(
-            color: profileSurface,
+            color: AppColors.surface,
             child: Center(
               child: Icon(
                 Icons.broken_image_outlined,

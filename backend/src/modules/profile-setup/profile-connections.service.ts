@@ -125,7 +125,12 @@ export class ProfileConnectionsService {
     const likes = await this.prisma.profileLike.findMany({
       where: {
         toUserId: userId,
-        fromUser: { likesSent: { none: { toUserId: userId } } },
+        // Pending likes only: skip people this member already liked back
+        // (they are matches) or passed.
+        fromUser: {
+          likesReceived: { none: { fromUserId: userId } },
+          passesReceived: { none: { fromUserId: userId } },
+        },
       },
       include: {
         fromUser: {

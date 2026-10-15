@@ -479,3 +479,51 @@ test("a member in a city with nobody nearby still sees profiles elsewhere", asyn
   });
   assert.deepEqual(await service(strict.prisma).discover("clerk-me", {}), []);
 });
+
+test("likes received lists pending likes, not matches or passed people", async () => {
+  const likes = [
+    { fromUserId: "pending", toUserId: "me" },
+    { fromUserId: "matched", toUserId: "me" },
+    { fromUserId: "me", toUserId: "matched" },
+    { fromUserId: "passed", toUserId: "me" },
+    { fromUserId: "other", toUserId: "someone-else" },
+  ];
+  const passes = [{ fromUserId: "me", toUserId: "passed" }];
+  // Evaluates the subset of Prisma's `where` used by listIncomingLikes.
+  const findMany = async ({ where }) =>
+    likes
+      .filter((like) => like.toUserId === where.toUserId)
+      .filter((like) => {
+        const { likesReceived, passesReceived } = where.fromUser;
+        const likedBack = likes.some(
+          (other) =>
+            other.toUserId === like.fromUserId &&
+            other.fromUserId === likesReceived.none.fromUserId,
+        );
+        const passed = passes.some(
+          (pass) =>
+            pass.toUserId === like.fromUserId &&
+            pass.fromUserId === passesReceived.none.fromUserId,
+        );
+        return !likedBack && !passed;
+      })
+      .map((like) => ({
+        createdAt: new Date(),
+        fromUser: {
+          id: like.fromUserId,
+          username: like.fromUserId,
+          lastActiveAt: null,
+          profile: { photos: [], location: "Hyderabad" },
+          onboardingProfile: null,
+        },
+      }));
+  const connections = new ProfileConnectionsService(
+    { profileLike: { findMany } },
+    { userId: async () => "me" },
+  );
+  const received = await connections.listIncomingLikes("clerk-me");
+  assert.deepEqual(
+    received.map((like) => like.id),
+    ["pending"],
+  );
+});
