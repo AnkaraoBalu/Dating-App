@@ -1,4 +1,5 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.INTERNET" />
@@ -11,6 +12,11 @@
     <!-- Android 12+: route Vibe voice audio to Bluetooth headsets. -->
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <!-- A plugin asks for storage on every version; Android 13+ picks photos
+         through the system photo picker, which needs no permission. -->
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
     <!-- Android 13+: asked at runtime before showing push notifications. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <application android:label="Just2" android:name="${applicationName}" android:icon="@mipmap/ic_launcher">
@@ -32,6 +38,13 @@
         <!-- Background pushes use the high-importance channel the app creates
              (SystemNotifications), so they appear as banners at the top. -->
         <meta-data android:name="com.google.firebase.messaging.default_notification_channel_id" android:value="just2_alerts" />
+        <!-- Just2 reads location once while the app is open (getCurrentPosition).
+             geolocator's background service is never started, so remove it:
+             a foreground service of type "location" requires a Play Console
+             declaration. Remove this entry if background tracking is added. -->
+        <service
+            android:name="com.baseflow.geolocator.GeolocatorLocationService"
+            tools:node="remove" />
     </application>
     <queries>
         <intent>
