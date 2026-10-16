@@ -27,7 +27,6 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   ClerkAuthState? _authState;
   bool _googleBusy = false;
-  bool _createAccount = false;
   String? _authError;
 
   @override
@@ -70,27 +69,19 @@ class _LoginScreenState extends State<LoginScreen> {
         if (mounted) setState(() => _authError = error.message);
       }
 
-      debugPrint(
-        '[Just2Auth] Starting Google ${_createAccount ? 'sign-up' : 'sign-in'}',
-      );
+      // One button for everyone: start as a sign-in and let the OAuth
+      // callback transfer new Google identities to sign-up (DatingApp).
+      debugPrint('[Just2Auth] Starting Google sign-in or sign-up');
       await runClerkOperation<void>(
         errors: auth.errorStream,
         operation: () async {
           await auth.resetClient();
           if (!mounted) return;
-          if (_createAccount) {
-            await auth.ssoSignUp(
-              context,
-              clerk.Strategy.oauthGoogle,
-              onError: onError,
-            );
-          } else {
-            await auth.ssoSignIn(
-              context,
-              clerk.Strategy.oauthGoogle,
-              onError: onError,
-            );
-          }
+          await auth.ssoSignIn(
+            context,
+            clerk.Strategy.oauthGoogle,
+            onError: onError,
+          );
         },
       );
       debugPrint('[Just2Auth] Google browser opened; awaiting OAuth callback');
@@ -147,27 +138,22 @@ class _LoginScreenState extends State<LoginScreen> {
               const BrandLogo(height: 78),
               const SizedBox(height: AppSpacing.sm),
               Text(
-                _createAccount ? 'Create your account' : 'Welcome back',
+                'Welcome to Just2',
                 style: AppTypography.h2,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                'Sign in or create your account in one step.',
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
                 textAlign: TextAlign.center,
               ),
             ],
           ),
         ),
         const SizedBox(height: AppSpacing.lg),
-        SegmentedButton<bool>(
-          segments: const [
-            ButtonSegment<bool>(value: false, label: Text('Sign in')),
-            ButtonSegment<bool>(value: true, label: Text('Create account')),
-          ],
-          selected: {_createAccount},
-          onSelectionChanged: _googleBusy
-              ? null
-              : (selection) => setState(() {
-                  _createAccount = selection.first;
-                  _authError = null;
-                }),
-        ),
         const SizedBox(height: AppSpacing.lg),
         SocialLoginButton(
           provider: LoginProvider.google,
@@ -186,10 +172,7 @@ class _LoginScreenState extends State<LoginScreen> {
           provider: LoginProvider.email,
           onPressed: _googleBusy || _authState == null
               ? null
-              : () => LoginRoutes.push<void>(
-                  context,
-                  EmailLoginScreen(initialCreateAccount: _createAccount),
-                ),
+              : () => LoginRoutes.push<void>(context, const EmailLoginScreen()),
         ),
         if (_authState == null) ...[
           const SizedBox(height: AppSpacing.sm),

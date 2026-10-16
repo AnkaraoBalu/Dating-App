@@ -311,6 +311,16 @@ class Auth {
 
   /// Transfer an oAuth authentication into a [User]
   ///
+  /// Ask Clerk to turn the current OAuth sign-in into a sign-up, even when
+  /// the client copy does not report it as transferable. Just2 patch: after a
+  /// new Google identity returns, Clerk has the transfer ready on the server
+  /// while the client still shows `needs_identifier`. Clerk rejects the
+  /// request when there is nothing to transfer.
+  Future<void> transferToSignUp() async {
+    await _api.transferSignUp().then(_housekeeping);
+    update();
+  }
+
   Future<void> transfer() async {
     if (signIn?.isTransferable == true) {
       await _api.transferSignUp().then(_housekeeping);

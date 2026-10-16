@@ -9,3 +9,8 @@ The upstream `ssoSignUp` flow passes a redirect URL to `attemptSignUp`, but
 with `redirect_url is required when strategy is present`. This copy forwards
 the redirect URL when creating and preparing a sign-up. Remove the override
 when a published SDK version contains the fix.
+
+`Auth.transferToSignUp()` is also added. A new Google identity that starts as a
+sign-in comes back with the sign-in at `needs_identifier` and is not reported
+as transferable on the client, although Clerk has prepared the sign-up on the
+server. The app calls this to complete the transfer.

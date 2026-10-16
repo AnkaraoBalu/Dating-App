@@ -128,7 +128,16 @@ class _ClerkOAuthCallbackState extends State<_ClerkOAuthCallback> {
     try {
       final token = uri.queryParameters['rotating_token_nonce'];
       if (token != null) {
-        await auth.completeOAuthSignIn(token: token);
+        try {
+          await auth.completeOAuthSignIn(token: token);
+        } catch (error) {
+          // A new Google identity makes the sign-in fail with
+          // "external_account_not_found" while Clerk marks it transferable.
+          // Reload the attempt and fall through to the transfer below
+          // instead of stopping on that error.
+          debugPrint('[Just2Auth] OAuth completion failed: $error');
+          await auth.refreshClient();
+        }
       } else {
         await auth.refreshClient();
       }
@@ -144,6 +153,24 @@ class _ClerkOAuthCallbackState extends State<_ClerkOAuthCallback> {
           'between sign-in and sign-up.',
         );
         await auth.transfer();
+      }
+      // A new Google identity can come back with the sign-in waiting at
+      // `needs_identifier` and not marked transferable on the client, even
+      // though Clerk has prepared the sign-up. Ask Clerk to transfer anyway;
+      // it refuses when there is nothing to transfer.
+      final pendingSignIn = auth.signIn;
+      if (!auth.isSignedIn && auth.signUp == null && pendingSignIn != null) {
+        final verification = pendingSignIn.firstFactorVerification;
+        debugPrint(
+          '[Just2Auth] Sign-in not complete; status=${pendingSignIn.status.name}, '
+          'verification=${verification?.status.name ?? 'none'}, '
+          'error=${verification?.errorMessage ?? 'none'}. Trying sign-up transfer.',
+        );
+        try {
+          await auth.transferToSignUp();
+        } catch (error) {
+          debugPrint('[Just2Auth] Sign-up transfer failed: $error');
+        }
       }
       if (!auth.isSignedIn) await auth.refreshClient();
       debugPrint(

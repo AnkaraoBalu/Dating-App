@@ -10,6 +10,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets('one Google button signs in or creates the account', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MaterialApp(home: LoginScreen()));
+    await tester.pumpAndSettle();
+    expect(find.text('Welcome to Just2'), findsOneWidget);
+    expect(find.byType(SegmentedButton<bool>), findsNothing);
+    expect(find.text('Create account'), findsNothing);
+    expect(find.text('Continue with Google'), findsOneWidget);
+  });
+
   testWidgets('missing Clerk configuration disables real login safely', (
     tester,
   ) async {

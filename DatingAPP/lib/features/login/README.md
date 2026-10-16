@@ -28,7 +28,7 @@ The backend verifies Clerk session tokens and syncs authenticated users at `GET 
 
 ## Real accounts and demo accounts
 
-Real users select **Continue with Google** or **Continue with Email**. Google opens Clerk's OAuth flow; email sends a Clerk verification code. Both use Clerk's session JWT to call the backend. `UsersService.syncFromClerk` reads the authenticated Clerk identity and creates or updates its Just2 user without replacing the saved onboarding answers or app display name.
+Real users select **Continue with Google** or **Continue with Email**. Google opens Clerk's OAuth flow as a sign-in; when the Google identity is new, the OAuth callback in `DatingApp` transfers it to a sign-up, so one button both signs in and creates accounts. Email sends a Clerk verification code. Both use Clerk's session JWT to call the backend. `UsersService.syncFromClerk` reads the authenticated Clerk identity and creates or updates its Just2 user without replacing the saved onboarding answers or app display name.
 
 The **Continue with a demo user** button (debug builds, or release builds made with `--dart-define=SHOW_DEMO_LOGIN=true`) lives in `features/demo_auth/`. Its backend counterpart lives in `src/modules/demo-auth/`. Demo tokens require `DEMO_AUTH_ENABLED=true` and are rejected in production. Enabling demo login does not replace verification of real Clerk session tokens.
 
