@@ -5,7 +5,7 @@ export function PrivacyPage() {
     <LegalDocument
       eyebrow="Privacy policy"
       title="Your privacy matters."
-      updated="[date]"
+      updated="16 October 2026"
       summary={privacySummary}
       sections={privacySections}
       related={{ to: "/terms", label: "Terms of use" }}

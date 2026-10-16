@@ -12,7 +12,7 @@ export type LegalSection = {
 };
 
 /**
- * Long-form legal page: draft banner, summary, sticky table of contents that
+ * Long-form legal page: summary, sticky table of contents that
  * follows the section being read, and a reading progress bar.
  */
 export function LegalDocument({
@@ -86,16 +86,10 @@ export function LegalDocument({
           <h1>{title}</h1>
           <S.Meta>
             <span>Last updated {updated}</span>
-            <span data-draft>Draft · pending legal review</span>
           </S.Meta>
         </CommonContainer>
       </S.Hero>
       <CommonContainer>
-        <S.Draft role="note">
-          <strong>This is a draft.</strong> It describes how Just2 works
-          today, but it hasn’t been reviewed by a lawyer and isn’t in effect
-          yet. Text in [brackets] still needs to be filled in.
-        </S.Draft>
         <S.Layout>
           <S.Toc aria-label="On this page">
             <strong>On this page</strong>

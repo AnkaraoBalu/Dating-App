@@ -36,6 +36,7 @@ export function Footer() {
                 <Link to="/community-guidelines">Community</Link>
                 <Link to="/privacy">Privacy</Link>
                 <Link to="/terms">Terms</Link>
+                <Link to="/delete-account">Delete account</Link>
               </div>
             </nav>
           </S.Top>

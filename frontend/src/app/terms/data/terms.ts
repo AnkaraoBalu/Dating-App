@@ -1,9 +1,9 @@
 import type { LegalSection } from "../../../components/legal-document";
 
-// DRAFT — written from how the app works today; needs legal review before launch.
-// Fill in every [bracketed] value.
+// Written from how the app works today. Have it reviewed by a lawyer as Just2
+// grows, and keep it in step with the app.
 export const termsSummary = [
-  "You must be [18] or older to use Just2.",
+  "You must be 18 or older to use Just2.",
   "Be honest, be kind, and follow our community guidelines.",
   "You own what you post; you let us show it so Just2 can work.",
   "We can remove content or accounts that break these terms.",
@@ -15,7 +15,7 @@ export const termsSections: LegalSection[] = [
     id: "agreement",
     title: "Agreeing to these terms",
     body: [
-      "These terms are an agreement between you and [Company legal name] (“Just2”, “we”, “us”). By creating an account or using Just2, you agree to them and to our Privacy Policy.",
+      "These terms are an agreement between you and Ankarao Nakka, who operates Just2 (“Just2”, “we”, “us”). By creating an account or using Just2, you agree to them and to our Privacy Policy.",
     ],
   },
   {
@@ -23,7 +23,7 @@ export const termsSections: LegalSection[] = [
     title: "Who can use Just2",
     body: [
       [
-        "You are at least [18] years old.",
+        "You are at least 18 years old.",
         "You can legally enter into this agreement where you live.",
         "You haven’t been removed from Just2 before.",
         "You have one account, and it represents you.",
@@ -95,14 +95,17 @@ export const termsSections: LegalSection[] = [
     id: "disclaimers",
     title: "Disclaimers and liability",
     body: [
-      "Just2 is provided “as is”. [Insert disclaimers and limitation of liability appropriate to your jurisdiction after legal review.]",
+      "Just2 is provided “as is” and “as available”. We work to keep it safe and running, but we can’t promise it will always be available or error-free.",
+      "We don’t run background checks on members and aren’t responsible for how members behave, on or off Just2. Take care when meeting someone: meet in a public place, tell a friend, and report anything that worries you.",
+      "To the extent the law allows, we are not liable for indirect or consequential losses, and our total liability to you is limited to the amount you have paid us in the last 12 months (Just2 is currently free). Nothing in these terms limits liability that cannot be limited by law.",
     ],
   },
   {
     id: "law",
     title: "Governing law and disputes",
     body: [
-      "These terms are governed by the laws of [jurisdiction]. [Describe how disputes are resolved.]",
+      "These terms are governed by the laws of India.",
+      "If you have a problem with Just2, please contact us first at ankaraovinod@gmail.com and we’ll try to resolve it. If we can’t, disputes will be handled by the competent courts in Andhra Pradesh, India.",
     ],
   },
   {

@@ -44,25 +44,6 @@ export const Meta = styled.div`
   margin-top: 22px;
   font-size: 13px;
   color: #686b67;
-  [data-draft] {
-    padding: 6px 12px;
-    border-radius: 999px;
-    background: #ffe3e7;
-    color: #bd3448;
-    font-weight: 800;
-  }
-`;
-export const Draft = styled.p`
-  margin: 10px 0 50px;
-  padding: 18px 22px;
-  border-left: 4px solid #bd3448;
-  border-radius: 12px;
-  background: #fffcf7;
-  font-size: 14px;
-  color: #4f5550;
-  strong {
-    color: #173f35;
-  }
 `;
 export const Layout = styled.div`
   display: grid;

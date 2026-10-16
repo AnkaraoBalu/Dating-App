@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { CommonContainer } from "../../components";
 import { Eyebrow, TextLink } from "../../components/ui";
 import { support } from "../../constants/support";
@@ -95,7 +96,7 @@ export function SupportPage() {
             <p>
               Your profile, photos, prompts, likes, matches, chats, voice
               messages, Vibe rooms, and your sign-in. Deletion is permanent and
-              can’t be undone.
+              can’t be undone. <Link to="/delete-account">Full details →</Link>
             </p>
           </section>
         </div>

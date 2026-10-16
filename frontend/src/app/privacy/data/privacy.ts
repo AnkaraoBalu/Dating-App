@@ -1,7 +1,7 @@
 import type { LegalSection } from "../../../components/legal-document";
 
-// DRAFT — written from how the app works today; needs legal review before launch.
-// Fill in every [bracketed] value.
+// Written from how the app works today. Have it reviewed by a lawyer as Just2
+// grows, and keep it in step with the app and backend.
 export const privacySummary = [
   "We collect what you give us (your profile, photos, and messages) and a little about how you use Just2.",
   "Your profile is shown to other members so you can connect. Your messages are only shared with the person you’re talking to.",
@@ -15,7 +15,7 @@ export const privacySections: LegalSection[] = [
     id: "who-we-are",
     title: "Who we are",
     body: [
-      "Just2 is operated by [Company legal name], [registered address] (“Just2”, “we”, “us”). We are responsible for the personal information described in this policy.",
+      "Just2 is operated by Ankarao Nakka, Somepalli, Tripuranthakam – 523326, India (“Just2”, “we”, “us”). We are responsible for the personal information described in this policy.",
       "Questions about privacy? Contact us at ankaraovinod@gmail.com.",
     ],
   },
@@ -44,9 +44,8 @@ export const privacySections: LegalSection[] = [
     id: "face-verification",
     title: "Selfie verification",
     body: [
-      "Selfie verification is optional. If you choose to take part, our verification provider, FaceTec, guides you through a live selfie check using your camera, after you give permission.",
-      "The check analyzes your face to confirm that you are a real, present person. This can involve biometric information. [Describe what is retained, by whom, for how long, and the legal basis or consent obtained, once the production verification flow is final.]",
-      "During development, selfie checks are sent to FaceTec’s testing service and do not change your Just2 profile or verification badge.",
+      "Selfie verification is not offered in the app yet, and we do not collect face or other biometric information.",
+      "If we add verification later, it will be optional, we will ask for your permission first, and we will update this policy before it starts.",
     ],
   },
   {
@@ -61,7 +60,7 @@ export const privacySections: LegalSection[] = [
         "To fix problems and improve the service.",
         "To meet our legal obligations.",
       ],
-      "[Where required by law, list the legal basis for each use, for example contract, consent, or legitimate interests.]",
+      "We use your information because you ask us to provide Just2 to you, and with the consent you give when you create your account and allow permissions such as location, camera, microphone and notifications. You can withdraw consent by changing those permissions or deleting your account.",
     ],
   },
   {
@@ -90,9 +89,10 @@ export const privacySections: LegalSection[] = [
       [
         "Sign-in and account security: Clerk.",
         "Photo and image storage: Cloudinary.",
-        "Selfie verification: FaceTec.",
-        "Push notifications: [push notification provider].",
-        "Hosting and database: [hosting provider].",
+        "Voice calls and live Vibe rooms: LiveKit.",
+        "Push notifications: Firebase Cloud Messaging (Google).",
+        "Hosting and database: Render and Neon.",
+        "Email for support and safety reports: our email provider.",
       ],
       "We may also share information if required by law, to protect someone’s safety, or as part of a merger or sale of our business. We do not sell your personal information.",
     ],
@@ -101,7 +101,9 @@ export const privacySections: LegalSection[] = [
     id: "retention",
     title: "How long we keep it",
     body: [
-      "We keep your information while your account is active. When you delete your account, we delete your profile, likes, passes, and related records, except where we need to keep some information for safety, legal, or fraud-prevention reasons for [retention period].",
+      "We keep your information while your account is active.",
+      "When you delete your account, we delete it right away: your profile, photos, prompts, likes, passes, matches, chats and voice messages, blocks and reports, Vibe rooms, and your sign-in. Copies can remain in our providers’ automatic backups and logs for up to 30 days before they are erased.",
+      "If the law requires us to keep something longer, for example to respond to a valid legal request, we keep only what is needed for as long as needed.",
     ],
   },
   {
@@ -111,7 +113,7 @@ export const privacySections: LegalSection[] = [
       [
         "Edit your profile, photos, and details at any time in the app.",
         "Turn location and notifications on or off in your device settings.",
-        "Delete your account from your profile options.",
+        "Delete your account in the app (Profile → Settings → Delete account), or request deletion without the app at just2.in/delete-account.",
         "Ask us for a copy of your information, or to correct or delete it, by contacting ankaraovinod@gmail.com.",
       ],
       "Depending on where you live, you may have additional rights, including the right to complain to your local data protection authority.",
@@ -128,7 +130,7 @@ export const privacySections: LegalSection[] = [
     id: "age",
     title: "Age requirement",
     body: [
-      "Just2 is only for adults aged [18] or older. We do not knowingly collect information from anyone under that age. If you believe a minor is using Just2, please report them in the app or contact us.",
+      "Just2 is only for adults aged 18 or older. We do not knowingly collect information from anyone under that age. If you believe a minor is using Just2, please report them in the app or contact us.",
     ],
   },
   {

@@ -10,6 +10,7 @@ import { DownloadPage } from "../app/download";
 import { CommunityPage } from "../app/community-guidelines";
 import { PrivacyPage } from "../app/privacy";
 import { TermsPage } from "../app/terms";
+import { DeleteAccountPage } from "../app/delete-account";
 import { NotFoundPage } from "../app/not-found";
 export function AppRouter() {
   return (
@@ -25,6 +26,7 @@ export function AppRouter() {
         <Route path="community-guidelines" element={<CommunityPage />} />
         <Route path="privacy" element={<PrivacyPage />} />
         <Route path="terms" element={<TermsPage />} />
+        <Route path="delete-account" element={<DeleteAccountPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
