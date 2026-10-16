@@ -12,6 +12,7 @@ const titles: Record<string, string> = {
   "/terms": "Terms",
   "/community-guidelines": "Our community",
   "/delete-account": "Delete your account",
+  "/child-safety": "Child safety standards",
 };
 export function RouteEffects() {
   const { pathname, hash } = useLocation();
