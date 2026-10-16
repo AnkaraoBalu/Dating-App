@@ -465,7 +465,6 @@ class _ConversationScreenState extends State<ConversationScreen>
         builder: (_) => ChatSearchScreen(match: widget.match),
       ),
     ),
-    onClear: () => _notice('Clearing messages is not available yet.'),
   );
 
   void _notice(String text) =>

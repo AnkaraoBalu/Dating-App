@@ -191,7 +191,7 @@ void showChatOptionsSheet(
   required VoidCallback onChatInfo,
   required VoidCallback onSharedMedia,
   required VoidCallback onSearch,
-  required VoidCallback onClear,
+  VoidCallback? onClear,
 }) => showModalBottomSheet<void>(
   context: context,
   backgroundColor: AppColors.surface,
@@ -232,17 +232,18 @@ void showChatOptionsSheet(
             onSearch();
           },
         ),
-        ListTile(
-          leading: const Icon(
-            Icons.delete_outline_rounded,
-            color: AppColors.error,
+        if (onClear != null)
+          ListTile(
+            leading: const Icon(
+              Icons.delete_outline_rounded,
+              color: AppColors.error,
+            ),
+            title: const Text('Clear chat'),
+            onTap: () {
+              Navigator.pop(context);
+              onClear();
+            },
           ),
-          title: const Text('Clear chat'),
-          onTap: () {
-            Navigator.pop(context);
-            onClear();
-          },
-        ),
       ],
     ),
   ),

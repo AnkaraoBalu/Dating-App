@@ -11,7 +11,8 @@ import 'profile_insights_screen.dart';
 import 'profile_photo_gallery_screen.dart';
 import 'profile_preview_screen.dart';
 import 'profile_settings_screen.dart';
-import 'profile_verification_screen.dart';
+// Restore with the hidden Verification tile below.
+// import 'profile_verification_screen.dart';
 
 class ProfileMainScreen extends StatelessWidget {
   const ProfileMainScreen({super.key, required this.controller});
@@ -255,15 +256,17 @@ class ProfileMainScreen extends StatelessWidget {
                         onTap: () =>
                             open(ProfilePreviewScreen(controller: controller)),
                       ),
-                      ProfileTile(
-                        title: p.verified
-                            ? 'Verified profile'
-                            : 'Verify your profile',
-                        icon: Icons.verified_user_outlined,
-                        onTap: () => open(
-                          ProfileVerificationScreen(controller: controller),
-                        ),
-                      ),
+                      // Verification is hidden until the selfie check has a
+                      // production backend; the screen is a developer test.
+                      // ProfileTile(
+                      //   title: p.verified
+                      //       ? 'Verified profile'
+                      //       : 'Verify your profile',
+                      //   icon: Icons.verified_user_outlined,
+                      //   onTap: () => open(
+                      //     ProfileVerificationScreen(controller: controller),
+                      //   ),
+                      // ),
                       ProfileTile(
                         title: 'Profile insights',
                         icon: Icons.insights_outlined,

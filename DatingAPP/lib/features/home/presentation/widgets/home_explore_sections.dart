@@ -81,6 +81,8 @@ extension _HomeExploreSections on _HomeScreenState {
     ),
   );
 
+  // Hidden for now; see home_feed_layout.dart.
+  // ignore: unused_element
   Widget _upgradeBanner() => Container(
     padding: const EdgeInsets.all(13),
     decoration: BoxDecoration(

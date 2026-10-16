@@ -72,10 +72,13 @@ extension _HomeFeedLayout on _HomeScreenState {
       ),
     ),
     SliverToBoxAdapter(child: _exploreModes()),
-    SliverPadding(
-      padding: const EdgeInsets.fromLTRB(18, 16, 18, 28),
-      sliver: SliverToBoxAdapter(child: _upgradeBanner()),
-    ),
+    // The Just2+ upgrade banner is hidden until paid plans exist (Play
+    // Billing). Restore this sliver to show it again.
+    // SliverPadding(
+    //   padding: const EdgeInsets.fromLTRB(18, 16, 18, 28),
+    //   sliver: SliverToBoxAdapter(child: _upgradeBanner()),
+    // ),
+    const SliverToBoxAdapter(child: SizedBox(height: 28)),
   ];
 
   List<Widget> _peopleSlivers(DiscoverPeopleMode mode) {

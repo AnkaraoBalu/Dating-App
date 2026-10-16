@@ -9,7 +9,8 @@ import '../../models/member_profile.dart';
 import '../widgets/profile_widgets.dart';
 import 'profile_edit_screen.dart';
 import 'profile_privacy_screen.dart';
-import 'profile_verification_screen.dart';
+// Restore with the hidden Verification tile below.
+// import 'profile_verification_screen.dart';
 import '../../../notifications/data/push_notifications_service.dart';
 
 class ProfileSettingsScreen extends StatelessWidget {
@@ -207,17 +208,19 @@ class ProfileSettingsScreen extends StatelessWidget {
               ),
             ),
           ),
-          ProfileTile(
-            title: 'Verification',
-            icon: Icons.verified_user_outlined,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute<void>(
-                builder: (_) =>
-                    ProfileVerificationScreen(controller: controller),
-              ),
-            ),
-          ),
+          // Verification is hidden until the selfie check has a production
+          // backend (see profile_main_screen.dart).
+          // ProfileTile(
+          //   title: 'Verification',
+          //   icon: Icons.verified_user_outlined,
+          //   onTap: () => Navigator.push(
+          //     context,
+          //     MaterialPageRoute<void>(
+          //       builder: (_) =>
+          //           ProfileVerificationScreen(controller: controller),
+          //     ),
+          //   ),
+          // ),
           ProfileTile(
             title: 'Privacy & safety',
             icon: Icons.lock_outline,

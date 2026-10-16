@@ -129,16 +129,6 @@ class ChatInfoScreen extends StatelessWidget {
                   () => showChatNotice(context, 'Voice calls are unavailable.'),
             ),
             _infoAction(
-              Icons.videocam_outlined,
-              'Video call',
-              () => showChatNotice(context, 'Video calls are coming soon.'),
-            ),
-            _infoAction(
-              Icons.notifications_off_outlined,
-              'Mute',
-              () => showChatNotice(context, 'Muting chats is coming soon.'),
-            ),
-            _infoAction(
               Icons.search_rounded,
               'Search',
               () => Navigator.push(
@@ -189,15 +179,6 @@ class ChatInfoScreen extends StatelessWidget {
             'Shared locations',
             style: TextStyle(color: AppColors.textPrimary),
           ),
-        ),
-        SwitchListTile(
-          value: true,
-          onChanged: (_) {},
-          title: const Text(
-            'Notifications',
-            style: TextStyle(color: AppColors.textPrimary),
-          ),
-          activeThumbColor: AppColors.coral,
         ),
         ListTile(
           leading: const Icon(Icons.block_rounded, color: AppColors.error),

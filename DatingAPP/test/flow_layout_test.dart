@@ -251,10 +251,8 @@ void main() {
         await tester.tap(next);
         await tester.pumpAndSettle();
       }
-      expect(find.text(ProfileSetupCopy.titles[9]), findsOneWidget);
-      await tester.ensureVisible(find.text('Maybe later'));
-      await tester.tap(find.text('Maybe later'));
-      await tester.pumpAndSettle();
+      // The Spotify step (9) is skipped; basics lead to the profile preview.
+      expect(find.text(ProfileSetupCopy.titles[9]), findsNothing);
       expect(find.text(ProfileSetupCopy.titles[10]), findsOneWidget);
       expect(
         tester.takeException(),

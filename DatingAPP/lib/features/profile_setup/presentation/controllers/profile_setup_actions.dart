@@ -202,7 +202,8 @@ extension _ProfileSetupActions on _ProfileSetupScreenState {
       _basicValues
         ..clear()
         ..addAll(saved);
-      _step = 9;
+      // Step 9 (Connect Spotify) is skipped until Spotify is connected.
+      _step = 10;
     });
   }
 }

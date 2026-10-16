@@ -77,7 +77,8 @@ extension _ProfileSetupNavigation on _ProfileSetupScreenState {
     } else {
       _refresh(() {
         if (_step == 4) _draft.selectedSection = null;
-        _step--;
+        // Step 9 (Connect Spotify) is skipped; go back to the basics intro.
+        _step = _step == 10 ? 8 : _step - 1;
       });
     }
   }
