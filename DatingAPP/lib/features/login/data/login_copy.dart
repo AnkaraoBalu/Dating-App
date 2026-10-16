@@ -3,10 +3,6 @@ abstract final class LoginCopy {
   static const brandAgreement = 'By continuing, you agree to our';
   static const terms = 'Terms';
   static const privacyPolicy = 'Privacy Policy';
-  static const termsUnavailable =
-      'Our terms are not published yet. Please check back soon.';
-  static const privacyUnavailable =
-      'Our privacy policy is not published yet. Please check back soon.';
 
   static const enterEmail = 'Sign in with email';
   static const enterPhone = 'Enter your number';

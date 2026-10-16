@@ -1,6 +1,7 @@
 import 'package:clerk_flutter/clerk_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:dating_app/features/demo_auth/data/demo_session.dart';
+import '../../../../core/constants/legal_links.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/widgets/distance_slider.dart';
 import '../../data/profile_controller.dart';
@@ -246,25 +247,26 @@ class ProfileSettingsScreen extends StatelessWidget {
             icon: Icons.location_on_outlined,
             onTap: () => _distancePreference(context),
           ),
-          const ProfileSection('Support'),
+          const ProfileSection('Support & legal'),
           ProfileTile(
             title: 'Help & support',
             icon: Icons.help_outline,
-            onTap: () => showDialog<void>(
-              context: context,
-              builder: (context) => AlertDialog(
-                title: const Text('Need a hand?'),
-                content: const Text(
-                  'You can update your information, manage photos, and pause discovery from your profile. You can delete your account from Settings at any time. For anything else, visit just2.in/support.',
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('Close'),
-                  ),
-                ],
-              ),
-            ),
+            onTap: () => openLegalLink(context, LegalLinks.support),
+          ),
+          ProfileTile(
+            title: 'Community guidelines',
+            icon: Icons.groups_outlined,
+            onTap: () => openLegalLink(context, LegalLinks.communityGuidelines),
+          ),
+          ProfileTile(
+            title: 'Terms of service',
+            icon: Icons.description_outlined,
+            onTap: () => openLegalLink(context, LegalLinks.terms),
+          ),
+          ProfileTile(
+            title: 'Privacy policy',
+            icon: Icons.privacy_tip_outlined,
+            onTap: () => openLegalLink(context, LegalLinks.privacy),
           ),
           ProfileTile(
             title: 'Log out',

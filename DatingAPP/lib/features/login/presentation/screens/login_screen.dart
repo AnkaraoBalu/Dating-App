@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:clerk_auth/clerk_auth.dart' as clerk;
 import 'package:clerk_flutter/clerk_flutter.dart';
+import '../../../../core/constants/legal_links.dart';
 import '../../../../core/widgets/brand_logo.dart';
 import '../../../../core/theme/theme.dart';
 import '../../data/login_copy.dart';
@@ -98,34 +99,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _information(BuildContext context, String title, String message) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      builder: (context) => Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(title, style: AppTypography.h2, textAlign: TextAlign.center),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: AppTypography.body,
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            FilledButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Got it'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) => LoginScaffold(
     kind: LoginHeaderKind.social,
@@ -203,19 +176,11 @@ class _LoginScreenState extends State<LoginScreen> {
           alignment: WrapAlignment.center,
           children: [
             TextButton(
-              onPressed: () => _information(
-                context,
-                LoginCopy.terms,
-                LoginCopy.termsUnavailable,
-              ),
+              onPressed: () => openLegalLink(context, LegalLinks.terms),
               child: const Text(LoginCopy.terms),
             ),
             TextButton(
-              onPressed: () => _information(
-                context,
-                LoginCopy.privacyPolicy,
-                LoginCopy.privacyUnavailable,
-              ),
+              onPressed: () => openLegalLink(context, LegalLinks.privacy),
               child: const Text(LoginCopy.privacyPolicy),
             ),
           ],

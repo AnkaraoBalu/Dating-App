@@ -1,3 +1,4 @@
+import 'package:dating_app/core/constants/legal_links.dart';
 import 'package:dating_app/features/profile/data/profile_controller.dart';
 import 'package:dating_app/features/onboarding/data/onboarding_api.dart';
 import 'package:dating_app/features/profile/models/member_profile.dart';
@@ -84,6 +85,32 @@ class FakeProfileController extends ProfileController {
 }
 
 void main() {
+  testWidgets('Settings links to support, guidelines, terms and privacy', (
+    tester,
+  ) async {
+    final controller = FakeProfileController();
+    await tester.pumpWidget(
+      MaterialApp(home: ProfileSettingsScreen(controller: controller)),
+    );
+    for (final title in [
+      'Help & support',
+      'Community guidelines',
+      'Terms of service',
+      'Privacy policy',
+    ]) {
+      await tester.scrollUntilVisible(
+        find.text(title),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.text(title), findsOneWidget);
+    }
+    expect(LegalLinks.privacy.toString(), 'https://just2.in/privacy');
+    expect(LegalLinks.terms.toString(), 'https://just2.in/terms');
+    await tester.pumpWidget(const SizedBox());
+    controller.dispose();
+  });
+
   test(
     'confirmed distance writes update listeners; failed writes preserve the saved value',
     () async {
