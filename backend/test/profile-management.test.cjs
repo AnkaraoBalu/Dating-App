@@ -71,6 +71,7 @@ function discoveryMock(profiles, onboardingChanges = {}) {
     prisma: {
       profileLike: { findMany: async () => [] },
       profilePass: { findMany: async () => [] },
+      profileBlock: { findMany: async () => [] },
       user: {
         findUnique: async () => ({
           id: "me",

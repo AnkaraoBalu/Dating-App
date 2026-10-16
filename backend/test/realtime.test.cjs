@@ -29,6 +29,7 @@ function likePrisma({ mutual }) {
           ? { id: "arav" }
           : { id: where.id, profile: { completedAt: new Date() } },
     },
+    profileBlock: { findFirst: async () => null },
     profileLike: {
       upsert: async () => ({}),
       findUnique: async () => (mutual ? { id: "like-back" } : null),

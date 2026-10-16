@@ -10,6 +10,8 @@ import '../../data/discover_api.dart';
 import '../../data/home_discovery_preferences.dart';
 import '../../../profile/data/profile_controller.dart';
 import '../../../profile/models/member_profile.dart';
+import '../../../safety/data/safety_api.dart';
+import '../../../safety/presentation/safety_actions.dart';
 import '../../../profile/presentation/screens/profile_main_screen.dart';
 import '../../../profile/presentation/widgets/profile_widgets.dart'
     show ProfilePhotoView;

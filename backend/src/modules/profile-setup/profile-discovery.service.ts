@@ -6,6 +6,7 @@ import {
 import { PrismaService } from "../../database/prisma.service";
 import { DiscoverProfilesQueryDto } from "./dto/discover-profiles.dto";
 import { discoveryCityCenter } from "./discovery-location";
+import { SafetyService } from "../safety/safety.service";
 
 @Injectable()
 export class ProfileDiscoveryService {
@@ -93,10 +94,15 @@ export class ProfileDiscoveryService {
     // while profiles exist elsewhere.
     const nearbyOnly = current.onboardingProfile.onlyShowPeopleNearby;
 
+    const blockedPeerIds = await SafetyService.blockedPeerIds(
+      this.prisma,
+      current.id,
+    );
     const excludedUserIds = [
       ...new Set([
         ...sentLikes.map(({ toUserId }) => toUserId),
         ...sentPasses.map(({ toUserId }) => toUserId),
+        ...blockedPeerIds,
       ]),
     ];
 

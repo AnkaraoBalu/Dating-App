@@ -40,6 +40,42 @@ extension _HomePersonActions on _HomeScreenState {
     }());
   }
 
+  SafetyApi? get _safetyApi {
+    final api = widget.discoverApi;
+    return api == null
+        ? null
+        : SafetyApi(baseUrl: api.baseUrl, getSessionToken: api.getSessionToken);
+  }
+
+  Future<void> _blockPerson(HomePerson person) async {
+    final api = _safetyApi;
+    if (api == null || person.id.isEmpty) return;
+    if (await confirmAndBlock(
+          context,
+          api: api,
+          userId: person.id,
+          name: person.name,
+        ) &&
+        mounted) {
+      _removePerson(person);
+    }
+  }
+
+  Future<void> _reportPerson(HomePerson person) async {
+    final api = _safetyApi;
+    if (api == null || person.id.isEmpty) return;
+    if (await showReportFlow(
+          context,
+          api: api,
+          userId: person.id,
+          name: person.name,
+          source: 'discover',
+        ) &&
+        mounted) {
+      _removePerson(person);
+    }
+  }
+
   void _showActions(HomePerson person) => showModalBottomSheet<void>(
     context: context,
     backgroundColor: AppColors.background,
@@ -57,27 +93,33 @@ extension _HomePersonActions on _HomeScreenState {
             },
           ),
           ListTile(
-            leading: const Icon(Icons.share_outlined),
-            title: const Text('Share profile'),
-            onTap: () {
-              Navigator.pop(sheetContext);
-              _notice('Profile sharing is coming soon.');
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.flag_outlined),
-            title: const Text('Report'),
-            onTap: () {
-              Navigator.pop(sheetContext);
-              _notice('Report options are coming soon.');
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.block_rounded),
+            leading: const Icon(Icons.thumb_down_alt_outlined),
             title: const Text('Not interested'),
             onTap: () {
               Navigator.pop(sheetContext);
               _pass(person);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.block_rounded, color: AppColors.error),
+            title: Text(
+              'Block ${person.name}',
+              style: const TextStyle(color: AppColors.error),
+            ),
+            onTap: () {
+              Navigator.pop(sheetContext);
+              unawaited(_blockPerson(person));
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.flag_outlined, color: AppColors.error),
+            title: Text(
+              'Report ${person.name}',
+              style: const TextStyle(color: AppColors.error),
+            ),
+            onTap: () {
+              Navigator.pop(sheetContext);
+              unawaited(_reportPerson(person));
             },
           ),
         ],

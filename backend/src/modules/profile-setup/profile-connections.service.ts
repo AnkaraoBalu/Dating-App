@@ -27,6 +27,17 @@ export class ProfileConnectionsService {
     if (!targetUser?.profile?.completedAt || fromUser.id === targetUser.id) {
       throw new NotFoundException("Profile not found.");
     }
+    // A block in either direction hides the profile, as if it did not exist.
+    const blocked = await this.prisma.profileBlock.findFirst({
+      where: {
+        OR: [
+          { blockerId: fromUser.id, blockedId: targetUser.id },
+          { blockerId: targetUser.id, blockedId: fromUser.id },
+        ],
+      },
+      select: { id: true },
+    });
+    if (blocked) throw new NotFoundException("Profile not found.");
     const pair = {
       fromUserId_toUserId: { fromUserId: fromUser.id, toUserId: targetUser.id },
     };

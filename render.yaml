@@ -28,6 +28,18 @@ services:
       # sign-in on this production server. Turn off before public launch.
       - key: DEMO_AUTH_ALLOW_IN_PRODUCTION
         sync: false
+      # Safety report emails. Set in the dashboard; REPORTS_EMAIL_TO is optional
+      # and defaults to SMTP_USER.
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: REPORTS_EMAIL_TO
+        sync: false
       # Optional push notifications: upload the Firebase key as a Render
       # Secret File named firebase-admin.json, then set this to
       # /etc/secrets/firebase-admin.json. Leave empty to run without pushes.

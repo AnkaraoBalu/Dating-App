@@ -7,6 +7,8 @@ import '../../../chat/data/chat_api.dart';
 import '../../../chat/presentation/screens/conversation_screen.dart';
 import '../../models/match_model.dart';
 import '../../../home/presentation/widgets/home_person_photo.dart';
+import '../../../safety/data/safety_api.dart';
+import '../../../safety/presentation/safety_actions.dart';
 
 class MatchedProfileScreen extends StatelessWidget {
   const MatchedProfileScreen({
@@ -22,6 +24,86 @@ class MatchedProfileScreen extends StatelessWidget {
   /// Replaces the default "open a conversation" action, e.g. when this profile
   /// was opened from inside that conversation and should simply return to it.
   final VoidCallback? onMessage;
+
+  SafetyApi get _safetyApi => SafetyApi(
+    baseUrl: chatApi.baseUrl,
+    getSessionToken: chatApi.getSessionToken,
+  );
+
+  void _showSafetyOptions(BuildContext context) {
+    // After unmatching, blocking or reporting, this match and its chat are
+    // gone, so return to the tabs.
+    Future<void> run(Future<bool> Function() action) async {
+      if (await action() && context.mounted) {
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      }
+    }
+
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppColors.background,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.heart_broken_outlined),
+              title: Text('Unmatch ${person.name}'),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                run(
+                  () => confirmAndUnmatch(
+                    context,
+                    api: _safetyApi,
+                    userId: person.id,
+                    name: person.name,
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.block_rounded, color: AppColors.error),
+              title: Text(
+                'Block ${person.name}',
+                style: const TextStyle(color: AppColors.error),
+              ),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                run(
+                  () => confirmAndBlock(
+                    context,
+                    api: _safetyApi,
+                    userId: person.id,
+                    name: person.name,
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.flag_outlined, color: AppColors.error),
+              title: Text(
+                'Report ${person.name}',
+                style: const TextStyle(color: AppColors.error),
+              ),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                run(
+                  () => showReportFlow(
+                    context,
+                    api: _safetyApi,
+                    userId: person.id,
+                    name: person.name,
+                    source: 'match',
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) => AnnotatedRegion<SystemUiOverlayStyle>(
@@ -46,13 +128,7 @@ class MatchedProfileScreen extends StatelessWidget {
               actions: [
                 IconButton(
                   tooltip: 'More options',
-                  onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Unmatch and report options are coming soon.',
-                      ),
-                    ),
-                  ),
+                  onPressed: () => _showSafetyOptions(context),
                   icon: const Icon(
                     Icons.more_horiz_rounded,
                     color: Colors.white,

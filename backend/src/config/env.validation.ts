@@ -21,6 +21,14 @@ const environmentSchema = z
     FIREBASE_SERVICE_ACCOUNT_PATH: z.string().min(1).optional(),
     // Optional for deployments that have not enabled Vibe voice yet. Set all
     // three together; the voice-token endpoint reports unavailable otherwise.
+    // Optional mail for safety reports. Without SMTP settings, reports are
+    // still saved and only logged.
+    SMTP_HOST: z.string().min(1).optional(),
+    SMTP_PORT: z.coerce.number().int().positive().optional(),
+    SMTP_USER: z.string().min(1).optional(),
+    SMTP_PASS: z.string().min(1).optional(),
+    // Where report emails go; defaults to SMTP_USER.
+    REPORTS_EMAIL_TO: z.string().email().optional(),
     LIVEKIT_URL: z.string().min(1).optional(),
     LIVEKIT_API_KEY: z.string().min(1).optional(),
     LIVEKIT_API_SECRET: z.string().min(1).optional(),

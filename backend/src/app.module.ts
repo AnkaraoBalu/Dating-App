@@ -13,6 +13,8 @@ import { RateLimitModule } from "./modules/rate-limit/rate-limit.module";
 import { NotificationsModule } from "./modules/notifications/notifications.module";
 import { LiveKitModule } from "./modules/livekit/livekit.module";
 import { CallsModule } from "./modules/calls/calls.module";
+import { MailModule } from "./modules/mail/mail.module";
+import { SafetyModule } from "./modules/safety/safety.module";
 
 @Module({
   imports: [
@@ -29,6 +31,8 @@ import { CallsModule } from "./modules/calls/calls.module";
     MessagesModule,
     VibeRoomsModule,
     CallsModule,
+    MailModule,
+    SafetyModule,
   ],
 })
 export class AppModule {}

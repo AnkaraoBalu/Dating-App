@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/theme.dart';
 import '../../../matches/models/match_model.dart';
+import '../../../safety/data/safety_api.dart';
+import '../../../safety/presentation/safety_actions.dart';
 import '../../models/chat_models.dart';
 import '../widgets/chat_media.dart';
 import 'chat_search_screen.dart';
@@ -12,11 +14,18 @@ class ChatInfoScreen extends StatelessWidget {
     super.key,
     required this.match,
     required this.messages,
+    required this.safetyApi,
     this.onAudioCall,
   });
   final MatchRecord match;
   final List<ChatMessage> messages;
+  final SafetyApi safetyApi;
   final VoidCallback? onAudioCall;
+
+  /// The chat no longer exists after a block or report; return to the tabs.
+  void _leaveChat(BuildContext context, bool removed) {
+    if (removed) Navigator.of(context).popUntil((route) => route.isFirst);
+  }
 
   Widget _sharedMediaPreview() {
     final sharedPhotos = messages
@@ -193,14 +202,29 @@ class ChatInfoScreen extends StatelessWidget {
         ListTile(
           leading: const Icon(Icons.block_rounded, color: AppColors.error),
           title: const Text('Block', style: TextStyle(color: AppColors.error)),
-          onTap: () =>
-              showChatNotice(context, 'Block controls are coming soon.'),
+          onTap: () async {
+            final removed = await confirmAndBlock(
+              context,
+              api: safetyApi,
+              userId: match.person.id,
+              name: match.person.name,
+            );
+            if (context.mounted) _leaveChat(context, removed);
+          },
         ),
         ListTile(
           leading: const Icon(Icons.flag_outlined, color: AppColors.error),
           title: const Text('Report', style: TextStyle(color: AppColors.error)),
-          onTap: () =>
-              showChatNotice(context, 'Report controls are coming soon.'),
+          onTap: () async {
+            final removed = await showReportFlow(
+              context,
+              api: safetyApi,
+              userId: match.person.id,
+              name: match.person.name,
+              source: 'chat',
+            );
+            if (context.mounted) _leaveChat(context, removed);
+          },
         ),
       ],
     ),

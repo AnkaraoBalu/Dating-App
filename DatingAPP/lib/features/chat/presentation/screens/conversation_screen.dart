@@ -9,6 +9,7 @@ import '../../../calls/data/call_coordinator.dart';
 import '../../../calls/data/calls_api.dart';
 import '../../../calls/presentation/screens/voice_call_screen.dart';
 import '../../../calls/presentation/widgets/call_microphone_permission.dart';
+import '../../../safety/data/safety_api.dart';
 import '../../../matches/models/match_model.dart';
 import '../../data/chat_api.dart';
 import '../../models/chat_models.dart';
@@ -435,6 +436,10 @@ class _ConversationScreenState extends State<ConversationScreen>
       builder: (_) => ChatInfoScreen(
         match: widget.match,
         messages: _controller.messages,
+        safetyApi: SafetyApi(
+          baseUrl: widget.api.baseUrl,
+          getSessionToken: widget.api.getSessionToken,
+        ),
         onAudioCall: () => unawaited(_startCall()),
       ),
     ),
