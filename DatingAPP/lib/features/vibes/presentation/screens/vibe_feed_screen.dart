@@ -103,6 +103,7 @@ class _VibeFeedScreenState extends State<VibeFeedScreen> {
         _loading = false;
       });
     } catch (error) {
+      debugPrint('[Vibes] Could not load ${widget.category.id}: $error');
       if (!mounted) return;
       setState(() {
         _error = error.toString();

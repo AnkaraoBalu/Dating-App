@@ -2,13 +2,14 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
+import '../../../core/network/retrying_client.dart';
 
 class ProfileSetupApi {
   ProfileSetupApi({required this.baseUrl, required this.getSessionToken});
 
   final String baseUrl;
   final Future<String> Function() getSessionToken;
-  final http.Client _client = http.Client();
+  final http.Client _client = RetryingClient();
 
   Future<Map<String, String>> _headers({bool json = true}) async => {
     'Authorization': 'Bearer ${await getSessionToken()}',

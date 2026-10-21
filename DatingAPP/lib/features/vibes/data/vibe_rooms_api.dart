@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import '../../../core/network/retrying_client.dart';
 import '../models/vibe_room.dart';
 import '../models/vibe_game.dart';
 
@@ -16,8 +17,11 @@ class VibeRoomsApi {
   final Future<String> Function() getSessionToken;
   final String? currentUserImage;
 
+  // Shared so GETs retry through a cold start or a brief network drop.
+  static final http.Client _client = RetryingClient();
+
   Future<String?> loadCurrentUserImage() async {
-    final response = await http
+    final response = await _client
         .get(Uri.parse('$baseUrl/profile'), headers: await _headers())
         .timeout(const Duration(seconds: 15));
     final decoded = _decode(response);
@@ -44,7 +48,7 @@ class VibeRoomsApi {
     final uri = Uri.parse(
       '$baseUrl/vibe-rooms',
     ).replace(queryParameters: query.isEmpty ? null : query);
-    final response = await http
+    final response = await _client
         .get(uri, headers: await _headers())
         .timeout(const Duration(seconds: 20));
     final decoded = _decode(response);
@@ -59,7 +63,7 @@ class VibeRoomsApi {
 
   /// Rooms the signed-in member has joined, formatted as group chats.
   Future<List<VibeRoomChat>> listChats() async {
-    final response = await http
+    final response = await _client
         .get(Uri.parse('$baseUrl/vibe-rooms/chats'), headers: await _headers())
         .timeout(const Duration(seconds: 20));
     final decoded = _decode(response);
@@ -176,7 +180,7 @@ class VibeRoomsApi {
     final uri = Uri.parse(
       '$baseUrl/vibe-rooms/${Uri.encodeComponent(roomId)}/messages',
     ).replace(queryParameters: {'limit': '$limit'});
-    final response = await http
+    final response = await _client
         .get(uri, headers: await _headers())
         .timeout(const Duration(seconds: 20));
     final decoded = _decode(response);
@@ -283,7 +287,7 @@ class VibeRoomsApi {
   }
 
   Future<VibeGameSession?> getActiveGame(String roomId) async {
-    final response = await http
+    final response = await _client
         .get(
           Uri.parse(
             '$baseUrl/vibe-rooms/${Uri.encodeComponent(roomId)}/games/active',
@@ -318,7 +322,7 @@ class VibeRoomsApi {
   }
 
   Future<VibeGameSession> getGame(String roomId, String sessionId) async {
-    final response = await http
+    final response = await _client
         .get(
           Uri.parse(
             '$baseUrl/vibe-rooms/${Uri.encodeComponent(roomId)}/games/${Uri.encodeComponent(sessionId)}',

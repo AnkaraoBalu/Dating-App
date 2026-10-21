@@ -350,7 +350,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                         unawaited(_savePreferences());
                                         unawaited(_loadPeople());
                                       },
-                                      location: _memberLocation,
+                                      // Discovery only accepts a travel city
+                                      // here; the profile's location label
+                                      // (e.g. "Current location") is not one.
+                                      location: _travelLocation,
                                       selectedVibeIds: _selectedVibeIds,
                                       onSelectionChanged: (ids) {
                                         _refresh(() => _selectedVibeIds = ids);

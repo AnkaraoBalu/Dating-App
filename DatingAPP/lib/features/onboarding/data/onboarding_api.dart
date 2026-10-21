@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import '../../../core/network/retrying_client.dart';
 import '../models/onboarding_profile.dart';
 
 class OnboardingApi {
@@ -9,7 +10,7 @@ class OnboardingApi {
 
   final String baseUrl;
   final Future<String> Function() getSessionToken;
-  final http.Client _client = http.Client();
+  final http.Client _client = RetryingClient();
 
   Future<Map<String, String>> _headers() async => {
     'Authorization': 'Bearer ${await getSessionToken()}',

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 
 import 'package:http/http.dart' as http;
+import '../../../core/network/retrying_client.dart';
 
 import 'home_discover_data.dart';
 
@@ -10,7 +11,7 @@ class DiscoverApi extends ChangeNotifier {
 
   final String baseUrl;
   final Future<String> Function() getSessionToken;
-  final http.Client _client = http.Client();
+  final http.Client _client = RetryingClient();
   final Set<String> _likedUserIds = {};
   final Map<String, Future<bool>> _pendingLikes = {};
   bool _disposed = false;

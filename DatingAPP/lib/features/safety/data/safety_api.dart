@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import '../../../core/network/retrying_client.dart';
 
 /// Why a member is being reported. Values match the backend's report reasons.
 enum ReportReason {
@@ -23,7 +24,7 @@ class SafetyApi {
     required this.baseUrl,
     required this.getSessionToken,
     http.Client? client,
-  }) : _client = client ?? http.Client();
+  }) : _client = client ?? RetryingClient();
 
   final String baseUrl;
   final Future<String> Function() getSessionToken;

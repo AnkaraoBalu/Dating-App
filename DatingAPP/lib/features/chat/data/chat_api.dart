@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import '../../../core/network/retrying_client.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../models/chat_models.dart';
@@ -10,7 +11,7 @@ class ChatApi {
     required this.baseUrl,
     required this.getSessionToken,
     http.Client? client,
-  }) : _client = client ?? http.Client();
+  }) : _client = client ?? RetryingClient();
 
   final String baseUrl;
   final Future<String> Function() getSessionToken;

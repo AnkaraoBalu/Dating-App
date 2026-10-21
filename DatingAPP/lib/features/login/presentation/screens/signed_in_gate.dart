@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:clerk_flutter/clerk_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../../../../core/network/retrying_client.dart';
+import '../../../../core/network/server_warmup.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/widgets/buttons/primary_button.dart';
 import '../../../onboarding/data/onboarding_api.dart';
@@ -25,8 +27,14 @@ class SignedInGate extends StatefulWidget {
 }
 
 class _SignedInGateState extends State<SignedInGate> {
+  // A sleeping server can take about a minute to boot; four tries at up to
+  // 30s each ride that out before the user ever sees an error.
+  static const _maxAttempts = 4;
+
   String? _error;
+  String? _status;
   bool _loading = true;
+  String _phase = 'starting';
   OnboardingApi? _api;
   OnboardingProfile? _profile;
   Map<String, dynamic>? _savedProfile;
@@ -42,9 +50,10 @@ class _SignedInGateState extends State<SignedInGate> {
       setState(() {
         _loading = true;
         _error = null;
+        _status = null;
       });
     }
-    var phase = 'starting';
+    _phase = 'starting';
     try {
       final apiUrl = (dotenv.env['API_URL'] ?? dotenv.env['VITE_API_URL'] ?? '')
           .trim()
@@ -55,36 +64,60 @@ class _SignedInGateState extends State<SignedInGate> {
         baseUrl: apiUrl,
         getSessionToken: _sessionToken,
       );
-      phase = 'loading your Just2 account';
-      final profile = await api.loadProfile();
-      Map<String, dynamic>? savedProfile;
-      if (profile?.completedAt != null) {
-        phase = 'loading your dating profile';
-        final profileApi = ProfileSetupApi(
-          baseUrl: api.baseUrl,
-          getSessionToken: api.getSessionToken,
-        );
-        savedProfile = await profileApi.load();
+      for (var attempt = 1; ; attempt++) {
+        try {
+          await _loadAccount(api);
+          break;
+        } catch (error) {
+          if (attempt >= _maxAttempts || !isTransientNetworkError(error)) {
+            rethrow;
+          }
+          debugPrint(
+            '[Just2Auth] Attempt $attempt failed while $_phase: $error; retrying.',
+          );
+          unawaited(ServerWarmup.ping());
+          if (mounted) {
+            setState(
+              () =>
+                  _status = 'Waking things up. This can take up to a minute...',
+            );
+          }
+          await Future<void>.delayed(const Duration(seconds: 2));
+        }
       }
       _api = api;
-      _profile = profile;
-      _savedProfile = savedProfile;
-      debugPrint(
-        '[Just2Auth] API session verified; account data loaded. '
-        'onboardingComplete=${profile?.completedAt != null}, '
-        'profileComplete=${savedProfile?['completedAt'] != null}.',
-      );
     } catch (error) {
-      final message = error is TimeoutException
-          ? 'Timed out while $phase. Check that the API server is reachable from this device and responsive, then try again.'
-          : 'Could not finish $phase: $error';
-      debugPrint('[Just2Auth] Startup failed while $phase: $error');
+      final message = isTransientNetworkError(error)
+          ? 'We could not reach Just2 while $_phase. Check your internet connection and try again.'
+          : 'Could not finish $_phase: $error';
+      debugPrint('[Just2Auth] Startup failed while $_phase: $error');
       if (mounted) setState(() => _error = message);
     } finally {
       if (mounted) {
         setState(() => _loading = false);
       }
     }
+  }
+
+  Future<void> _loadAccount(OnboardingApi api) async {
+    _phase = 'loading your Just2 account';
+    final profile = await api.loadProfile();
+    Map<String, dynamic>? savedProfile;
+    if (profile?.completedAt != null) {
+      _phase = 'loading your dating profile';
+      final profileApi = ProfileSetupApi(
+        baseUrl: api.baseUrl,
+        getSessionToken: api.getSessionToken,
+      );
+      savedProfile = await profileApi.load();
+    }
+    _profile = profile;
+    _savedProfile = savedProfile;
+    debugPrint(
+      '[Just2Auth] API session verified; account data loaded. '
+      'onboardingComplete=${profile?.completedAt != null}, '
+      'profileComplete=${savedProfile?['completedAt'] != null}.',
+    );
   }
 
   Future<String> _sessionToken() async {
@@ -99,7 +132,26 @@ class _SignedInGateState extends State<SignedInGate> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      final status = _status;
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(),
+              if (status != null) ...[
+                const SizedBox(height: AppSpacing.md),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
+                  ),
+                  child: Text(status, textAlign: TextAlign.center),
+                ),
+              ],
+            ],
+          ),
+        ),
+      );
     }
     if (_error != null) {
       return Scaffold(

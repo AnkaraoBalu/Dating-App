@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import '../../../core/network/retrying_client.dart';
 
 /// Registers this phone for push notifications with the Just2 API.
 class NotificationsApi {
@@ -8,7 +9,7 @@ class NotificationsApi {
     required this.baseUrl,
     required this.getSessionToken,
     http.Client? client,
-  }) : _client = client ?? http.Client();
+  }) : _client = client ?? RetryingClient();
 
   final String baseUrl;
   final Future<String> Function() getSessionToken;

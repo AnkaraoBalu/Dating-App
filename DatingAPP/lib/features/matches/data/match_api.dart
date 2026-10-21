@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import '../../../core/network/retrying_client.dart';
 
 import '../models/match_model.dart';
 
@@ -9,7 +10,7 @@ class MatchApi {
 
   final String baseUrl;
   final Future<String> Function() getSessionToken;
-  final http.Client _client = http.Client();
+  final http.Client _client = RetryingClient();
 
   void dispose() => _client.close();
 

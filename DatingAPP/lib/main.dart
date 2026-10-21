@@ -1,12 +1,19 @@
+import 'dart:async';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'app/dating_app.dart';
+import 'core/network/server_warmup.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env');
+  // The free API host sleeps when idle; start waking it now, and again
+  // whenever the app returns to the foreground.
+  unawaited(ServerWarmup.ping());
+  AppLifecycleListener(onResume: () => unawaited(ServerWarmup.ping()));
   try {
     // Reads android/app/google-services.json or ios/Runner/GoogleService-Info.plist.
     await Firebase.initializeApp();
