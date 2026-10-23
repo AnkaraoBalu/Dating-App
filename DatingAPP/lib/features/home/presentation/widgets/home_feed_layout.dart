@@ -34,7 +34,10 @@ extension _HomeFeedLayout on _HomeScreenState {
               controller: _feedController,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _feedPeople.length,
-              onPageChanged: (index) => _refresh(() => _liked = false),
+              onPageChanged: (index) {
+                _refresh(() => _liked = false);
+                _prefetchDiscoveryPhotos();
+              },
               itemBuilder: (context, index) {
                 final person = _feedPeople[index];
                 return HomeDiscoverSections.leadCard(

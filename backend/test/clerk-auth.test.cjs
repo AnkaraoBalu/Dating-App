@@ -162,6 +162,7 @@ test("real-user sync uses Clerk identity and preserves app profile data", async 
   const service = new UsersService(
     {
       user: {
+        findUnique: async () => null,
         upsert: async (args) => {
           query = args;
           return {
@@ -199,4 +200,32 @@ test("real-user sync uses Clerk identity and preserves app profile data", async 
   assert.equal(query.update.onboardingProfile, undefined);
   assert.equal(user.username, "App name");
   assert.ok(user.onboardingProfile.completedAt);
+});
+
+test("returning user loads saved account without contacting Clerk", async () => {
+  const savedUser = {
+    id: "db-existing-user",
+    username: "Saved name",
+    onboardingProfile: { completedAt: new Date() },
+  };
+  const service = new UsersService(
+    {
+      user: {
+        findUnique: async (args) => {
+          assert.deepEqual(args.where, { clerkUserId: "user_existing" });
+          assert.equal(args.include.onboardingProfile, true);
+          return savedUser;
+        },
+      },
+    },
+    config(),
+  );
+  service.clerk = {
+    users: {
+      getUser: async () => {
+        assert.fail("Returning users must not depend on Clerk's user API");
+      },
+    },
+  };
+  assert.equal(await service.syncFromClerk("user_existing"), savedUser);
 });

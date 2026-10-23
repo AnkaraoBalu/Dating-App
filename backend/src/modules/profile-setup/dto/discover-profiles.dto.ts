@@ -2,6 +2,7 @@ import { Transform, Type } from "class-transformer";
 import {
   ArrayMaxSize,
   IsArray,
+  IsDateString,
   IsBoolean,
   IsIn,
   IsInt,
@@ -14,6 +15,13 @@ import {
 } from "class-validator";
 
 export class DiscoverProfilesQueryDto {
+  @IsOptional()
+  @IsDateString()
+  replayBefore?: string;
+  @IsOptional()
+  @Transform(({ value }) => value === true || value === "true")
+  @IsBoolean()
+  includeStatus?: boolean;
   @IsOptional()
   @IsIn(["for_you", "nearby", "trending", "online", "new"])
   mode?: string;

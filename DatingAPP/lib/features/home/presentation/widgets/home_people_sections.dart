@@ -57,9 +57,18 @@ extension _HomePeopleSections on _HomeScreenState {
     }
     final message = _peopleError != null
         ? 'Could not load profiles. Check your connection and try again.'
-        : _filters.nearbyOnly
-        ? 'No one within ${_filters.radiusKm} km yet. Turn off “Only show people within this distance” in Filters to see people further away.'
-        : 'No profiles match these filters yet. Try a wider age range or fewer filters.';
+        : switch (_emptyReason) {
+            'distance' =>
+              'No new profiles are available within ${_filters.radiusKm} km. Expand your distance to discover more people.',
+            'filters' =>
+              'No new profiles match your filters. Try a wider age range or fewer filters.',
+            'exhausted' =>
+              'You’re caught up with the available profiles matching your preferences. Check back for new people.',
+            'no_profiles' =>
+              'More people are joining. Check back soon for profiles matching your preferences.',
+            _ =>
+              'No new profiles are available right now. Adjust your filters or check back later.',
+          };
     return Column(
       children: [
         Icon(
@@ -80,6 +89,36 @@ extension _HomePeopleSections on _HomeScreenState {
         if (_peopleError != null) ...[
           const SizedBox(height: 12),
           TextButton(onPressed: _loadPeople, child: const Text('Retry')),
+        ] else ...[
+          const SizedBox(height: 12),
+          if (_emptyReason == 'exhausted' && _nextReplayBefore != null)
+            FilledButton(
+              onPressed:
+                  _pendingPassIds.isNotEmpty || _pendingLikeIds.isNotEmpty
+                  ? null
+                  : _replayPassedProfiles,
+              child: const Text('View profiles again'),
+            ),
+          if (_emptyReason == 'distance' && _filters.nearbyOnly)
+            FilledButton(
+              onPressed: _expandingDistance ? null : _expandDiscoveryDistance,
+              child: Text(
+                _expandingDistance
+                    ? 'Updating distance...'
+                    : nextDiscoveryRadius(_filters.radiusKm) != null
+                    ? 'Expand to ${nextDiscoveryRadius(_filters.radiusKm)} km'
+                    : 'Show people further away',
+              ),
+            ),
+          if (_emptyReason == 'distance' || _emptyReason == 'filters')
+            TextButton(
+              onPressed: _expandingDistance ? null : _openFilters,
+              child: const Text('Edit filters'),
+            ),
+          TextButton(
+            onPressed: _expandingDistance ? null : _loadPeople,
+            child: const Text('Refresh'),
+          ),
         ],
       ],
     );

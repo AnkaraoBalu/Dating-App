@@ -11,10 +11,10 @@ class ProfileController extends ChangeNotifier {
     required this.baseUrl,
     required this.getSessionToken,
     OnboardingApi? onboardingApi,
-  }) : api = ProfileSetupApi(
-         baseUrl: baseUrl,
-         getSessionToken: getSessionToken,
-       ),
+    ProfileSetupApi? profileApi,
+  }) : api =
+           profileApi ??
+           ProfileSetupApi(baseUrl: baseUrl, getSessionToken: getSessionToken),
        onboardingApi =
            onboardingApi ??
            OnboardingApi(baseUrl: baseUrl, getSessionToken: getSessionToken);
@@ -39,8 +39,15 @@ class ProfileController extends ChangeNotifier {
     _notify();
     try {
       final results = await Future.wait<Object>([
-        api.load(),
-        request('GET', '/profile/insights'),
+        api.load().then((data) {
+          profile = MemberProfile(data);
+          _notify();
+          return data;
+        }),
+        request('GET', '/profile/insights').catchError((Object error) {
+          debugPrint('[Profile] Could not load insights: $error');
+          return <String, dynamic>{};
+        }),
       ]);
       profile = MemberProfile(results[0] as Map<String, dynamic>);
       insights = results[1] as Map<String, dynamic>;

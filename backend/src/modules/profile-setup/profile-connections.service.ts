@@ -111,7 +111,7 @@ export class ProfileConnectionsService {
         },
       },
       create: { fromUserId: fromUser.id, toUserId: targetUser.id },
-      update: {},
+      update: { createdAt: new Date() },
     });
     return { passed: true };
   }

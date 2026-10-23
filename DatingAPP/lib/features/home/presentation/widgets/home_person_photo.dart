@@ -43,36 +43,23 @@ abstract final class HomePersonPhoto {
     'assets/images/girls-images/city_night_portrait.png',
   ];
 
-  static Widget imageFor(String image, {String? personName}) {
-    final localDemoPhoto = _localDemoPhoto(image, personName);
-    if (localDemoPhoto != null) {
-      return Image.asset(
-        localDemoPhoto,
-        fit: BoxFit.cover,
-        errorBuilder: (_, error, _) {
-          debugPrint('[DiscoverPhoto] Bundled demo photo failed: $error');
-          return _imageFallback();
-        },
-      );
-    }
+  static ImageProvider? providerFor(String image, {String? personName}) {
+    final local = _localDemoPhoto(image, personName);
+    if (local != null) return AssetImage(local);
     if (image.startsWith('https://') || image.startsWith('http://')) {
-      return Image.network(
-        image,
-        fit: BoxFit.cover,
-        errorBuilder: (_, error, _) {
-          debugPrint('[DiscoverPhoto] Failed to load $image: $error');
-          return _imageFallback();
-        },
-      );
+      return NetworkImage(image);
     }
-    if (image.isNotEmpty) {
-      return Image.asset(
-        image,
-        fit: BoxFit.cover,
-        errorBuilder: (_, _, _) => _imageFallback(),
-      );
-    }
-    return _imageFallback();
+    return image.isEmpty ? null : AssetImage(image);
+  }
+
+  static Widget imageFor(String image, {String? personName}) {
+    final provider = providerFor(image, personName: personName);
+    if (provider == null) return _imageFallback();
+    return Image(
+      image: provider,
+      fit: BoxFit.cover,
+      errorBuilder: (_, _, _) => _imageFallback(),
+    );
   }
 
   static String? _localDemoPhoto(String image, String? personName) {

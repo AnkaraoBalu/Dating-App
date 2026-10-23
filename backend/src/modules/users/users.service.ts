@@ -3,6 +3,7 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  ServiceUnavailableException,
 } from "@nestjs/common";
 import { createClerkClient } from "@clerk/backend";
 import { ConfigService } from "@nestjs/config";
@@ -34,9 +35,30 @@ export class UsersService {
       if (!demoUser) throw new NotFoundException("Demo profile not found.");
       return demoUser;
     }
+    // Startup needs the saved app account, not a remote identity refresh.
+    const existingUser = await this.prisma.user.findUnique({
+      where: { clerkUserId },
+      include: { onboardingProfile: true },
+    });
+    if (existingUser) return existingUser;
+
     this.logger.log(`Syncing authenticated Clerk user ${clerkUserId}`);
     try {
-      const clerkUser = await this.clerk.users.getUser(clerkUserId);
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const clerkUser = await Promise.race([
+        this.clerk.users.getUser(clerkUserId),
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(
+            () =>
+              reject(
+                new ServiceUnavailableException(
+                  "Account provider took too long to respond. Please try again.",
+                ),
+              ),
+            10_000,
+          );
+        }),
+      ]).finally(() => clearTimeout(timer));
       const primaryEmail = clerkUser.emailAddresses.find(
         (email) => email.id === clerkUser.primaryEmailAddressId,
       )?.emailAddress;

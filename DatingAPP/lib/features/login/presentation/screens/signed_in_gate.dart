@@ -27,9 +27,8 @@ class SignedInGate extends StatefulWidget {
 }
 
 class _SignedInGateState extends State<SignedInGate> {
-  // A sleeping server can take about a minute to boot; four tries at up to
-  // 30s each ride that out before the user ever sees an error.
-  static const _maxAttempts = 4;
+  // Bound retries so an unavailable API does not trap users on startup.
+  static const _maxAttempts = 2;
 
   String? _error;
   String? _status;
@@ -50,7 +49,7 @@ class _SignedInGateState extends State<SignedInGate> {
       setState(() {
         _loading = true;
         _error = null;
-        _status = null;
+        _status = 'Loading your account...';
       });
     }
     _phase = 'starting';
@@ -122,11 +121,14 @@ class _SignedInGateState extends State<SignedInGate> {
 
   Future<String> _sessionToken() async {
     final provider = widget.sessionTokenProvider;
-    if (provider != null) return provider();
+    if (provider != null) {
+      return provider().timeout(const Duration(seconds: 10));
+    }
     final auth = widget.auth;
-    if (auth == null)
+    if (auth == null) {
       throw StateError('No authenticated session is available.');
-    return (await auth.sessionToken()).jwt;
+    }
+    return (await auth.sessionToken().timeout(const Duration(seconds: 10))).jwt;
   }
 
   @override
@@ -166,7 +168,7 @@ class _SignedInGateState extends State<SignedInGate> {
                   const Icon(Icons.cloud_off_rounded, size: 44),
                   const SizedBox(height: AppSpacing.md),
                   Text(
-                    'Could not finish account setup',
+                    'Could not load your account',
                     style: AppTypography.h2,
                     textAlign: TextAlign.center,
                   ),

@@ -11,6 +11,7 @@ extension _HomePersonActions on _HomeScreenState {
       _people = _people.where((item) => item.id != person.id).toList();
       _nearby = _nearby.where((item) => item.id != person.id).toList();
     });
+    _prefetchDiscoveryPhotos();
     if (_people.isNotEmpty && page >= _people.length) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && _feedController.hasClients) {
@@ -20,22 +21,60 @@ extension _HomePersonActions on _HomeScreenState {
     }
   }
 
+  void _restoreFailedSwipe(
+    HomePerson person,
+    int index,
+    DiscoverFilterOptions filters,
+    int tab,
+    String? travel,
+    String? interest,
+  ) {
+    if (!mounted || _safetyDismissedIds.contains(person.id)) return;
+    _refresh(() {
+      _dismissedUserIds.remove(person.id);
+      if (identical(_filters, filters) &&
+          _selectedTab == tab &&
+          _travelLocation == travel &&
+          _selectedInterest == interest) {
+        _people = restoreDiscoveryCard(_people, person, index);
+        _peopleError = null;
+      }
+    });
+    _prefetchDiscoveryPhotos();
+  }
+
   void _pass(HomePerson person) {
-    if (person.id.isEmpty || widget.discoverApi == null) {
-      _notice('Unable to save this pass right now.');
-      _advanceFeed();
+    if (_pendingLikeIds.contains(person.id) ||
+        _pendingPassIds.contains(person.id) ||
+        _dismissedUserIds.contains(person.id)) {
       return;
     }
+    if (person.id.isEmpty || widget.discoverApi == null) {
+      _notice('Unable to save this pass right now.');
+      return;
+    }
+    if (!_pendingPassIds.add(person.id)) return;
+    final index = _people.indexWhere((card) => card.id == person.id);
+    final filters = _filters;
+    final tab = _selectedTab;
+    final travel = _travelLocation;
+    final interest = _selectedInterest;
     _removePerson(person);
     unawaited(() async {
       try {
         await widget.discoverApi!.pass(person.id);
+        _passedUserIds.add(person.id);
+        await _refillPeopleIfNeeded();
       } catch (error) {
         if (mounted) {
-          _dismissedUserIds.remove(person.id);
-          _notice('Could not save your pass: $error');
-          unawaited(_loadPeople(nearbyAlso: false));
+          _restoreFailedSwipe(person, index, filters, tab, travel, interest);
+          _notice(
+            'Could not save your pass. Your card is available to try again.',
+          );
         }
+      } finally {
+        _pendingPassIds.remove(person.id);
+        if (mounted) _refresh(() {});
       }
     }());
   }
@@ -57,6 +96,7 @@ extension _HomePersonActions on _HomeScreenState {
           name: person.name,
         ) &&
         mounted) {
+      _safetyDismissedIds.add(person.id);
       _removePerson(person);
     }
   }
@@ -72,6 +112,7 @@ extension _HomePersonActions on _HomeScreenState {
           source: 'discover',
         ) &&
         mounted) {
+      _safetyDismissedIds.add(person.id);
       _removePerson(person);
     }
   }
@@ -128,15 +169,26 @@ extension _HomePersonActions on _HomeScreenState {
   );
 
   Future<void> _like(HomePerson person) async {
-    if (_pendingLikeIds.contains(person.id)) return;
+    if (_pendingLikeIds.contains(person.id) ||
+        _pendingPassIds.contains(person.id) ||
+        _dismissedUserIds.contains(person.id)) {
+      return;
+    }
     if (person.id.isEmpty || widget.discoverApi == null) {
       _notice('Unable to send this like right now.');
       return;
     }
     _pendingLikeIds.add(person.id);
+    final index = _people.indexWhere((card) => card.id == person.id);
+    final filters = _filters;
+    final tab = _selectedTab;
+    final travel = _travelLocation;
+    final interest = _selectedInterest;
+    var saved = false;
     _removePerson(person);
     try {
       final isMatch = await widget.discoverApi!.like(person.id);
+      saved = true;
       if (mounted) {
         if (isMatch) {
           await MatchNavigation.celebrate(
@@ -156,12 +208,18 @@ extension _HomePersonActions on _HomeScreenState {
       }
     } catch (error) {
       if (mounted) {
-        _dismissedUserIds.remove(person.id);
-        _notice('Could not send like: $error');
-        unawaited(_loadPeople(nearbyAlso: false));
+        if (saved) {
+          _notice('Your like was saved. Open Matches to continue.');
+        } else {
+          _restoreFailedSwipe(person, index, filters, tab, travel, interest);
+          _notice(
+            'Could not send your like. Your card is available to try again.',
+          );
+        }
       }
     } finally {
       _pendingLikeIds.remove(person.id);
+      unawaited(_refillPeopleIfNeeded());
     }
   }
 

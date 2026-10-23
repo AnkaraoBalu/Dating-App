@@ -69,7 +69,7 @@ function discoveryMock(profiles, onboardingChanges = {}) {
   let query;
   return {
     prisma: {
-      profileLike: { findMany: async () => [] },
+      profileLike: { findMany: async () => [], groupBy: async () => [] },
       profilePass: { findMany: async () => [] },
       profileBlock: { findMany: async () => [] },
       user: {
@@ -93,7 +93,15 @@ function discoveryMock(profiles, onboardingChanges = {}) {
       profile: {
         findMany: async (args) => {
           query = args;
-          return profiles;
+          return [...profiles]
+            .filter(
+              (profile) =>
+                !args.where.userId.gt || profile.userId > args.where.userId.gt,
+            )
+            .sort((a, b) =>
+              a.userId < b.userId ? -1 : a.userId > b.userId ? 1 : 0,
+            )
+            .slice(0, args.take);
         },
       },
     },
@@ -527,4 +535,275 @@ test("likes received lists pending likes, not matches or passed people", async (
     received.map((like) => like.id),
     ["pending"],
   );
+});
+
+test("discovery status distinguishes distance, filters, exhaustion and an empty pool", async () => {
+  const cases = [
+    {
+      profiles: [locatedCandidate("far", 19.076, 72.8777)],
+      onboarding: nearbyOnly,
+      query: {},
+      reason: "distance",
+    },
+    {
+      profiles: [candidate()],
+      query: { verifiedOnly: true },
+      reason: "filters",
+    },
+    { profiles: [candidate()], passed: true, query: {}, reason: "exhausted" },
+    { profiles: [], query: {}, reason: "no_profiles" },
+  ];
+  for (const fixture of cases) {
+    const mock = discoveryMock(fixture.profiles, fixture.onboarding);
+    if (fixture.passed)
+      mock.prisma.profilePass.findMany = async () => [{ toUserId: "other" }];
+    const result = await service(mock.prisma).discover("clerk-me", {
+      ...fixture.query,
+      includeStatus: true,
+    });
+    assert.deepEqual(result.people, []);
+    assert.equal(result.emptyReason, fixture.reason);
+    assert.ok(mock.query().where.userId.notIn.includes("me"));
+  }
+});
+
+test("discovery status does not expose swiped profiles and has no reason when cards exist", async () => {
+  const mock = discoveryMock([candidate(), candidate({ userId: "new" })]);
+  mock.prisma.profileLike.findMany = async () => [{ toUserId: "other" }];
+  const result = await service(mock.prisma).discover("clerk-me", {
+    includeStatus: true,
+  });
+  assert.deepEqual(
+    result.people.map((p) => p.id),
+    ["new"],
+  );
+  assert.equal(result.emptyReason, null);
+});
+
+test("replay returns eligible passes oldest first and excludes likes and this-round passes", async () => {
+  const mock = discoveryMock([
+    candidate({ userId: "recent" }),
+    candidate({ userId: "old" }),
+    candidate({ userId: "liked" }),
+    candidate({ userId: "round-pass" }),
+  ]);
+  const cutoff = new Date(Date.now() - 5000).toISOString();
+  mock.prisma.profilePass.findMany = async () => [
+    { toUserId: "recent", createdAt: new Date("2026-01-02") },
+    { toUserId: "old", createdAt: new Date("2026-01-01") },
+    { toUserId: "liked", createdAt: new Date("2026-01-01") },
+    { toUserId: "round-pass", createdAt: new Date() },
+  ];
+  mock.prisma.profileLike.findMany = async () => [{ toUserId: "liked" }];
+  const api = service(mock.prisma);
+  assert.deepEqual(
+    (await api.discover("clerk-me", { includeStatus: true })).people,
+    [],
+  );
+  const result = await api.discover("clerk-me", {
+    includeStatus: true,
+    replayBefore: cutoff,
+  });
+  assert.deepEqual(
+    result.people.map((p) => p.id),
+    ["old", "recent"],
+  );
+  assert.ok(result.replayBefore);
+});
+
+test("replay prioritizes unseen profiles and still respects preferences", async () => {
+  const mock = discoveryMock([
+    candidate({ userId: "passed" }),
+    candidate({ userId: "new" }),
+  ]);
+  mock.prisma.profilePass.findMany = async () => [
+    { toUserId: "passed", createdAt: new Date("2026-01-01") },
+  ];
+  const query = {
+    includeStatus: true,
+    replayBefore: new Date(Date.now() - 1000).toISOString(),
+  };
+  const api = service(mock.prisma);
+  assert.deepEqual(
+    (await api.discover("clerk-me", query)).people.map((p) => p.id),
+    ["new"],
+  );
+  assert.deepEqual(
+    (await api.discover("clerk-me", { ...query, verifiedOnly: true })).people,
+    [],
+  );
+  await assert.rejects(
+    api.discover("clerk-me", {
+      ...query,
+      replayBefore: new Date(Date.now() + 60000).toISOString(),
+    }),
+    { status: 400 },
+  );
+});
+
+test("refresh keeps replay passes excluded until another explicit round", async () => {
+  const mock = discoveryMock([candidate()]);
+  const firstCutoff = new Date(Date.now() - 10000).toISOString();
+  let passedAt = new Date("2026-01-01");
+  mock.prisma.profilePass.findMany = async () => [
+    { toUserId: "other", createdAt: passedAt },
+  ];
+  const api = service(mock.prisma);
+  const firstRound = { includeStatus: true, replayBefore: firstCutoff };
+  assert.equal((await api.discover("clerk-me", firstRound)).people.length, 1);
+  passedAt = new Date(Date.now() - 5000);
+  for (let refresh = 0; refresh < 3; refresh++) {
+    const result = await api.discover("clerk-me", firstRound);
+    assert.deepEqual(result.people, []);
+    assert.equal(result.emptyReason, "exhausted");
+  }
+  const nextRound = {
+    includeStatus: true,
+    replayBefore: new Date(Date.now() - 1000).toISOString(),
+  };
+  assert.equal((await api.discover("clerk-me", nextRound)).people.length, 1);
+});
+
+test("For You ranks normalized shared interests ahead of genre-only overlap", async () => {
+  const activity = candidate({ userId: "activity" });
+  activity.user.onboardingProfile.interests = ["COFFEE", "coffee"];
+  const genre = candidate({ userId: "genre" });
+  genre.user.onboardingProfile.interests = [];
+  genre.user.onboardingProfile.musicGenres = ["pop"];
+  const mock = discoveryMock([genre, activity], { musicGenres: ["pop"] });
+  const people = await service(mock.prisma).discover("clerk-me", {
+    mode: "for_you",
+  });
+  assert.deepEqual(
+    people.map((p) => p.id),
+    ["activity", "genre"],
+  );
+  assert.equal(people[0].match, 75);
+  assert.equal(people[1].match, 25);
+});
+
+test("exploration applies only to For You and keeps farther-away profiles behind nearby people", async () => {
+  const near = Array.from({ length: 10 }, (_, i) =>
+    candidate({ userId: `near-${i}` }),
+  );
+  const far = locatedCandidate("far", 19.076, 72.8777);
+  const mock = discoveryMock([...near, far]);
+  const api = service(mock.prisma);
+  const forYou = await api.discover("clerk-me", { mode: "for_you" });
+  assert.deepEqual(
+    forYou.slice(0, 4).map((p) => p.id),
+    near.slice(0, 4).map((p) => p.userId),
+  );
+  assert.ok(Number(forYou[4].id.split("-")[1]) >= 5);
+  assert.equal(forYou.at(-1).id, "far");
+  for (const mode of ["nearby", "trending"]) {
+    const people = await api.discover("clerk-me", { mode });
+    assert.deepEqual(
+      people.map((p) => p.id),
+      [...near.map((p) => p.userId), "far"],
+    );
+  }
+});
+
+test("For You replay preserves oldest-pass order instead of adding exploration", async () => {
+  const profiles = Array.from({ length: 10 }, (_, i) =>
+    candidate({ userId: `passed-${i}` }),
+  );
+  const mock = discoveryMock(profiles);
+  mock.prisma.profilePass.findMany = async () =>
+    profiles.map((p, i) => ({
+      toUserId: p.userId,
+      createdAt: new Date(Date.UTC(2026, 0, i + 1)),
+    }));
+  const result = await service(mock.prisma).discover("clerk-me", {
+    mode: "for_you",
+    includeStatus: true,
+    replayBefore: new Date(Date.now() - 1000).toISOString(),
+  });
+  assert.deepEqual(
+    result.people.map((p) => p.id),
+    profiles.map((p) => p.userId),
+  );
+});
+
+test("Trending uses recent engagement instead of shared interests without changing Nearby", async () => {
+  const relevant = candidate({ userId: "relevant" });
+  const trending = candidate({ userId: "trending" });
+  trending.user.onboardingProfile.interests = ["travel"];
+  const mock = discoveryMock([relevant, trending]);
+  let queries = 0;
+  mock.prisma.profileLike.groupBy = async (query) => {
+    queries++;
+    assert.deepEqual(query.by, ["toUserId"]);
+    assert.ok(query.where.createdAt.gte instanceof Date);
+    assert.ok(query.where.fromUserId.notIn.includes("me"));
+    return [{ toUserId: "trending", _count: { _all: 12 } }];
+  };
+  const api = service(mock.prisma);
+  const ranked = await api.discover("clerk-me", { mode: "trending" });
+  assert.deepEqual(
+    ranked.map((p) => p.id),
+    ["trending", "relevant"],
+  );
+  assert.equal(ranked[0].trendingScore, undefined);
+  assert.deepEqual(
+    (await api.discover("clerk-me", { mode: "for_you" })).map((p) => p.id),
+    ["relevant", "trending"],
+  );
+  await api.discover("clerk-me", { mode: "nearby" });
+  assert.equal(queries, 1);
+});
+
+test("discovery scans past 500 ineligible profiles before reporting an empty feed", async () => {
+  const profiles = Array.from({ length: 501 }, (_, i) => {
+    const profile = candidate({
+      userId: `member-${String(i).padStart(4, "0")}`,
+    });
+    profile.verificationStatus = i === 500 ? "verified" : "not_started";
+    return profile;
+  });
+  const mock = discoveryMock(profiles);
+  const result = await service(mock.prisma).discover("clerk-me", {
+    includeStatus: true,
+    verifiedOnly: true,
+  });
+  assert.deepEqual(
+    result.people.map((p) => p.id),
+    ["member-0500"],
+  );
+  assert.equal(result.emptyReason, null);
+  assert.equal(mock.query().where.userId.gt, "member-0499");
+  assert.equal(mock.query().take, 500);
+  assert.deepEqual(mock.query().orderBy, { userId: "asc" });
+});
+
+test("profiles beyond the first batch participate in global ranking", async () => {
+  const profiles = Array.from({ length: 501 }, (_, i) => {
+    const profile = candidate({
+      userId: `member-${String(i).padStart(4, "0")}`,
+    });
+    profile.user.onboardingProfile.interests =
+      i === 500 ? ["coffee"] : ["travel"];
+    return profile;
+  });
+  const mock = discoveryMock(profiles);
+  const result = await service(mock.prisma).discover("clerk-me", {
+    mode: "for_you",
+    limit: 1,
+  });
+  assert.equal(result[0].id, "member-0500");
+});
+
+test("an exact full batch terminates on an empty next page without duplicates", async () => {
+  const profiles = Array.from({ length: 500 }, (_, i) =>
+    candidate({ userId: `member-${String(i).padStart(4, "0")}` }),
+  );
+  const mock = discoveryMock(profiles);
+  const result = await service(mock.prisma).discover("clerk-me", {
+    mode: "nearby",
+    limit: 100,
+  });
+  assert.equal(result.length, 100);
+  assert.equal(new Set(result.map((p) => p.id)).size, 100);
+  assert.equal(mock.query().where.userId.gt, "member-0499");
 });

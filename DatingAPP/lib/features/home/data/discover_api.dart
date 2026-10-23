@@ -32,17 +32,22 @@ class DiscoverApi extends ChangeNotifier {
     bool onlineOnly = false,
     bool verifiedOnly = false,
     int limit = 60,
+    void Function(String? reason)? onEmptyReason,
+    String? replayBefore,
+    void Function(String? token)? onReplayBefore,
   }) async {
     final query = <String, String>{
       'mode': mode,
       'minAge': '$minAge',
       'maxAge': '$maxAge',
       'limit': '$limit',
+      if (onEmptyReason != null) 'includeStatus': 'true',
     };
     void add(String key, Object? value) {
       if (value != null && value.toString().isNotEmpty) query[key] = '$value';
     }
 
+    add('replayBefore', replayBefore);
     add('gender', gender);
     add('location', location);
     add('interest', interest);
@@ -60,7 +65,18 @@ class DiscoverApi extends ChangeNotifier {
           headers: await _headers(),
         )
         .timeout(const Duration(seconds: 20));
-    final body = _decode(response);
+    final decoded = _decode(response);
+    final body = decoded is Map<String, dynamic> ? decoded['people'] : decoded;
+    onEmptyReason?.call(
+      decoded is Map<String, dynamic>
+          ? decoded['emptyReason'] as String?
+          : null,
+    );
+    onReplayBefore?.call(
+      decoded is Map<String, dynamic>
+          ? decoded['replayBefore'] as String?
+          : null,
+    );
     if (body is! List) throw const FormatException('Invalid people response.');
     return body
         .whereType<Map<String, dynamic>>()

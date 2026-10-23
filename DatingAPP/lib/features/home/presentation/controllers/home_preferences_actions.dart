@@ -12,6 +12,17 @@ extension _HomePreferencesActions on _HomeScreenState {
     }
     await _initialProfileLoad;
     if (!mounted) return;
+    final memberId = _profileController?.profile?.data['userId'] as String?;
+    final api = widget.discoverApi;
+    _roundMemberId = memberId;
+    if (memberId != null && api != null) {
+      try {
+        _replayBefore = await _roundStore.load(api.baseUrl, memberId);
+      } catch (error) {
+        debugPrint('[DiscoveryRound] Could not restore round: $error');
+      }
+    }
+    if (!mounted) return;
     _refresh(() {
       _filters = DiscoverFilterOptions(
         minAge: preferences.minAge,
@@ -49,6 +60,38 @@ extension _HomePreferencesActions on _HomeScreenState {
       );
     } catch (error) {
       debugPrint('[HomePreferences] Could not save local preferences: $error');
+    }
+  }
+
+  Future<void> _expandDiscoveryDistance() async {
+    if (_expandingDistance || !_filters.nearbyOnly) return;
+    final controller = _profileController;
+    if (controller == null || controller.profile == null || controller.saving) {
+      _notice('Could not update your distance. Try again.');
+      return;
+    }
+    final nextRadius = nextDiscoveryRadius(_filters.radiusKm);
+    _refresh(() => _expandingDistance = true);
+    _applyingFilters = true;
+    try {
+      await controller.updateOnboarding({
+        'preferredDistanceKm': ?nextRadius,
+        if (nextRadius == null) 'onlyShowPeopleNearby': false,
+      });
+      if (!mounted) return;
+      _refresh(() {
+        _filters = _filters.withProfilePreferences(
+          radiusKm: nextRadius ?? _filters.radiusKm,
+          nearbyOnly: nextRadius != null,
+          gender: _filters.gender,
+        );
+      });
+      await _loadPeople();
+    } catch (_) {
+      if (mounted) _notice('Could not save your distance. Please try again.');
+    } finally {
+      _applyingFilters = false;
+      if (mounted) _refresh(() => _expandingDistance = false);
     }
   }
 

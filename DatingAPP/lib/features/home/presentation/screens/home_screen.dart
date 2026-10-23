@@ -7,6 +7,8 @@ import '../../../../core/theme/theme.dart';
 import '../../../../core/widgets/brand_logo.dart';
 import '../../data/home_discover_data.dart';
 import '../../data/discover_api.dart';
+import '../../data/discovery_feed.dart';
+import '../../data/discovery_round_store.dart';
 import '../../data/home_discovery_preferences.dart';
 import '../../../profile/data/profile_controller.dart';
 import '../../../profile/models/member_profile.dart';
@@ -37,6 +39,7 @@ import '../../../vibes/data/vibe_room_store.dart';
 import '../../../vibes/presentation/screens/live_vibe_room_screen.dart';
 import '../../../vibes/presentation/screens/room_detail_screen.dart';
 import '../widgets/home_person_card.dart';
+import '../widgets/home_person_photo.dart';
 import '../../../../core/realtime/realtime_service.dart';
 import '../../../chat/presentation/screens/conversation_screen.dart';
 import '../../../notifications/data/notifications_api.dart';
@@ -104,9 +107,19 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _liked = false;
   final Set<String> _dismissedUserIds = {};
   final Set<String> _pendingLikeIds = {};
+  final Set<String> _safetyDismissedIds = {};
   bool _loadingPeople = true;
   int _peopleRequest = 0;
+  bool _refillingPeople = false;
+  bool _refillQueued = false;
   String? _peopleError;
+  String? _emptyReason;
+  final DiscoveryRoundStore _roundStore = DiscoveryRoundStore();
+  String? _roundMemberId;
+  String? _replayBefore;
+  String? _nextReplayBefore;
+  final Set<String> _passedUserIds = {};
+  final Set<String> _pendingPassIds = {};
   List<HomePerson> _people = const [];
   List<HomePerson> _nearby = const [];
   DiscoverFilterOptions _filters = const DiscoverFilterOptions();
@@ -117,6 +130,7 @@ class _HomeScreenState extends State<HomeScreen> {
       HomeDiscoveryPreferencesStore();
   bool _preferencesReady = false;
   bool _applyingFilters = false;
+  bool _expandingDistance = false;
   Future<void>? _initialProfileLoad;
   Timer? _activityTimer;
   Timer? _matchRefreshTimer;
@@ -254,16 +268,6 @@ class _HomeScreenState extends State<HomeScreen> {
     _stopPushNotifications();
     _feedController.dispose();
     super.dispose();
-  }
-
-  void _advanceFeed() {
-    if (!_feedController.hasClients || _feedPeople.isEmpty) return;
-    final next = _feedController.page!.round() + 1;
-    _feedController.animateToPage(
-      next,
-      duration: const Duration(milliseconds: 280),
-      curve: Curves.easeOutCubic,
-    );
   }
 
   void _notice(String message) => ScaffoldMessenger.of(context)
