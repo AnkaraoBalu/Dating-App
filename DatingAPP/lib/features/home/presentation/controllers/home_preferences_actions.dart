@@ -5,7 +5,9 @@ extension _HomePreferencesActions on _HomeScreenState {
   Future<void> _restorePreferences() async {
     HomeDiscoveryPreferences preferences;
     try {
-      preferences = await _preferencesStore.load();
+      preferences = await _preferencesStore.load().timeout(
+        const Duration(seconds: 3),
+      );
     } catch (error) {
       debugPrint('[HomePreferences] Could not load local preferences: $error');
       preferences = const HomeDiscoveryPreferences();
@@ -17,7 +19,9 @@ extension _HomePreferencesActions on _HomeScreenState {
     _roundMemberId = memberId;
     if (memberId != null && api != null) {
       try {
-        _replayBefore = await _roundStore.load(api.baseUrl, memberId);
+        _replayBefore = await _roundStore
+            .load(api.baseUrl, memberId)
+            .timeout(const Duration(seconds: 3));
       } catch (error) {
         debugPrint('[DiscoveryRound] Could not restore round: $error');
       }

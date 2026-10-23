@@ -72,6 +72,7 @@ class HomeScreen extends StatefulWidget {
     this.photos = const [],
     this.bio = '',
     this.fieldOfStudy,
+    this.initialProfile,
   });
 
   final String displayName;
@@ -80,6 +81,7 @@ class HomeScreen extends StatefulWidget {
   final List<String> photos;
   final String bio;
   final String? fieldOfStudy;
+  final Map<String, dynamic>? initialProfile;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -226,11 +228,19 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       )..load();
       _profileController = ProfileController(
+        initialProfile: widget.initialProfile == null
+            ? null
+            : MemberProfile(widget.initialProfile!),
         baseUrl: api.baseUrl,
         getSessionToken: api.getSessionToken,
       );
       _profileController!.addListener(_profileUpdated);
-      _initialProfileLoad = _profileController!.load();
+      if (_profileController!.profile != null) {
+        _initialProfileLoad = Future<void>.value();
+        unawaited(_profileController!.loadInsights());
+      } else {
+        _initialProfileLoad = _profileController!.load();
+      }
     } else {
       _matchController = MatchController(
         api: MatchApi(baseUrl: '', getSessionToken: () async => ''),

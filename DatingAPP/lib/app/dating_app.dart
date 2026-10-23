@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:clerk_flutter/clerk_flutter.dart';
 import 'package:app_links/app_links.dart';
 
+import 'auth_startup.dart';
 import '../core/constants/app_constants.dart';
 import '../core/theme/app_theme.dart';
 import '../features/welcome/presentation/screens/welcome_screen.dart';
@@ -62,8 +63,8 @@ class DatingApp extends StatelessWidget {
     );
     if (clerkPublishableKey.isEmpty) return app;
 
-    return ClerkAuth(
-      config: ClerkAuthConfig(
+    return AuthStartup(
+      createConfig: () => ClerkAuthConfig(
         publishableKey: clerkPublishableKey,
         telemetryPeriod: Duration.zero,
         redirectionGenerator: (_, strategy) =>

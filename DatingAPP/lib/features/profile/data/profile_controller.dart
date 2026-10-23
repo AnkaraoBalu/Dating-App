@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
@@ -12,7 +13,9 @@ class ProfileController extends ChangeNotifier {
     required this.getSessionToken,
     OnboardingApi? onboardingApi,
     ProfileSetupApi? profileApi,
-  }) : api =
+    MemberProfile? initialProfile,
+  }) : profile = initialProfile,
+       api =
            profileApi ??
            ProfileSetupApi(baseUrl: baseUrl, getSessionToken: getSessionToken),
        onboardingApi =
@@ -38,25 +41,30 @@ class ProfileController extends ChangeNotifier {
     error = null;
     _notify();
     try {
-      final results = await Future.wait<Object>([
-        api.load().then((data) {
-          profile = MemberProfile(data);
-          _notify();
-          return data;
-        }),
-        request('GET', '/profile/insights').catchError((Object error) {
-          debugPrint('[Profile] Could not load insights: $error');
-          return <String, dynamic>{};
-        }),
-      ]);
-      profile = MemberProfile(results[0] as Map<String, dynamic>);
-      insights = results[1] as Map<String, dynamic>;
+      final watch = Stopwatch()..start();
+      profile = MemberProfile(
+        await api.load().timeout(const Duration(seconds: 30)),
+      );
+      debugPrint('[Startup] Profile loaded in ${watch.elapsedMilliseconds}ms');
+      unawaited(loadInsights());
     } catch (e) {
       error = e.toString();
     } finally {
       loading = false;
       _notify();
     }
+  }
+
+  Future<void> loadInsights() async {
+    try {
+      insights = await request(
+        'GET',
+        '/profile/insights',
+      ).timeout(const Duration(seconds: 20));
+    } catch (error) {
+      debugPrint('[Profile] Could not load insights: $error');
+    }
+    _notify();
   }
 
   Future<Map<String, dynamic>> request(
@@ -66,7 +74,8 @@ class ProfileController extends ChangeNotifier {
   ]) async {
     final request = http.Request(method, Uri.parse('$baseUrl$path'))
       ..headers.addAll({
-        'Authorization': 'Bearer ${await getSessionToken()}',
+        'Authorization':
+            'Bearer ${await getSessionToken().timeout(const Duration(seconds: 10))}',
         'Content-Type': 'application/json',
       });
     if (body != null) request.body = jsonEncode(body);
@@ -141,7 +150,8 @@ class ProfileController extends ChangeNotifier {
   Future<void> replacePhoto(String id, Uint8List bytes) => _save(() async {
     final request =
         http.MultipartRequest('PUT', Uri.parse('$baseUrl/profile/photos/$id'))
-          ..headers['Authorization'] = 'Bearer ${await getSessionToken()}'
+          ..headers['Authorization'] =
+              'Bearer ${await getSessionToken().timeout(const Duration(seconds: 10))}'
           ..files.add(
             http.MultipartFile.fromBytes(
               'file',

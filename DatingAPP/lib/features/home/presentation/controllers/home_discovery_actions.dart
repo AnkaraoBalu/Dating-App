@@ -34,7 +34,7 @@ extension _HomeDiscoveryActions on _HomeScreenState {
     _replayBefore = cutoff;
     _dismissedUserIds.removeAll(_passedUserIds);
     _passedUserIds.clear();
-    await _loadPeople(nearbyAlso: false);
+    await _loadPeople();
   }
 
   void _prefetchDiscoveryPhotos() {
@@ -80,13 +80,11 @@ extension _HomeDiscoveryActions on _HomeScreenState {
       _refillQueued = true;
       return;
     }
-    await _loadPeople(nearbyAlso: false, append: true);
+    await _loadPeople(append: true);
   }
 
-  Future<void> _loadPeople({
-    bool nearbyAlso = true,
-    bool append = false,
-  }) async {
+  Future<void> _loadPeople({bool append = false}) async {
+    final watch = Stopwatch()..start();
     final requestId = ++_peopleRequest;
     _refillingPeople = append;
     _refillQueued = false;
@@ -141,24 +139,8 @@ extension _HomeDiscoveryActions on _HomeScreenState {
         onlineOnly: args['onlineOnly']! as bool,
         verifiedOnly: args['verifiedOnly']! as bool,
       );
-      // Fetch the nearby strip at the same time instead of after the feed.
-      final nearbyRequest = nearbyAlso && _selectedTab == 0
-          ? api.discover(
-              mode: 'nearby',
-              minAge: _filters.minAge,
-              maxAge: _filters.maxAge,
-              gender: _filters.gender,
-              location: location,
-              interest: _selectedInterest ?? _filters.interest,
-              interests: _activeInterests,
-              radiusKm: args['radiusKm'] as int?,
-              onlineOnly: _filters.onlineOnly,
-              verifiedOnly: _filters.verifiedOnly,
-            )
-          : null;
-      final results = await Future.wait([peopleRequest, ?nearbyRequest]);
-      final people = results.first;
-      final nearby = nearbyRequest == null ? null : results.last;
+      // The nearby strip is hidden; one feed request is sufficient.
+      final people = await peopleRequest.timeout(const Duration(seconds: 35));
       if (!mounted || requestId != _peopleRequest) return;
       _refresh(() {
         _people = mergeDiscoveryFeed(
@@ -168,11 +150,6 @@ extension _HomeDiscoveryActions on _HomeScreenState {
         );
         _emptyReason = emptyReason;
         _nextReplayBefore = nextReplayBefore;
-        if (nearby != null) {
-          _nearby = nearby
-              .where((p) => !_dismissedUserIds.contains(p.id))
-              .toList();
-        }
         _loadingPeople = false;
       });
       _prefetchDiscoveryPhotos();
@@ -188,6 +165,9 @@ extension _HomeDiscoveryActions on _HomeScreenState {
         });
       }
     } finally {
+      debugPrint(
+        '[Startup] Discovery request finished in ${watch.elapsedMilliseconds}ms; append=$append',
+      );
       if (mounted && requestId == _peopleRequest) {
         _refillingPeople = false;
         if (_refillQueued) {

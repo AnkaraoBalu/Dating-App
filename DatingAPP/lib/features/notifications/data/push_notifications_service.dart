@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 
+import '../../../core/startup/firebase_startup.dart';
 import '../models/push_notification.dart';
 import 'notifications_api.dart';
 import 'system_notifications.dart';
@@ -42,7 +43,8 @@ class PushNotificationsService {
   Future<void> start() async {
     // Firebase isn't configured (no google-services.json /
     // GoogleService-Info.plist), e.g. in tests: run without push.
-    if (Firebase.apps.isEmpty) return;
+    await FirebaseStartup.initialize();
+    if (_disposed || Firebase.apps.isEmpty) return;
     final messaging = _messaging ??= FirebaseMessaging.instance;
     current = this;
     try {

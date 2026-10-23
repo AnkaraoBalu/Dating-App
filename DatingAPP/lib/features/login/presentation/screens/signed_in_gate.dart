@@ -17,9 +17,17 @@ import '../../../home/data/discover_api.dart';
 import 'location_screen.dart';
 
 class SignedInGate extends StatefulWidget {
-  const SignedInGate({super.key, this.auth, this.sessionTokenProvider});
+  const SignedInGate({
+    super.key,
+    this.auth,
+    this.sessionTokenProvider,
+    this.onboardingApi,
+    this.profileApi,
+  });
 
   final ClerkAuthState? auth;
+  final OnboardingApi? onboardingApi;
+  final ProfileSetupApi? profileApi;
   final Future<String> Function()? sessionTokenProvider;
 
   @override
@@ -30,6 +38,7 @@ class _SignedInGateState extends State<SignedInGate> {
   // Bound retries so an unavailable API does not trap users on startup.
   static const _maxAttempts = 2;
 
+  int _run = 0;
   String? _error;
   String? _status;
   bool _loading = true;
@@ -44,91 +53,133 @@ class _SignedInGateState extends State<SignedInGate> {
     _syncUser();
   }
 
+  @override
+  void dispose() {
+    _run++;
+    super.dispose();
+  }
+
   Future<void> _syncUser() async {
-    if (mounted) {
-      setState(() {
-        _loading = true;
-        _error = null;
-        _status = 'Loading your account...';
-      });
-    }
+    final run = ++_run;
+    var active = true;
+    bool current() => mounted && run == _run && active;
+    setState(() {
+      _loading = true;
+      _error = null;
+      _status = 'Loading your account...';
+    });
     _phase = 'starting';
+    final watch = Stopwatch()..start();
     try {
       final apiUrl = (dotenv.env['API_URL'] ?? dotenv.env['VITE_API_URL'] ?? '')
           .trim()
           .replaceFirst(RegExp(r'/$'), '');
       if (apiUrl.isEmpty) throw Exception('Set API_URL in DatingAPP/.env.');
-
-      final api = OnboardingApi(
-        baseUrl: apiUrl,
-        getSessionToken: _sessionToken,
-      );
-      for (var attempt = 1; ; attempt++) {
-        try {
-          await _loadAccount(api);
-          break;
-        } catch (error) {
-          if (attempt >= _maxAttempts || !isTransientNetworkError(error)) {
-            rethrow;
-          }
-          debugPrint(
-            '[Just2Auth] Attempt $attempt failed while $_phase: $error; retrying.',
-          );
-          unawaited(ServerWarmup.ping());
-          if (mounted) {
+      final api =
+          widget.onboardingApi ??
+          OnboardingApi(baseUrl: apiUrl, getSessionToken: _sessionToken);
+      final result = await (() async {
+        for (var attempt = 1; ; attempt++) {
+          if (!current()) throw StateError('Startup attempt ended.');
+          try {
+            return await _loadAccount(api, (phase) {
+              if (current()) _phase = phase;
+            }, current);
+          } catch (error) {
+            if (!current() ||
+                attempt >= _maxAttempts ||
+                !isTransientNetworkError(error)) {
+              rethrow;
+            }
+            debugPrint(
+              '[Just2Auth] Attempt $attempt failed while $_phase: $error; retrying.',
+            );
             setState(
               () =>
                   _status = 'Waking things up. This can take up to a minute...',
             );
+            if (error is TimeoutException &&
+                error.message?.contains('GET /users/me') == true) {
+              await ServerWarmup.ping().timeout(
+                const Duration(seconds: 60),
+                onTimeout: () {},
+              );
+            } else {
+              unawaited(ServerWarmup.ping());
+              await Future<void>.delayed(const Duration(seconds: 2));
+            }
           }
-          await Future<void>.delayed(const Duration(seconds: 2));
         }
-      }
+      })().timeout(const Duration(seconds: 90));
+      if (!current()) return;
       _api = api;
+      _profile = result.profile;
+      _savedProfile = result.savedProfile;
     } catch (error) {
+      if (!current()) return;
       final message = isTransientNetworkError(error)
-          ? 'We could not reach Just2 while $_phase. Check your internet connection and try again.'
+          ? 'We could not reach Just2 while $_phase. The server may still be starting. Please try again.'
           : 'Could not finish $_phase: $error';
       debugPrint('[Just2Auth] Startup failed while $_phase: $error');
-      if (mounted) setState(() => _error = message);
+      setState(() => _error = message);
     } finally {
-      if (mounted) {
-        setState(() => _loading = false);
-      }
+      // Futures are not cancelled by timeout. Invalidate callbacks from late work.
+      active = false;
+      debugPrint(
+        '[Startup] Account gate finished in ${watch.elapsedMilliseconds}ms; phase=$_phase',
+      );
+      if (mounted && run == _run) setState(() => _loading = false);
     }
   }
 
-  Future<void> _loadAccount(OnboardingApi api) async {
-    _phase = 'loading your Just2 account';
+  Future<({OnboardingProfile? profile, Map<String, dynamic>? savedProfile})>
+  _loadAccount(
+    OnboardingApi api,
+    void Function(String) phase,
+    bool Function() current,
+  ) async {
+    phase('loading your Just2 account');
+    final watch = Stopwatch()..start();
     final profile = await api.loadProfile();
+    if (!current()) throw StateError('Startup attempt ended.');
+    debugPrint('[Startup] Account loaded in ${watch.elapsedMilliseconds}ms');
     Map<String, dynamic>? savedProfile;
     if (profile?.completedAt != null) {
-      _phase = 'loading your dating profile';
-      final profileApi = ProfileSetupApi(
-        baseUrl: api.baseUrl,
-        getSessionToken: api.getSessionToken,
-      );
+      phase('loading your dating profile');
+      final profileApi =
+          widget.profileApi ??
+          ProfileSetupApi(
+            baseUrl: api.baseUrl,
+            getSessionToken: api.getSessionToken,
+          );
+      watch.reset();
       savedProfile = await profileApi.load();
+      debugPrint(
+        '[Startup] Dating profile loaded in ${watch.elapsedMilliseconds}ms',
+      );
     }
-    _profile = profile;
-    _savedProfile = savedProfile;
-    debugPrint(
-      '[Just2Auth] API session verified; account data loaded. '
-      'onboardingComplete=${profile?.completedAt != null}, '
-      'profileComplete=${savedProfile?['completedAt'] != null}.',
-    );
+    return (profile: profile, savedProfile: savedProfile);
   }
 
   Future<String> _sessionToken() async {
-    final provider = widget.sessionTokenProvider;
-    if (provider != null) {
-      return provider().timeout(const Duration(seconds: 10));
+    final watch = Stopwatch()..start();
+    try {
+      final provider = widget.sessionTokenProvider;
+      if (provider != null) {
+        return await provider().timeout(const Duration(seconds: 10));
+      }
+      final auth = widget.auth;
+      if (auth == null) {
+        throw StateError('No authenticated session is available.');
+      }
+      return (await auth.sessionToken().timeout(
+        const Duration(seconds: 10),
+      )).jwt;
+    } finally {
+      debugPrint(
+        '[Startup] Session token request finished in ${watch.elapsedMilliseconds}ms',
+      );
     }
-    final auth = widget.auth;
-    if (auth == null) {
-      throw StateError('No authenticated session is available.');
-    }
-    return (await auth.sessionToken().timeout(const Duration(seconds: 10))).jwt;
   }
 
   @override
@@ -195,6 +246,7 @@ class _SignedInGateState extends State<SignedInGate> {
             .whereType<String>()
             .toList();
         return HomeScreen(
+          initialProfile: saved,
           discoverApi: DiscoverApi(
             baseUrl: api.baseUrl,
             getSessionToken: api.getSessionToken,
