@@ -82,6 +82,7 @@ flutter:
     - assets/images/welcome/just2_rooftop_poster.jpg
     - assets/images/branding/just2/
     - assets/images/location/location.png
+    - assets/images/travel/
     - assets/images/welcome/welcome_background.png
   fonts:
     - family: Manrope

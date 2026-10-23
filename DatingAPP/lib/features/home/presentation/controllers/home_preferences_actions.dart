@@ -171,11 +171,13 @@ extension _HomePreferencesActions on _HomeScreenState {
 
   Future<void> _openTravel() async {
     final city = await Navigator.of(context).push<String>(
-      MaterialPageRoute(builder: (_) => const DiscoverTravelScreen()),
+      MaterialPageRoute(
+        builder: (_) => DiscoverTravelScreen(currentCity: _travelLocation),
+      ),
     );
     if (city == null || !mounted) return;
     _refresh(() {
-      _travelLocation = city;
+      _travelLocation = city == DiscoverTravelScreen.myLocation ? null : city;
       _selectedTab = 0;
     });
     await _savePreferences();
