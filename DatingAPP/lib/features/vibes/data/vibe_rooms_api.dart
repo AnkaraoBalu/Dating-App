@@ -136,6 +136,50 @@ class VibeRoomsApi {
     return _roomFromJson(decoded);
   }
 
+  /// Host-only: edits the room or takes it live; null fields stay unchanged.
+  Future<VibeRoom> updateRoom(
+    String roomId, {
+    String? title,
+    String? description,
+    String? categoryId,
+    String? emoji,
+    int? maxParticipants,
+    bool? inviteOnly,
+    bool? isLive,
+  }) async {
+    final response = await http
+        .patch(
+          Uri.parse('$baseUrl/vibe-rooms/${Uri.encodeComponent(roomId)}'),
+          headers: await _headers(),
+          body: jsonEncode({
+            'title': ?title,
+            'description': ?description,
+            'categoryId': ?categoryId,
+            'emoji': ?emoji,
+            'maxParticipants': ?maxParticipants,
+            'inviteOnly': ?inviteOnly,
+            'isLive': ?isLive,
+          }),
+        )
+        .timeout(const Duration(seconds: 20));
+    final decoded = _decode(response);
+    if (decoded is! Map<String, dynamic>) {
+      throw const FormatException('Invalid update room response.');
+    }
+    return _roomFromJson(decoded);
+  }
+
+  /// Host-only: deletes the room for every member.
+  Future<void> deleteRoom(String roomId) async {
+    final response = await http
+        .delete(
+          Uri.parse('$baseUrl/vibe-rooms/${Uri.encodeComponent(roomId)}'),
+          headers: await _headers(),
+        )
+        .timeout(const Duration(seconds: 20));
+    _decode(response);
+  }
+
   /// Requests a short-lived LiveKit token for an active room member.
   /// The API secret remains on the backend and is never sent to this app.
   Future<VibeVoiceCredentials> createVoiceToken(String roomId) async {

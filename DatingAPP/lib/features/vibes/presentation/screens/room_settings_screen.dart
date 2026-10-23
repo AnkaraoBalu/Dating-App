@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/theme.dart';
 import '../../data/vibe_categories.dart';
 import '../../data/vibe_room_store.dart';
+import '../../data/vibe_rooms_api.dart';
 import '../../models/vibe_room.dart';
 
 class RoomSettingsScreen extends StatefulWidget {
-  const RoomSettingsScreen({super.key, required this.room});
+  const RoomSettingsScreen({super.key, required this.room, this.api});
 
   final VibeRoom room;
+  final VibeRoomsApi? api;
 
   @override
   State<RoomSettingsScreen> createState() => _RoomSettingsScreenState();
@@ -21,6 +23,10 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
   );
   late bool _inviteOnly = widget.room.inviteOnly;
   late int _maxParticipants = widget.room.maxParticipants;
+  late String _categoryId = widget.room.categoryId;
+  late String _emoji = widget.room.emoji;
+  bool _saving = false;
+  bool _deleting = false;
 
   @override
   void dispose() {
@@ -39,7 +45,12 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
         'Room settings',
         style: AppTypography.h3.copyWith(color: AppColors.textPrimary),
       ),
-      actions: [TextButton(onPressed: _save, child: const Text('Save'))],
+      actions: [
+        TextButton(
+          onPressed: _saving ? null : _save,
+          child: Text(_saving ? 'Saving…' : 'Save'),
+        ),
+      ],
     ),
     body: SafeArea(
       top: false,
@@ -68,7 +79,7 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
             icon: Icons.category_outlined,
             title: 'Category',
             value:
-                '${widget.room.emoji} ${VibeCategories.byId(widget.room.categoryId)?.title ?? 'Other'}',
+                '$_emoji ${VibeCategories.byId(_categoryId)?.title ?? 'Other'}',
             onTap: _editCategory,
           ),
           const SizedBox(height: 14),
@@ -118,36 +129,24 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
             onChanged: (value) =>
                 setState(() => _maxParticipants = value.round()),
           ),
-          const SizedBox(height: 11),
-          _SectionLabel('Community'),
-          _SettingRow(
-            icon: Icons.shield_outlined,
-            title: 'Room guidelines',
-            value: '${widget.room.guidelines.length} rules',
-            onTap: _editGuidelines,
-          ),
-          _SettingRow(
-            icon: Icons.people_outline_rounded,
-            title: 'Moderators',
-            value: '3',
-            onTap: () => _notice('Moderator management is a local preview.'),
-          ),
-          _SettingRow(
-            icon: Icons.block_rounded,
-            title: 'Blocked users',
-            value: '1',
-            onTap: () => _notice('No blocked users in this demo room.'),
-          ),
-          const SizedBox(height: 14),
-          TextButton.icon(
-            onPressed: _delete,
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.error,
-              alignment: Alignment.centerLeft,
+          // Only the person who created the room can delete it.
+          if (widget.room.isHostedByMe) ...[
+            const SizedBox(height: 14),
+            TextButton.icon(
+              onPressed: _deleting ? null : _delete,
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.error,
+                alignment: Alignment.centerLeft,
+              ),
+              icon: _deleting
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.delete_outline_rounded),
+              label: Text(_deleting ? 'Deleting…' : 'Delete room'),
             ),
-            icon: const Icon(Icons.delete_outline_rounded),
-            label: const Text('Delete room'),
-          ),
+          ],
         ],
       ),
     ),
@@ -167,58 +166,45 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
     ),
   );
 
-  void _save() {
-    if (_nameController.text.trim().isEmpty) {
+  Future<void> _save() async {
+    final title = _nameController.text.trim();
+    if (title.isEmpty) {
       _notice('Room name can’t be empty.');
       return;
     }
-    VibeRoomStore.instance.updateRoom(
-      widget.room,
-      title: _nameController.text.trim(),
-      description: _descriptionController.text.trim(),
-      inviteOnly: _inviteOnly,
-      maxParticipants: _maxParticipants,
-    );
-    Navigator.pop(context);
-  }
-
-  Future<void> _editGuidelines() async {
-    final controller = TextEditingController(
-      text: widget.room.guidelines.join('\n'),
-    );
-    final value = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        title: const Text('Room guidelines'),
-        content: TextField(
-          controller: controller,
-          maxLines: 5,
-          decoration: const InputDecoration(hintText: 'One guideline per line'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, controller.text),
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
-    controller.dispose();
-    if (value == null) return;
-    VibeRoomStore.instance.updateRoom(
-      widget.room,
-      guidelines: value
-          .split('\n')
-          .map((line) => line.trim())
-          .where((line) => line.isNotEmpty)
-          .toList(),
-    );
-    if (mounted) setState(() {});
+    final description = _descriptionController.text.trim();
+    final api = widget.api;
+    if (api == null) {
+      VibeRoomStore.instance.updateRoom(
+        widget.room,
+        title: title,
+        description: description,
+        inviteOnly: _inviteOnly,
+        maxParticipants: _maxParticipants,
+        categoryId: _categoryId,
+        emoji: _emoji,
+      );
+      Navigator.pop(context);
+      return;
+    }
+    setState(() => _saving = true);
+    try {
+      final updated = await api.updateRoom(
+        widget.room.id,
+        title: title,
+        description: description.isEmpty ? null : description,
+        inviteOnly: _inviteOnly,
+        maxParticipants: _maxParticipants,
+        categoryId: _categoryId,
+        emoji: _emoji,
+      );
+      VibeRoomStore.instance.cacheRoom(updated);
+      if (mounted) Navigator.pop(context);
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      _notice('Could not save room settings: $error');
+    }
   }
 
   Future<void> _editCategory() async {
@@ -245,7 +231,7 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
                   style: const TextStyle(fontSize: 23),
                 ),
                 title: Text(category.title),
-                trailing: category.id == widget.room.categoryId
+                trailing: category.id == _categoryId
                     ? const Icon(Icons.check_rounded, color: AppColors.coral)
                     : null,
                 onTap: () => Navigator.pop(context, category.id),
@@ -256,12 +242,10 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
     );
     if (categoryId == null || !mounted) return;
     final category = VibeCategories.byId(categoryId)!;
-    VibeRoomStore.instance.updateRoom(
-      widget.room,
-      categoryId: category.id,
-      emoji: category.emoji,
-    );
-    setState(() {});
+    setState(() {
+      _categoryId = category.id;
+      _emoji = category.emoji;
+    });
   }
 
   Future<void> _delete() async {
@@ -271,7 +255,7 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
         backgroundColor: AppColors.surface,
         title: const Text('Delete this room?'),
         content: const Text(
-          'This removes the room from your local room lists.',
+          'This deletes the room and its chat for everyone. It can’t be undone.',
         ),
         actions: [
           TextButton(
@@ -289,8 +273,22 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
       ),
     );
     if (confirm != true || !mounted) return;
+    final api = widget.api;
+    if (api == null) {
+      _notice('Could not delete this room. Try again.');
+      return;
+    }
+    setState(() => _deleting = true);
+    try {
+      await api.deleteRoom(widget.room.id);
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _deleting = false);
+      _notice('Could not delete this room: $error');
+      return;
+    }
     VibeRoomStore.instance.delete(widget.room);
-    Navigator.of(context).pop();
+    if (mounted) Navigator.of(context).pop();
   }
 
   void _notice(String message) => ScaffoldMessenger.of(

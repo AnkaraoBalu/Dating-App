@@ -145,11 +145,14 @@ From the `backend` directory, run `npx prisma migrate deploy` against the
 configured database, then restart the backend. This applies pending migrations,
 including per-participant conversation unread counters.
 
-
 ### Disappearing history
 
 Direct chats use After Viewing behavior. Closing the chat or backgrounding the
-app posts loaded incoming IDs to `POST /messages/conversations/:id/leave`.
+app posts loaded incoming IDs to `POST /messages/conversations/:id/leave`. The
+server expires them one minute later (`MessagesController.expiryDelayMs`);
+reopening the chat (its newest history page) or marking it read within that
+minute cancels the pending expiry. The timer is in memory, so a restart inside
+the minute leaves those messages until the next leave.
 Only messages already read by the authenticated recipient expire. Unread and
 unloaded messages stay. Saved messages are protected; Vibe rooms are unaffected.
 Content is scrubbed for both participants. Content-free tombstones preserve
@@ -157,8 +160,7 @@ send idempotency and pagination. History and previews exclude expired messages.
 Live `messages:expired` events and history `expiredIds` reconcile other clients.
 Cloudinary images are removed with cache invalidation; failed cleanup retains
 the public ID for operational recovery. Offline departure requires a successful
-leave request; there is no timed expiry or durable retry queue yet.
-
+leave request; there is no durable retry queue yet.
 
 Long-press a delivered message to Save in Chat or Unsave from Chat. Either
 participant can change this shared flag; both see the bookmark indicator.

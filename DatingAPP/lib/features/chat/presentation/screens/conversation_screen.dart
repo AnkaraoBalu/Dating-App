@@ -90,7 +90,10 @@ class _ConversationScreenState extends State<ConversationScreen>
       unawaited(_controller.leaveConversation());
     }
     _controller.active = state == AppLifecycleState.resumed;
-    if (_controller.active) unawaited(_controller.retryConnection());
+    if (_controller.active) {
+      unawaited(_controller.retryConnection());
+      unawaited(_controller.returnToConversation());
+    }
   }
 
   @override
@@ -120,7 +123,7 @@ class _ConversationScreenState extends State<ConversationScreen>
           ),
           subtitle: Text(
             message.savedInChat
-                ? 'This message can disappear after the recipient leaves.'
+                ? 'It will disappear 1 min after the recipient leaves.'
                 : 'Keep this message for both people.',
           ),
           onTap: () => Navigator.pop(context, true),
@@ -221,7 +224,7 @@ class _ConversationScreenState extends State<ConversationScreen>
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 12),
             child: Text(
-              'Viewed messages disappear · Long-press to save',
+              'Viewed messages disappear 1 min after leaving · Long-press to save',
               style: TextStyle(color: AppColors.textTertiary, fontSize: 10),
             ),
           ),
@@ -436,6 +439,7 @@ class _ConversationScreenState extends State<ConversationScreen>
       builder: (_) => ChatInfoScreen(
         match: widget.match,
         messages: _controller.messages,
+        olderMessagesAvailable: _controller.hasMore,
         safetyApi: SafetyApi(
           baseUrl: widget.api.baseUrl,
           getSessionToken: widget.api.getSessionToken,
@@ -462,7 +466,11 @@ class _ConversationScreenState extends State<ConversationScreen>
     onSearch: () => Navigator.push(
       context,
       MaterialPageRoute<void>(
-        builder: (_) => ChatSearchScreen(match: widget.match),
+        builder: (_) => ChatSearchScreen(
+          match: widget.match,
+          messages: _controller.messages,
+          olderMessagesAvailable: _controller.hasMore,
+        ),
       ),
     ),
   );

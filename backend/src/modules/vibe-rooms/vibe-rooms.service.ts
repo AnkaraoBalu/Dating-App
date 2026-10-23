@@ -6,7 +6,11 @@ import {
 } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import { PrismaService } from "../../database/prisma.service";
-import { CreateVibeRoomDto, ListVibeRoomsQueryDto } from "./dto/vibe-room.dto";
+import {
+  CreateVibeRoomDto,
+  ListVibeRoomsQueryDto,
+  UpdateVibeRoomDto,
+} from "./dto/vibe-room.dto";
 
 const fallbackAvatar = "assets/images/boys-images/golden_hour_white_shirt.png";
 
@@ -316,6 +320,74 @@ export class VibeRoomsService {
       return this.serializeRoom(updated, userId, false);
     });
   }
+  /** Host-only: edits the room's details or takes it live. */
+  async update(clerkUserId: string, roomId: string, dto: UpdateVibeRoomDto) {
+    const userId = await this.databaseUserId(clerkUserId);
+    return this.prisma.$transaction(async (tx) => {
+      const room = await tx.vibeRoom.findUnique({
+        where: { id: roomId },
+        select: { hostUserId: true },
+      });
+      if (!room) throw new NotFoundException("Vibe room not found.");
+      if (room.hostUserId !== userId) {
+        throw new ForbiddenException("Only the host can edit this room.");
+      }
+      const updated = await tx.vibeRoom.update({
+        where: { id: roomId },
+        data: {
+          title: dto.title?.trim(),
+          description: dto.description?.trim(),
+          categoryId: dto.categoryId,
+          emoji: dto.emoji,
+          maxParticipants: dto.maxParticipants,
+          inviteOnly: dto.inviteOnly,
+          isLive: dto.isLive,
+          // A room that goes live is no longer scheduled for later.
+          ...(dto.isLive ? { scheduledFor: null } : {}),
+        },
+        include: roomRelations(userId),
+      });
+      const joined = await tx.vibeRoomMember.count({
+        where: { roomId, userId, leftAt: null },
+      });
+      return this.serializeRoom(updated, userId, joined > 0);
+    });
+  }
+
+  /**
+   * Host-only: deletes the room with its members, messages and games.
+   * Returns who was in it and the stored voice notes, so the caller can
+   * clean up live connections and media after the delete is saved.
+   */
+  async delete(clerkUserId: string, roomId: string) {
+    const userId = await this.databaseUserId(clerkUserId);
+    return this.prisma.$transaction(async (tx) => {
+      const room = await tx.vibeRoom.findUnique({
+        where: { id: roomId },
+        select: { hostUserId: true },
+      });
+      if (!room) throw new NotFoundException("Vibe room not found.");
+      if (room.hostUserId !== userId) {
+        throw new ForbiddenException("Only the host can delete this room.");
+      }
+      const members = await tx.vibeRoomMember.findMany({
+        where: { roomId, leftAt: null },
+        select: { userId: true },
+      });
+      const media = await tx.vibeRoomMessage.findMany({
+        where: { roomId, mediaPublicId: { not: null } },
+        select: { mediaPublicId: true },
+      });
+      await tx.vibeRoom.delete({ where: { id: roomId } });
+      return {
+        memberIds: members.map((member) => member.userId),
+        mediaPublicIds: media.flatMap(({ mediaPublicId }) =>
+          mediaPublicId ? [mediaPublicId] : [],
+        ),
+      };
+    });
+  }
+
   /**
    * The rooms this member is in, as group chats for the Chat tab: each with
    * its latest message and how many messages arrived since they last read it.

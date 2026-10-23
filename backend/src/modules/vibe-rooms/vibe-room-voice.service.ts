@@ -114,6 +114,11 @@ export class VibeRoomVoiceService {
     return this.liveKit.removeParticipant(roomId, userId);
   }
 
+  /** Best effort: ends a deleted room's voice call for everyone. */
+  closeRoom(roomId: string) {
+    return this.liveKit.deleteRoom(roomId);
+  }
+
   private async databaseUserId(clerkUserId: string) {
     const user = await this.prisma.user.findUnique({
       where: { clerkUserId },

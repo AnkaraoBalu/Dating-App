@@ -56,6 +56,8 @@ void main() {
       300,
       scrollable: find.byType(Scrollable).last,
     );
+    await tester.ensureVisible(find.text('Show results'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Show results'));
     await tester.pumpAndSettle();
     expect(result!.nearbyOnly, isTrue);

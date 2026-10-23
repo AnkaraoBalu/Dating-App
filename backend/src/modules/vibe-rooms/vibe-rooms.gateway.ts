@@ -129,6 +129,19 @@ export class VibeRoomsGateway {
   }
 
   /** After leaving over REST, stop live delivery to all of the user's sockets. */
+  /** Tells everyone viewing a deleted room, then closes its live channel. */
+  roomDeleted(roomId: string) {
+    try {
+      const room = this.server.in(VibeRoomsGateway.room(roomId));
+      this.server.to(VibeRoomsGateway.room(roomId)).emit("vibe:room_deleted", {
+        roomId,
+      });
+      room.socketsLeave(VibeRoomsGateway.room(roomId));
+    } catch (error) {
+      this.logger.error("Could not close deleted live room", error);
+    }
+  }
+
   removeMember(roomId: string, userId: string) {
     try {
       this.server

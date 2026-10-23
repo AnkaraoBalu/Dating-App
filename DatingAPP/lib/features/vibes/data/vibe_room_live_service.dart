@@ -48,6 +48,9 @@ class VibeRoomLiveService {
         if (!_isThisRoom(data)) return;
         _add(_messages, api.messageFromJson(Map<String, dynamic>.from(data)));
       })
+      ..on('vibe:room_deleted', (data) {
+        if (_isThisRoom(data)) _add(_deleted, null);
+      })
       ..on('vibe:game', (data) {
         if (!_isThisRoom(data) || data is! Map) return;
         final sessionId = data['sessionId']?.toString();
@@ -70,6 +73,7 @@ class VibeRoomLiveService {
   final StreamController<VibeRoomMessage> _messages =
       StreamController<VibeRoomMessage>.broadcast();
   final StreamController<void> _joined = StreamController<void>.broadcast();
+  final StreamController<void> _deleted = StreamController<void>.broadcast();
   final StreamController<String> _memberJoined =
       StreamController<String>.broadcast();
   final StreamController<VibeRoomGameEvent> _gameEvents =
@@ -80,6 +84,9 @@ class VibeRoomLiveService {
 
   Stream<VibeRoomMessage> get messages => _messages.stream;
   Stream<void> get joined => _joined.stream;
+
+  /// Fires when the host deletes this room while it is open.
+  Stream<void> get deleted => _deleted.stream;
 
   /// Names of members who join while this room is open.
   Stream<String> get memberJoined => _memberJoined.stream;
@@ -104,6 +111,7 @@ class VibeRoomLiveService {
     live.dispose();
     await _messages.close();
     await _joined.close();
+    await _deleted.close();
     await _memberJoined.close();
     await _gameEvents.close();
   }

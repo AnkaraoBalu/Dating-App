@@ -5,17 +5,23 @@ import '../../../matches/models/match_model.dart';
 import '../../models/chat_models.dart';
 
 class ChatSearchScreen extends StatefulWidget {
-  const ChatSearchScreen({super.key, required this.match});
+  const ChatSearchScreen({
+    super.key,
+    required this.match,
+    required this.messages,
+    this.olderMessagesAvailable = false,
+  });
   final MatchRecord match;
+
+  /// The messages loaded in the conversation; older pages are not fetched here.
+  final List<ChatMessage> messages;
+  final bool olderMessagesAvailable;
   @override
   State<ChatSearchScreen> createState() => _ChatSearchScreenState();
 }
 
 class _ChatSearchScreenState extends State<ChatSearchScreen> {
   final _search = TextEditingController();
-  late final List<ChatMessage> _messages = ChatDemoData.messagesFor(
-    widget.match,
-  );
   @override
   void dispose() {
     _search.dispose();
@@ -24,13 +30,17 @@ class _ChatSearchScreenState extends State<ChatSearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final query = _search.text.toLowerCase();
-    final results = _messages
-        .where(
-          (message) =>
-              query.isEmpty || message.text.toLowerCase().contains(query),
-        )
-        .toList();
+    final query = _search.text.trim().toLowerCase();
+    // Photos, voice notes and locations have no text to search.
+    final results =
+        widget.messages
+            .where(
+              (message) =>
+                  message.text.trim().isNotEmpty &&
+                  (query.isEmpty || message.text.toLowerCase().contains(query)),
+            )
+            .toList()
+          ..sort((a, b) => b.sentAt.compareTo(a.sentAt));
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -59,12 +69,19 @@ class _ChatSearchScreenState extends State<ChatSearchScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           Text(
-            '${results.length} results',
+            '${results.length} ${results.length == 1 ? 'result' : 'results'}',
             style: const TextStyle(
               color: AppColors.textSecondary,
               fontSize: 12,
             ),
           ),
+          if (widget.olderMessagesAvailable) ...[
+            const SizedBox(height: 4),
+            const Text(
+              'Searching loaded messages. Scroll up in the chat to load older ones.',
+              style: TextStyle(color: AppColors.textTertiary, fontSize: 12),
+            ),
+          ],
           const SizedBox(height: 12),
           for (final message in results)
             ListTile(
@@ -89,7 +106,7 @@ class _ChatSearchScreenState extends State<ChatSearchScreen> {
                 style: const TextStyle(color: AppColors.textSecondary),
               ),
               trailing: Text(
-                TimeOfDay.fromDateTime(message.sentAt).format(context),
+                _when(context, message.sentAt),
                 style: const TextStyle(
                   color: AppColors.textTertiary,
                   fontSize: 10,
@@ -99,5 +116,32 @@ class _ChatSearchScreenState extends State<ChatSearchScreen> {
         ],
       ),
     );
+  }
+
+  static const _months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+
+  /// Time for today's messages, the date for older ones.
+  String _when(BuildContext context, DateTime sentAt) {
+    final now = DateTime.now();
+    if (sentAt.year == now.year &&
+        sentAt.month == now.month &&
+        sentAt.day == now.day) {
+      return TimeOfDay.fromDateTime(sentAt).format(context);
+    }
+    final date = '${sentAt.day} ${_months[sentAt.month - 1]}';
+    return sentAt.year == now.year ? date : '$date ${sentAt.year}';
   }
 }

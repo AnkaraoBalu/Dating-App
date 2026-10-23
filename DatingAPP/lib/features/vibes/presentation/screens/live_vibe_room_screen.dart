@@ -40,6 +40,7 @@ class _LiveVibeRoomScreenState extends State<LiveVibeRoomScreen> {
   StreamSubscription<void>? _liveJoined;
   StreamSubscription<String>? _liveMemberJoined;
   StreamSubscription<VibeRoomGameEvent>? _liveGameEvents;
+  StreamSubscription<void>? _liveDeleted;
   bool _refreshingMessages = false;
   bool _leaving = false;
   String? _retryMessageId;
@@ -61,6 +62,7 @@ class _LiveVibeRoomScreenState extends State<LiveVibeRoomScreen> {
       _liveJoined = live.joined.listen((_) => unawaited(_refreshMessages()));
       _liveMemberJoined = live.memberJoined.listen(_announceMember);
       _liveGameEvents = live.gameEvents.listen(_announceGame);
+      _liveDeleted = live.deleted.listen((_) => _roomDeleted());
       live.connect();
       // Fallback while the live connection is down.
       _messagePoll = Timer.periodic(const Duration(seconds: 5), (_) {
@@ -95,6 +97,7 @@ class _LiveVibeRoomScreenState extends State<LiveVibeRoomScreen> {
     unawaited(_liveJoined?.cancel());
     unawaited(_liveMemberJoined?.cancel());
     unawaited(_liveGameEvents?.cancel());
+    unawaited(_liveDeleted?.cancel());
     unawaited(_live?.dispose());
     _messageController.dispose();
     super.dispose();
@@ -134,6 +137,16 @@ class _LiveVibeRoomScreenState extends State<LiveVibeRoomScreen> {
       builder: (_) => IcebreakerGamesScreen(room: widget.room, api: widget.api),
     ),
   );
+
+  void _roomDeleted() {
+    if (!mounted) return;
+    VibeRoomStore.instance.delete(widget.room);
+    final messenger = ScaffoldMessenger.of(context);
+    Navigator.of(context).pop();
+    messenger.showSnackBar(
+      const SnackBar(content: Text('The host deleted this room.')),
+    );
+  }
 
   void _announceMember(String name) {
     if (!mounted) return;

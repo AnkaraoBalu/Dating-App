@@ -37,6 +37,17 @@ export class CreateVibeRoomDto {
   @IsBoolean() inviteOnly!: boolean;
 }
 
+/** Host-only room edits; omitted fields stay as they are. */
+export class UpdateVibeRoomDto {
+  @IsOptional() @IsString() @IsNotEmpty() @MaxLength(40) title?: string;
+  @IsOptional() @IsString() @IsNotEmpty() @MaxLength(1000) description?: string;
+  @IsOptional() @IsString() @IsNotEmpty() @MaxLength(80) categoryId?: string;
+  @IsOptional() @IsString() @IsNotEmpty() @MaxLength(16) emoji?: string;
+  @IsOptional() @IsInt() @Min(10) @Max(100) maxParticipants?: number;
+  @IsOptional() @IsBoolean() inviteOnly?: boolean;
+  @IsOptional() @IsBoolean() isLive?: boolean;
+}
+
 export class SetVibeRoomSavedDto {
   @IsBoolean() saved!: boolean;
 }

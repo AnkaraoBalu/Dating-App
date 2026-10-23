@@ -98,6 +98,32 @@ class _MyRoomTile extends StatelessWidget {
   final bool hosting;
   final VibeRoomsApi? api;
 
+  /// Marks the room live for everyone, then opens it.
+  Future<void> _goLive(BuildContext context) async {
+    final api = this.api;
+    var live = room;
+    if (api == null) {
+      VibeRoomStore.instance.goLive(room);
+    } else {
+      try {
+        live = await api.updateRoom(room.id, isLive: true);
+        VibeRoomStore.instance.cacheRoom(live);
+      } catch (error) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Could not go live: $error')));
+        return;
+      }
+    }
+    if (!context.mounted) return;
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => LiveVibeRoomScreen(room: live, api: api),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) => Container(
     decoration: BoxDecoration(
@@ -184,7 +210,7 @@ class _MyRoomTile extends StatelessWidget {
                   tooltip: 'Room settings',
                   onPressed: () => Navigator.of(context).push<void>(
                     MaterialPageRoute<void>(
-                      builder: (_) => RoomSettingsScreen(room: room),
+                      builder: (_) => RoomSettingsScreen(room: room, api: api),
                     ),
                   ),
                   icon: const Icon(
@@ -193,15 +219,7 @@ class _MyRoomTile extends StatelessWidget {
                   ),
                 ),
                 TextButton(
-                  onPressed: () {
-                    VibeRoomStore.instance.goLive(room);
-                    Navigator.of(context).push<void>(
-                      MaterialPageRoute<void>(
-                        builder: (_) =>
-                            LiveVibeRoomScreen(room: room, api: api),
-                      ),
-                    );
-                  },
+                  onPressed: () => _goLive(context),
                   child: const Text('Go live'),
                 ),
               ],

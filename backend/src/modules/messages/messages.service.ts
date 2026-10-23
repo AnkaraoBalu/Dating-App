@@ -134,12 +134,15 @@ export class MessagesService {
     });
   }
 
-  /** Only the recipient can expire messages they have already read. */
-  async expireViewedMessages(
+  /**
+   * Checks a leave request up front, so a bad request fails now rather than
+   * when its delayed expiry runs. Returns the validated message IDs.
+   */
+  async validateLeave(
     clerkUserId: string,
     conversationId: string,
     messageIds: unknown,
-  ) {
+  ): Promise<string[]> {
     if (
       !Array.isArray(messageIds) ||
       messageIds.length > 1000 ||
@@ -149,6 +152,17 @@ export class MessagesService {
     }
     const userId = await this.userId(clerkUserId);
     await this.assertParticipant(userId, conversationId);
+    return messageIds as string[];
+  }
+
+  /** Only the recipient can expire messages they have already read. */
+  async expireViewedMessages(
+    clerkUserId: string,
+    conversationId: string,
+    messageIds: unknown,
+  ) {
+    await this.validateLeave(clerkUserId, conversationId, messageIds);
+    const userId = await this.userId(clerkUserId);
     return this.prisma.$transaction(async (tx) => {
       await tx.$queryRaw`SELECT "id" FROM "Conversation" WHERE "id" = ${conversationId} FOR UPDATE`;
       const where = {

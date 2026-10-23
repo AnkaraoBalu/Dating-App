@@ -434,7 +434,15 @@ class ChatController extends ChangeNotifier {
     messages.removeWhere((message) => _expiredIds.contains(message.id));
   }
 
-  /// Expires only received messages loaded in this chat, never unseen history.
+  /// Back in the open chat after backgrounding the app. Marking it read also
+  /// cancels the server's pending expiry, so the messages stay on screen.
+  Future<void> returnToConversation() async {
+    final id = conversationId;
+    if (id != null) await _markConversationRead(id);
+  }
+
+  /// Leaving the chat: the server clears received messages loaded here one
+  /// minute later, unless the chat is reopened first. Never unseen history.
   Future<void> leaveConversation() async {
     final id = conversationId;
     if (id == null) return;

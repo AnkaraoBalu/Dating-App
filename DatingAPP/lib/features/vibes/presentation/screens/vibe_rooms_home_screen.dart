@@ -45,6 +45,10 @@ class _VibeRoomsHomeScreenState extends State<VibeRoomsHomeScreen> {
   String _category = 'All';
   Timer? _roomRefresh;
   bool _refreshingRooms = false;
+  // Until the first load, an empty list means "loading", not "no rooms".
+  late bool _loadingRooms = widget.api != null && _store.rooms.isEmpty;
+  String? _roomsError;
+  final Set<String> _savingRoomIds = {};
 
   @override
   void initState() {
@@ -75,14 +79,75 @@ class _VibeRoomsHomeScreenState extends State<VibeRoomsHomeScreen> {
       final rooms = await widget.api!.listRooms();
       if (!mounted) return;
       _store.replaceRooms(rooms);
+      setState(() {
+        _loadingRooms = false;
+        _roomsError = null;
+      });
     } catch (error) {
-      if (!mounted || silent) return;
+      if (!mounted) return;
+      if (_loadingRooms || _store.rooms.isEmpty) {
+        setState(() {
+          _loadingRooms = false;
+          _roomsError = 'Could not load rooms. Check your connection.';
+        });
+      }
+      if (silent) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Could not sync vibe rooms: $error')),
       );
     } finally {
       _refreshingRooms = false;
     }
+  }
+
+  Future<void> _toggleSaved(VibeRoom room) async {
+    final api = widget.api;
+    if (api == null) {
+      _store.toggleSaved(room);
+      return;
+    }
+    if (!_savingRoomIds.add(room.id)) return;
+    final save = !_store.savedIds.contains(room.id);
+    try {
+      await api.setSaved(room.id, save);
+      room.isSaved = save;
+      _store.cacheRoom(room);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not save room: $error')));
+    } finally {
+      _savingRoomIds.remove(room.id);
+    }
+  }
+
+  Widget _liveRoomsPlaceholder() {
+    if (_loadingRooms) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    final error = _roomsError;
+    if (error != null && _store.rooms.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(error, textAlign: TextAlign.center),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _loadingRooms = true;
+                  _roomsError = null;
+                });
+                unawaited(_loadDatabaseRooms());
+              },
+              child: const Text('Try again'),
+            ),
+          ],
+        ),
+      );
+    }
+    return const Center(child: Text('No live rooms in this vibe yet.'));
   }
 
   List<VibeRoom> get _liveRooms => _store.rooms.where((room) {
@@ -176,7 +241,7 @@ class _VibeRoomsHomeScreenState extends State<VibeRoomsHomeScreen> {
             SizedBox(
               height: 252,
               child: _liveRooms.isEmpty
-                  ? const Center(child: Text('No live rooms in this vibe yet.'))
+                  ? _liveRoomsPlaceholder()
                   : ListView.separated(
                       scrollDirection: Axis.horizontal,
                       itemCount: _liveRooms.length,
@@ -188,7 +253,7 @@ class _VibeRoomsHomeScreenState extends State<VibeRoomsHomeScreen> {
                           width: 232,
                           saved: _store.savedIds.contains(room.id),
                           onTap: () => _openRoom(room),
-                          onSave: () => _store.toggleSaved(room),
+                          onSave: () => _toggleSaved(room),
                         );
                       },
                     ),
@@ -215,7 +280,7 @@ class _VibeRoomsHomeScreenState extends State<VibeRoomsHomeScreen> {
                       width: 232,
                       saved: _store.savedIds.contains(room.id),
                       onTap: () => _openRoom(room),
-                      onSave: () => _store.toggleSaved(room),
+                      onSave: () => _toggleSaved(room),
                     );
                   },
                 ),

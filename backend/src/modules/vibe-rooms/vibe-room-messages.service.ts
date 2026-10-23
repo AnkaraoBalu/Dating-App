@@ -177,6 +177,11 @@ export class VibeRoomMessagesService {
   }
 
   /** IDs of everyone currently in the room. */
+  /** Best effort: removes a deleted room's voice notes from storage. */
+  async destroyMedia(publicIds: string[]) {
+    for (const publicId of publicIds) await this.voiceNotes.destroy(publicId);
+  }
+
   async activeMemberIds(roomId: string) {
     const members = await this.prisma.vibeRoomMember.findMany({
       where: { roomId, leftAt: null },

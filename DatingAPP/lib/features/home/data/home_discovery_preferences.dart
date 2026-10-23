@@ -2,6 +2,10 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Profile verification is hidden until it ships, so no one is verified yet
+/// and a "verified only" filter would empty the feed.
+const verifiedFilterAvailable = false;
+
 class HomeDiscoveryPreferences {
   const HomeDiscoveryPreferences({
     this.selectedVibeIds = const {},
@@ -60,7 +64,8 @@ class HomeDiscoveryPreferencesStore {
             ? rawInterests.whereType<String>().toList()
             : const [],
         onlineOnly: decoded['onlineOnly'] == true,
-        verifiedOnly: decoded['verifiedOnly'] == true,
+        verifiedOnly:
+            verifiedFilterAvailable && decoded['verifiedOnly'] == true,
         selectedInterest: _readOptionalString(decoded['selectedInterest']),
         travelLocation: _readOptionalString(decoded['travelLocation']),
       );

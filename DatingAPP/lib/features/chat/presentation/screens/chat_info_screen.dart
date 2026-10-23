@@ -7,6 +7,7 @@ import '../../../safety/presentation/safety_actions.dart';
 import '../../models/chat_models.dart';
 import '../widgets/chat_media.dart';
 import 'chat_search_screen.dart';
+import 'shared_items_screen.dart';
 import 'shared_media_screen.dart';
 
 class ChatInfoScreen extends StatelessWidget {
@@ -16,9 +17,11 @@ class ChatInfoScreen extends StatelessWidget {
     required this.messages,
     required this.safetyApi,
     this.onAudioCall,
+    this.olderMessagesAvailable = false,
   });
   final MatchRecord match;
   final List<ChatMessage> messages;
+  final bool olderMessagesAvailable;
   final SafetyApi safetyApi;
   final VoidCallback? onAudioCall;
 
@@ -134,7 +137,11 @@ class ChatInfoScreen extends StatelessWidget {
               () => Navigator.push(
                 context,
                 MaterialPageRoute<void>(
-                  builder: (_) => ChatSearchScreen(match: match),
+                  builder: (_) => ChatSearchScreen(
+                    match: match,
+                    messages: messages,
+                    olderMessagesAvailable: olderMessagesAvailable,
+                  ),
                 ),
               ),
             ),
@@ -163,23 +170,35 @@ class ChatInfoScreen extends StatelessWidget {
         ),
         _sharedMediaPreview(),
         const Divider(color: AppColors.border),
-        const ListTile(
-          leading: Icon(Icons.link_rounded, color: AppColors.textSecondary),
-          title: Text(
-            'Shared links',
-            style: TextStyle(color: AppColors.textPrimary),
-          ),
-        ),
-        const ListTile(
-          leading: Icon(
+        for (final (kind, icon, label) in const [
+          (SharedItemKind.links, Icons.link_rounded, 'Shared links'),
+          (
+            SharedItemKind.locations,
             Icons.location_on_outlined,
-            color: AppColors.textSecondary,
-          ),
-          title: Text(
             'Shared locations',
-            style: TextStyle(color: AppColors.textPrimary),
           ),
-        ),
+        ])
+          ListTile(
+            leading: Icon(icon, color: AppColors.textSecondary),
+            title: Text(
+              label,
+              style: const TextStyle(color: AppColors.textPrimary),
+            ),
+            trailing: Text(
+              '${sharedItems(messages, kind).length}',
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute<void>(
+                builder: (_) => SharedItemsScreen(
+                  match: match,
+                  messages: messages,
+                  kind: kind,
+                ),
+              ),
+            ),
+          ),
         ListTile(
           leading: const Icon(Icons.block_rounded, color: AppColors.error),
           title: const Text('Block', style: TextStyle(color: AppColors.error)),

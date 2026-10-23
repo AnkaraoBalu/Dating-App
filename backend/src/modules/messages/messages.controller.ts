@@ -1,4 +1,5 @@
 import {
+  Logger,
   Controller,
   Body,
   UploadedFile,
@@ -23,6 +24,18 @@ import { VOICE_NOTE_MAX_BYTES } from "./voice-note.storage";
 @Controller("messages")
 @UseGuards(ClerkAuthGuard)
 export class MessagesController {
+  /** Viewed messages disappear this long after the recipient leaves the chat. */
+  static expiryDelayMs = 60_000;
+
+  private readonly logger = new Logger(MessagesController.name);
+  // Keyed by "<clerk user>:<conversation>". Timers live in memory: if the
+  // server restarts inside the minute, those messages stay until the next
+  // leave, which is the safe direction to fail.
+  private readonly pendingExpiry = new Map<
+    string,
+    { timer: NodeJS.Timeout; messageIds: Set<string> }
+  >();
+
   constructor(
     private readonly messages: MessagesService,
     private readonly conversations: ConversationsService,
@@ -113,6 +126,7 @@ export class MessagesController {
     @Req() request: ClerkRequest,
     @Param("conversationId") conversationId: string,
   ) {
+    this.cancelPendingExpiry(request.auth.userId, conversationId);
     return this.messages
       .markConversationRead(request.auth.userId, conversationId)
       .then((receipt) => {
@@ -142,26 +156,70 @@ export class MessagesController {
     return result;
   }
 
+  /**
+   * The recipient left the chat (or backgrounded the app). Their viewed
+   * messages disappear after [expiryDelayMs] unless they come back first.
+   */
   @Post("conversations/:conversationId/leave")
   async leaveConversation(
     @Req() request: ClerkRequest,
     @Param("conversationId") conversationId: string,
     @Body("messageIds") messageIds: unknown,
   ) {
-    const expired = await this.messages.expireViewedMessages(
-      request.auth.userId,
+    const clerkUserId = request.auth.userId;
+    const ids = await this.messages.validateLeave(
+      clerkUserId,
       conversationId,
       messageIds,
     );
-    if (expired.messageIds.length) {
-      this.gateway.broadcastExpired(conversationId, {
+    const key = `${clerkUserId}:${conversationId}`;
+    const pending = this.pendingExpiry.get(key);
+    if (pending) clearTimeout(pending.timer);
+    const all = new Set([...(pending?.messageIds ?? []), ...ids]);
+    const timer = setTimeout(() => {
+      this.pendingExpiry.delete(key);
+      void this.expireNow(clerkUserId, conversationId, [...all]);
+    }, MessagesController.expiryDelayMs);
+    timer.unref?.();
+    this.pendingExpiry.set(key, { timer, messageIds: all });
+    return {
+      conversationId,
+      messageIds: [],
+      expiresInMs: MessagesController.expiryDelayMs,
+    };
+  }
+
+  /** Coming back to the chat keeps its messages until the next leave. */
+  private cancelPendingExpiry(clerkUserId: string, conversationId: string) {
+    const key = `${clerkUserId}:${conversationId}`;
+    const pending = this.pendingExpiry.get(key);
+    if (!pending) return;
+    clearTimeout(pending.timer);
+    this.pendingExpiry.delete(key);
+  }
+
+  private async expireNow(
+    clerkUserId: string,
+    conversationId: string,
+    messageIds: string[],
+  ) {
+    try {
+      const expired = await this.messages.expireViewedMessages(
+        clerkUserId,
         conversationId,
-        messageIds: expired.messageIds,
-      });
-      void this.gateway.notifyInboxChanged(conversationId);
+        messageIds,
+      );
+      if (expired.messageIds.length) {
+        this.gateway.broadcastExpired(conversationId, {
+          conversationId,
+          messageIds: expired.messageIds,
+        });
+        void this.gateway.notifyInboxChanged(conversationId);
+      }
+      await this.media.deleteExpiredMedia(expired.mediaPublicIds);
+    } catch (error) {
+      this.logger.error("Could not expire viewed messages", error);
     }
-    await this.media.deleteExpiredMedia(expired.mediaPublicIds);
-    return { conversationId, messageIds: expired.messageIds };
   }
 
   @Get("conversations/:conversationId/messages")
@@ -171,6 +229,10 @@ export class MessagesController {
     @Query("before") before?: string,
     @Query("limit", new ParseIntPipe({ optional: true })) limit = 50,
   ) {
+    // Opening the chat (its newest page) cancels a pending expiry.
+    if (before == null) {
+      this.cancelPendingExpiry(request.auth.userId, conversationId);
+    }
     return this.messages.listMessages(
       request.auth.userId,
       conversationId,

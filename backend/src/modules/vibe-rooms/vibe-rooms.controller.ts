@@ -23,6 +23,7 @@ import {
   ListVibeRoomMessagesQueryDto,
   SetVibeRoomSavedDto,
   SubmitVibeGameAnswerDto,
+  UpdateVibeRoomDto,
 } from "./dto/vibe-room.dto";
 import { VibeRoomMessagesService } from "./vibe-room-messages.service";
 import { VibeRoomsService } from "./vibe-rooms.service";
@@ -135,6 +136,33 @@ export class VibeRoomsController {
     this.gateway.removeMember(roomId, userId);
     void this.voice.removeParticipant(roomId, userId);
     return room;
+  }
+
+  /** Host-only: edits the room's details or takes it live. */
+  @Patch(":roomId")
+  update(
+    @Req() request: ClerkRequest,
+    @Param("roomId") roomId: string,
+    @Body() body: UpdateVibeRoomDto,
+  ) {
+    return this.rooms.update(request.auth.userId, roomId, body);
+  }
+
+  /** Host-only: deletes the room for everyone. */
+  @Delete(":roomId")
+  async remove(@Req() request: ClerkRequest, @Param("roomId") roomId: string) {
+    const { memberIds, mediaPublicIds } = await this.rooms.delete(
+      request.auth.userId,
+      roomId,
+    );
+    // The delete is saved; the rest is best-effort cleanup.
+    this.gateway.roomDeleted(roomId);
+    void this.voice.closeRoom(roomId);
+    void this.messages.destroyMedia(mediaPublicIds).catch(() => undefined);
+    for (const memberId of memberIds) {
+      this.realtime.notifyUser(memberId, "inbox:changed", { roomId });
+    }
+    return { deleted: true };
   }
 
   @Get(":roomId/messages")

@@ -4,8 +4,8 @@ part of '../screens/vibe_rooms_home_screen.dart';
 extension _VibeRoomsHomeSections on _VibeRoomsHomeScreenState {
   Widget _featuredRoom() {
     final room =
-        _store.byId('late-night-talks') ??
-        (_store.rooms.isEmpty ? null : _store.rooms.first);
+        _store.rooms.where((room) => room.isLive).firstOrNull ??
+        _store.rooms.firstOrNull;
     if (room == null) {
       return Material(
         color: AppColors.surface,
@@ -92,7 +92,7 @@ extension _VibeRoomsHomeSections on _VibeRoomsHomeScreenState {
                       _Badge(label: '♟ ${room.participantCount} in room'),
                       const Spacer(),
                       IconButton.filledTonal(
-                        onPressed: () => _store.toggleSaved(room),
+                        onPressed: () => _toggleSaved(room),
                         style: IconButton.styleFrom(
                           backgroundColor: Colors.white.withValues(alpha: .91),
                           foregroundColor: _store.savedIds.contains(room.id)

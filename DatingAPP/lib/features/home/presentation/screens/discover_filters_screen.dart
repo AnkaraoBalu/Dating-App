@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/theme.dart';
 import '../../../../core/widgets/distance_slider.dart';
+import '../../data/home_discovery_preferences.dart';
 
 class DiscoverFilterOptions {
   const DiscoverFilterOptions({
@@ -90,7 +91,7 @@ class _DiscoverFiltersScreenState extends State<DiscoverFiltersScreen> {
       _ => 'Everyone',
     };
     _online = initial.onlineOnly;
-    _verified = initial.verifiedOnly;
+    _verified = verifiedFilterAvailable && initial.verifiedOnly;
     final interest = initial.interest;
     if (interest != null) {
       _interests.add(switch (interest) {
@@ -246,18 +247,19 @@ class _DiscoverFiltersScreenState extends State<DiscoverFiltersScreen> {
           activeTrackColor: AppColors.coral,
           onChanged: (value) => setState(() => _online = value),
         ),
-        SwitchListTile(
-          contentPadding: EdgeInsets.zero,
-          title: Text(
-            'Verified profiles only',
-            style: AppTypography.bodySmall.copyWith(
-              color: AppColors.textPrimary,
+        if (verifiedFilterAvailable)
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(
+              'Verified profiles only',
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.textPrimary,
+              ),
             ),
+            value: _verified,
+            activeTrackColor: AppColors.coral,
+            onChanged: (value) => setState(() => _verified = value),
           ),
-          value: _verified,
-          activeTrackColor: AppColors.coral,
-          onChanged: (value) => setState(() => _verified = value),
-        ),
         const SizedBox(height: 20),
         FilledButton(
           onPressed: () => Navigator.pop(
