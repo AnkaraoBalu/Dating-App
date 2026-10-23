@@ -6,6 +6,7 @@ import 'package:clerk_flutter/clerk_flutter.dart';
 import 'package:app_links/app_links.dart';
 
 import 'auth_startup.dart';
+import 'oauth_browser.dart';
 import '../core/constants/app_constants.dart';
 import '../core/theme/app_theme.dart';
 import '../features/welcome/presentation/screens/welcome_screen.dart';
@@ -67,6 +68,7 @@ class DatingApp extends StatelessWidget {
       createConfig: () => ClerkAuthConfig(
         publishableKey: clerkPublishableKey,
         telemetryPeriod: Duration.zero,
+        defaultLaunchMode: oauthBrowserMode,
         redirectionGenerator: (_, strategy) =>
             strategy.isOauth ? Uri.parse(_oauthCallback) : null,
       ),
@@ -117,6 +119,7 @@ class _ClerkOAuthCallbackState extends State<_ClerkOAuthCallback> {
       return;
     }
     _lastCallback = uri.toString();
+    unawaited(dismissOAuthBrowser());
     final auth = ClerkAuth.of(context, listen: false);
     if (auth.isSignedIn) return;
     _callbackError = null;

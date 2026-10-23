@@ -79,11 +79,7 @@ class _AuthStartupState extends State<AuthStartup> {
   Widget build(BuildContext context) {
     final auth = _auth;
     if (auth != null) {
-      return ClerkAuth(
-        config: auth.config,
-        authState: auth,
-        child: widget.child,
-      );
+      return ClerkAuth(authState: auth, child: widget.child);
     }
     return MaterialApp(
       debugShowCheckedModeBanner: false,
