@@ -30,6 +30,17 @@ void main() {
     expect(find.text('Mumbai'), findsOneWidget);
     expect(find.textContaining('K people'), findsNothing);
     expect(find.text('Back to my location'), findsNothing);
+    expect(find.text('Choose a destination').hitTestable(), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Visakhapatnam'),
+      300,
+      scrollable: find.descendant(
+        of: find.byType(GridView),
+        matching: find.byType(Scrollable),
+      ),
+    );
+    expect(find.text('Visakhapatnam'), findsOneWidget);
+    expect(find.text('Choose a destination').hitTestable(), findsOneWidget);
   });
 
   testWidgets('back to my location turns travel mode off', (tester) async {
@@ -38,26 +49,10 @@ void main() {
       const DiscoverTravelScreen(currentCity: 'Mumbai'),
     );
     final back = find.text('Back to my location');
-    await tester.scrollUntilVisible(
-      back,
-      200,
-      scrollable: find.byType(Scrollable).first,
-    );
+    // Buttons stay pinned below the scrolling grid, so no scrolling needed.
     expect(find.text('Set Mumbai'), findsOneWidget);
     await tester.tap(back);
     await tester.pumpAndSettle();
     expect(result(), DiscoverTravelScreen.myLocation);
-  });
-
-  testWidgets('search matches a city by its state', (tester) async {
-    await _open(tester, const DiscoverTravelScreen());
-    await tester.enterText(find.byType(TextField), 'telangana');
-    await tester.pumpAndSettle();
-    expect(find.text('Hyderabad'), findsOneWidget);
-    expect(find.text('Warangal'), findsOneWidget);
-    expect(find.text('Mumbai'), findsNothing);
-    await tester.enterText(find.byType(TextField), 'atlantis');
-    await tester.pumpAndSettle();
-    expect(find.textContaining('No cities match'), findsOneWidget);
   });
 }

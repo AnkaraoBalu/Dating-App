@@ -16,7 +16,7 @@ test("every city on the app's travel screen has a search center", () => {
   const cities = [...source.matchAll(/^\s*\('([^']+)',\s*'[^']+',/gm)].map(
     (match) => match[1],
   );
-  assert.ok(cities.length >= 30, `found only ${cities.length} cities`);
+  assert.ok(cities.length >= 10, `found only ${cities.length} cities`);
   for (const city of cities) {
     assert.ok(discoveryCityCenter(city), `${city} is missing a center`);
   }

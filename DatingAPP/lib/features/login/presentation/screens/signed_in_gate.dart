@@ -176,9 +176,13 @@ class _SignedInGateState extends State<SignedInGate> {
         const Duration(seconds: 10),
       )).jwt;
     } finally {
-      debugPrint(
-        '[Startup] Session token request finished in ${watch.elapsedMilliseconds}ms',
-      );
+      // Every API request asks for the token, and cached ones return
+      // instantly, so only slow fetches are worth logging.
+      if (watch.elapsedMilliseconds >= 300) {
+        debugPrint(
+          '[Startup] Session token request finished in ${watch.elapsedMilliseconds}ms',
+        );
+      }
     }
   }
 
